@@ -23,6 +23,8 @@ Così si provano i programmi **senza occupare la macchina e senza rischiare uten
 4. Premere **Avvia** oppure **Blocco singolo**; con **Velocità** si sceglie quante volte più veloce della macchina vera (da ×1 a ×500)
 5. Se compare un allarme: leggere il messaggio, correggere la riga indicata e premere **Reset**
 
+Il menu **Modello**, accanto a **Macchina**, permette di scegliere una macchina reale (DMG MORI, Haas, Mazak, Okuma, DN Solutions, EMCO): il simulatore usa i suoi giri, rapidi e corse, e la scheda **Macchina** sotto la simulazione mostra i dati con la fonte e dice se il suo controllo accetta la programmazione ISO. Il linguaggio resta Fanuc ISO per tutte le macchine.
+
 Il pulsante **Guida** (o F1) spiega come si usa il simulatore ed elenca codici G/M e allarmi della macchina scelta. Scorciatoie: **Ctrl+Invio** avvia, **Esc** mette in pausa, **Ctrl+S** salva.
 
 Nella simulazione il tratteggio rosso è il rapido G00, il blu la lavorazione. L'**anteprima percorso** mostra in chiaro tutto il percorso prima di eseguirlo. Rotella del mouse = zoom, trascinamento = spostamento, doppio clic = adatta la vista. In alto a destra si leggono le quote X (in diametro) e Z, l'utensile, i giri, l'avanzamento e il tempo ciclo. Il menu **Utensili e correttori** elenca gli utensili in torretta (T01 sgrossatore, T02 troncatore, T03 finitore) con la passata massima di ciascuno. Lì si imposta anche l'usura dei correttori: se il pezzo esce Ø42,10 invece di 42,00, si mette usura X −0.1 e si riesegue, come sulla macchina.
@@ -80,7 +82,7 @@ docs/                   codici supportati, allarmi, esercitazioni, configurazion
 ## Per i docenti
 
 - [Esercitazioni](docs/esercitazioni.md): esercizi "trova l'errore" con soluzioni e tracce da disegno
-- [Configurare le macchine del laboratorio](docs/configurare-le-macchine.md): dove inserire corse, giri, mandrino, morsa e utensili reali
+- [Configurare le macchine del laboratorio](docs/configurare-le-macchine.md): dove inserire corse, giri, mandrino, morsa e utensili reali, e come aggiungere un modello al database
 - [Codici supportati](docs/codici-supportati.md) e [catalogo allarmi](docs/allarmi.md)
 
 ## Sviluppo (docenti)

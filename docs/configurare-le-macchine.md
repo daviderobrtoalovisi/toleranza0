@@ -47,3 +47,30 @@ Per ogni utensile (`MILL_TOOLS`): nome, tipo (`flat` fresa piana, `ball` sferica
 4. Quando i test sono verdi: commit e push. Dopo pochi minuti il sito online usa i nuovi dati.
 
 Se gli utensili cambiano, aggiornare anche le tabelle in `docs/codici-supportati.md`.
+
+## Database dei modelli
+
+Oltre alla macchina didattica generica, nel menu **Modello** si può scegliere una macchina reale dai cataloghi dei produttori. I dati stanno in `js/machines/catalog-data.js`, uno per macchina, ciascuno con la **fonte** (pagina ufficiale) e il mese di controllo.
+
+Scegliendo un modello il simulatore usa i suoi dati:
+
+| Dato del catalogo | Nel simulatore |
+|---|---|
+| giri massimi | limite dei giri (anche con G96) |
+| rapido | tempo dei G00 e tempo ciclo |
+| corsa X del tornio | fine corsa X = 2 × corsa (X è in diametro) |
+| corsa Z del tornio | circa il 30% davanti alla faccia del pezzo (al massimo 150 mm), il resto verso il mandrino |
+| corse X, Y della fresa | ± metà corsa attorno allo zero pezzo |
+| corsa Z della fresa | circa il 60% sopra il pezzo (al massimo 200 mm), il resto sotto |
+| diametro e lunghezza tornibili, tavola | grezzo massimo impostabile |
+
+Le ipotesi sulla posizione dello zero pezzo sono in `js/machines/catalog.js` (`latheModelData`, `millModelData`). Utensili, mandrino e morsa restano quelli del simulatore.
+
+**Il linguaggio resta Fanuc ISO.** La scheda della macchina dice se il controllo vero lo accetta: *sì* (Fanuc, Haas…), *come modalità aggiuntiva* (per esempio Mazatrol con EIA/ISO, Okuma OSP) oppure *no* (Siemens, Heidenhain). Nell'ultimo caso il simulatore usa corse e giri della macchina, ma il programma va scritto in ISO.
+
+### Aggiungere un modello
+
+1. Aggiungere un oggetto in `MACHINE_DATA` (`js/machines/catalog-data.js`) copiando un modello dello stesso tipo.
+2. `id` in minuscolo con trattini e unico; `sourceUrl` con la pagina ufficiale; `checked` con il mese (`2026-09`); `iso` = `yes`, `mode` o `no`.
+3. I dati non trovati vanno lasciati a `null`: il simulatore usa quelli generici.
+4. Aprire i test: ogni modello viene controllato (fonte presente, numeri validi, fine corsa coerenti).
