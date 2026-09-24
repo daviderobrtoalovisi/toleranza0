@@ -47,6 +47,8 @@ Note:
 | 2004 | Utensile non presente nella torretta | `T0909` | usare T01, T02 o T03 |
 | 2005 | G96 senza limite di giri G50 | `G96 S180 M03` senza un `G50 S..` prima | `G50 S2000` prima di G96 |
 | 2006 | Correttore non presente | `T0109` | correttori 01, 02, 03: `T0101` |
+| 2008 | Fresa: movimento in Z senza G43 | `T1 M06` e poi `G00 Z5` | `G43 H1 Z50` dopo ogni cambio utensile |
+| 2009 | Fresa: H diverso dall'utensile montato | `T1 M06` e poi `G43 H2` | H uguale al numero dell'utensile |
 | 2007 | Ciclo incompleto | `G71 P100 Q180 ...` senza il blocco `G71 U2 R0.5` prima; `G70 P100` senza Q | scrivere il ciclo completo (il suggerimento mostra la sintassi) |
 
 Un programma senza M30 non dà allarme: alla fine compare il messaggio «Programma terminato senza M30».
@@ -60,6 +62,7 @@ Un programma senza M30 non dà allarme: alla fine compare il messaggio «Program
 | 3003 | Arco senza raggio né centro | `G02 X30 Z-5` | aggiungere R oppure I e K |
 | 3004 | Fuori corsa | `G00 X400` (limite X300) | controllare valore e segno |
 | 3005 | Passata troppo profonda | T01 da Ø50 direttamente a X30 | dividere in più passate |
+| 3008 | Fresa: punta mossa di lato nel materiale | `G01 Z-5` con la punta e poi `X60` | risalire sopra il pezzo prima di spostarsi |
 | 3006 | Blocco del profilo non trovato | `G71 P100 Q999` senza una riga N999 | P e Q devono essere numeri N presenti |
 | 3007 | Profilo non adatto a G71 | primo blocco con Z, oppure una gola nel profilo | primo blocco solo X, X sempre crescenti, Z sempre decrescenti |
 
@@ -73,7 +76,8 @@ Profondità massima di passata, misurata perpendicolarmente al movimento: T01 4 
 |---|---|---|---|
 | 4001 | Rapido G00 dentro il materiale | `G00 Z-30` a un diametro più piccolo del pezzo | avvicinarsi in G00 a 1–2 mm, poi G01 |
 | 4002 | Utensile o portautensile contro il mandrino | `G01 Z-85` con sporgenza 80 mm | restare nella sporgenza del pezzo |
-| 4003 | Portautensile contro il pezzo | gola di 20 mm con il troncatore profondo 18 | usare un utensile adatto o cambiare percorso |
+| 4003 | Gambo o portautensile contro il pezzo | gola di 20 mm con il troncatore profondo 18; fresa Ø10 a 24 mm di profondità (tagliente 22) | usare un utensile adatto o cambiare percorso |
+| 4004 | Fresa: utensile contro la morsa | `G00 Y-10 Z-15` accanto al pezzo | restare nella parte del pezzo che sporge dalla morsa |
 
 L'esempio *Esercizio — Perché si rompe l'utensile?* mostra la collisione 4001.
 

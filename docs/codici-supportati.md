@@ -133,6 +133,89 @@ Punto programmato: la punta teorica dell'utensile (orientamento 3). Senza G41/G4
 
 Anche il portautensile ha una forma e può urtare il pezzo (4003) o il mandrino (4002). La tabella è in `js/machines/lathe/tools.js`.
 
-## Fresa 3 assi
+## Fresa 3 assi — Fanuc serie M
 
-Prevista dalla v0.5.
+Tabella di riferimento: [`js/machines/mill/codes.js`](../js/machines/mill/codes.js).
+
+Convenzioni:
+- **Zero pezzo**: Z0 sulla faccia superiore finita; X0 Y0 sull'angolo davanti a sinistra oppure al centro (si sceglie sopra la simulazione o con `CENTRO` nella riga del grezzo)
+- **G90** quote assolute, **G91** incrementali; avanzamento **F in mm/min** (G94)
+- **Cambio utensile**: `T1 M06` (T prepara, M06 monta), poi **`G43 H1`** prima di muovere Z. Dopo ogni M06 la correzione di lunghezza va richiamata (allarme 2008), e H deve essere il numero dell'utensile montato (2009)
+- Riga del grezzo: `(GREZZO X100 Y80 Z30)`, con `S2` per il sovrametallo sopra e `CENTRO` per lo zero al centro
+
+### Indirizzi
+
+| Lettera | Significato |
+|---|---|
+| X, Y, Z | Quote |
+| I, J | Centro dell'arco (incrementale dal punto iniziale) |
+| R | Raggio dell'arco o piano R dei cicli |
+| F | Avanzamento in mm/min |
+| S | Giri del mandrino |
+| T | Utensile da preparare |
+| H | Correttore di lunghezza (G43) |
+| D | Correttore di raggio (G41/G42, non ancora simulati) |
+| P | Sosta in ms (G04, G82) |
+| Q | Profondità di beccata (G83) |
+
+### Codici G
+
+| Codice | Significato | Stato |
+|---|---|---|
+| G00 / G01 | Rapido / lineare | ✅ |
+| G02 / G03 | Arco orario / antiorario nel piano XY, anche elicoidale (con Z) | ✅ |
+| G04 | Sosta | ✅ |
+| G17 | Piano XY | ✅ |
+| G18 / G19 | Piani ZX / YZ | 🕓 |
+| G20 / G21 | Pollici / millimetri | ✅ |
+| G28 | Ritorno al punto di riferimento (di solito `G91 G28 Z0`) | ✅ |
+| G40 | Annulla compensazione raggio | ✅ |
+| G41 / G42 | Compensazione raggio fresa | 🕓 v0.6 |
+| G43 / G49 | Correzione lunghezza utensile / annulla | ✅ |
+| G54–G59 | Origini pezzo | ✅ |
+| G80 | Annulla ciclo | ✅ |
+| G81 | Foratura | ✅ |
+| G82 | Foratura con sosta sul fondo | ✅ |
+| G83 | Foratura profonda a beccate | ✅ |
+| G90 / G91 | Assolute / incrementali | ✅ |
+| G94 | Avanzamento mm/min | ✅ |
+| G95 | Avanzamento mm/giro | 🕓 |
+| G98 / G99 | Ritorno al piano iniziale / al piano R nei cicli | ✅ |
+
+### Codici M
+
+| Codice | Significato | Stato |
+|---|---|---|
+| M00 / M01 / M02 / M30 | Arresti e fine programma | ✅ |
+| M03 / M04 / M05 | Mandrino orario / antiorario / fermo | ✅ |
+| M06 | Cambio utensile | ✅ |
+| M08 / M09 | Refrigerante | ✅ |
+| M98 / M99 | Sottoprogrammi | 🕓 |
+
+### Cicli di foratura
+
+```
+G99 G81 X15 Y15 Z-10 R2 F120    (foro: rapido a R2, lavoro fino a Z-10, ritorno a R)
+X85                              (il ciclo resta attivo: altro foro)
+G98 X15                          (ultimo foro: ritorno al piano iniziale)
+G80                              (fine del ciclo)
+G83 X50 Y40 Z-25 R2 Q5 F100     (foro profondo a beccate di 5 mm)
+```
+
+In G91 R si misura dal piano iniziale e Z dal piano R. Anche un G00–G03 annulla il ciclo.
+
+### Come la simula la fresa
+
+- **Macchina** (`js/machines/mill/machine.js`): punto di riferimento X0 Y0 Z150, rapido 10000 mm/min, 8000 giri/min, cambio utensile 5 s; fine corsa X ±250, Y ±200, Z da -100 a 200 (quote pezzo). Valori tipici, da adattare.
+- **Grezzo**: mappa delle altezze (la superficie superiore): basta per la fresatura a 3 assi dall'alto, senza sottosquadri.
+- **Morsa**: due ganasce sui lati Y del grezzo, che ne lasciano sporgere al massimo 10 mm, e la base sotto (allarme 4004).
+- **Utensili** (`js/machines/mill/tools.js`):
+
+| T | Utensile | Tagliente | Passata max |
+|---|---|---|---|
+| T01 | Fresa a candela Ø10 | 22 mm | 5 mm |
+| T02 | Fresa a candela Ø6 | 13 mm | 3 mm |
+| T03 | Punta elicoidale Ø8, 118° | 40 mm | solo foratura (3008 se si muove di lato nel materiale) |
+| T04 | Fresa sferica Ø8 | 16 mm | 2 mm |
+
+Oltre il tagliente c'è il gambo e poi il portautensile, più largo: se toccano il materiale scatta 4003.

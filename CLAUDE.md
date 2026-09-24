@@ -4,7 +4,8 @@
 
 Toleranza0 è un simulatore CNC didattico per studenti. Programma ISO/Fanuc in un editor di testo → simulazione grafica dell'asportazione, riga in esecuzione evidenziata, allarmi in italiano. Vedi `README.md` per obiettivi e tabella di marcia.
 
-- Prima il **tornio 2 assi (X/Z, vista 2D su canvas)**, poi la **fresa 3 assi (X/Y/Z, Three.js)**
+- Due macchine: **tornio 2 assi** (X/Z, vista 2D su canvas) e **fresa 3 assi** (X/Y/Z, vista 3D Three.js, dalla v0.5)
+- Fresa: **Fanuc serie M**. G90/G91, F in mm/min, T prepara e M06 monta, dopo ogni M06 serve G43 H(numero utensile) prima di muovere Z (allarmi 2008/2009).
 - Tornio: **Fanuc sistema A**. X in diametro, X/Z assolute, U/W incrementali, G98/G99 per l'avanzamento. Sul tornio G90/G94 sono cicli, non assoluto/avanzamento.
 - La tabella dei codici di ogni macchina (`js/machines/*/codes.js`) è la fonte unica: parser, pannello *Blocco corrente* e `docs/codici-supportati.md` devono essere coerenti con essa. Un codice che esiste sulla macchina ma non è ancora simulato ha `status: 'planned'` e dà l'allarme 1013.
 - Utenti finali: studenti. I messaggi di allarme devono essere chiari per chi sta imparando: cosa è successo, su quale riga, come correggere.
@@ -63,6 +64,11 @@ testo -> parser -> blocchi -> interpreter (stato modale) -> movimenti -> machine
 - `simulator.follow()` restituisce `null` oppure `{ code, params }`; l'allarme lo crea chi chiama, con la riga del blocco.
 - Ogni esempio in `examples/` viene eseguito per intero dai test: se si cambia la fisica del simulatore, gli esempi devono restare senza allarmi (o con quelli attesi in `tests/examples.test.js`).
 - I dati del tornio in `machine.js` sono valori tipici, non quelli del laboratorio: vanno sostituiti quando i docenti li forniscono.
+- **Due macchine con la stessa forma.** Ogni macchina ha un adattatore (`js/machines/lathe/adapter.js`, `js/machines/mill/adapter.js`) con codici, parametri, utensili, campi del grezzo, interprete, simulatore, vista e quote da mostrare. `main.js` parla solo con l'adattatore attivo: una funzione nuova per una macchina va nel suo adattatore, non in `main.js` con un `if`.
+- `js/interpreter/interpret-mill.js` e `path-3d.js` — interprete della fresa (posizioni `{ x, y, z }`, archi nel piano XY con centro `{ x, y }`, anche elicoidali; cicli G81/G82/G83 con G98/G99). `js/machines/mill/` — `codes.js`, `machine.js` (grezzo in quote pezzo con `stockBox()`, riga `(GREZZO X.. Y.. Z..)`), `tools.js` (forma del fondo con `bottomAt()`), `stock.js` mappa delle altezze, `simulator.js` (asportazione, 3005, 3008, 4001, 4003 gambo e portautensile, 4004 morsa; `runAllMill()` per i test).
+- `js/render/mill-3d.js` — vista 3D. **È l'unico file che importa Three.js** (`import ... from 'three'`, risolto dall'importmap in `index.html` con la versione fissa 0.170.0). Si carica solo quando si sceglie la fresa: nessun altro modulo, test compresi, deve importare `three`, così il tornio e i test funzionano anche senza rete.
+- Le viste ricevono la scena solo quando la loro macchina è attiva (`getScene()` restituisce `null` altrimenti) e devono gestire quel caso.
+- `examples/index.json` indica per ogni esempio la macchina (`"machine": "lathe" | "mill"`): il menu Esempi e i test la usano.
 - `js/alarms/` — catalogo degli allarmi. Ogni allarme: `{ code, category, message, hint }`.
 - Ogni movimento porta con sé il numero di riga di origine: serve per evidenziare la riga nell'editor e per gli allarmi.
 - Parser e interpreter devono essere **funzioni pure** (niente DOM), così sono testabili.

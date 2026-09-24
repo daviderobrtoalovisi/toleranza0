@@ -9,7 +9,7 @@ Così si provano i programmi **senza occupare la macchina e senza rischiare uten
 - **Editor** di testo per il programma CNC, con numeri di riga e apertura/salvataggio di file `.nc` / `.txt`
 - **Simulazione grafica** dell'asportazione del materiale:
   - **Tornio 2 assi (X/Z)**: prima versione, vista 2D del profilo
-  - **Fresa 3 assi (X/Y/Z)**: versione successiva, vista 3D
+  - **Fresa 3 assi (X/Y/Z)**: vista 3D (Three.js), dalla v0.5
 - **Esecuzione controllata**: avvio, pausa, blocco singolo (riga per riga), reset, regolazione velocità
 - **Riga in esecuzione evidenziata** nell'editor, sincronizzata con la grafica
 - **Allarmi** con codice, riga e spiegazione in italiano pensata per gli studenti
@@ -25,20 +25,22 @@ Così si provano i programmi **senza occupare la macchina e senza rischiare uten
 
 Nella simulazione il tratteggio rosso è il rapido G00, il blu la lavorazione. L'**anteprima percorso** mostra in chiaro tutto il percorso prima di eseguirlo. Rotella del mouse = zoom, trascinamento = spostamento, doppio clic = adatta la vista. In alto a destra si leggono le quote X (in diametro) e Z, l'utensile, i giri, l'avanzamento e il tempo ciclo. Il menu **Utensili e correttori** elenca gli utensili in torretta (T01 sgrossatore, T02 troncatore, T03 finitore) con la passata massima di ciascuno. Lì si imposta anche l'usura dei correttori: se il pezzo esce Ø42,10 invece di 42,00, si mette usura X −0.1 e si riesegue, come sulla macchina.
 
+**Fresa.** Si sceglie in alto a destra, in **Macchina**. Il grezzo si imposta con lunghezza X, larghezza Y, altezza Z, sovrametallo sopra e posizione dello zero (angolo o centro), oppure con `(GREZZO X100 Y80 Z30)` nel programma. La vista è in 3D: si ruota trascinando con il tasto sinistro, si sposta con il destro, si ingrandisce con la rotella; doppio clic = adatta la vista. Dopo ogni cambio utensile (`T1 M06`) serve `G43 H1` prima di muovere Z. La vista 3D usa Three.js scaricato da Internet: senza connessione la fresa non si apre, il tornio funziona lo stesso.
+
 ## Linguaggio supportato: ISO / Fanuc
 
 Si parte dal sottoinsieme usato a scuola; l'elenco completo e aggiornato è in [`docs/codici-supportati.md`](docs/codici-supportati.md).
 
 Il tornio segue il **Fanuc sistema A**, il più diffuso nelle scuole: X in diametro, X/Z assolute e U/W incrementali.
 
-| Gruppo | Tornio (Fanuc sistema A) | Fresa (dopo) |
+| Gruppo | Tornio (Fanuc sistema A) | Fresa (Fanuc serie M) |
 |---|---|---|
-| Movimenti | G00, G01, G02, G03, G04 | come il tornio + piano G17/G18/G19 |
+| Movimenti | G00, G01, G02, G03, G04 | G00–G04, archi nel piano G17 anche elicoidali (G18/G19 più avanti) |
 | Quote | X/Z assolute, U/W incrementali, G20/G21 | G90/G91, G20/G21 |
-| Avanzamento / velocità | G98/G99, G96/G97, G50 (limite giri) | G94/G95, S, F |
+| Avanzamento / velocità | G98/G99, G96/G97, G50 (limite giri) | G94 (mm/min), S, F |
 | Origini | G54–G59, G28 | G54–G59, G28 |
-| Utensile | T0101 con correttori, G40/G41/G42 | T01 M06, G43 H, G40/G41/G42 D |
-| Cicli | G71 sgrossatura, G70 finitura; G72, G76, G90, G94 più avanti | G81, G83 (più avanti) |
+| Utensile | T0101 con correttori, G40/G41/G42 | T1 M06, G43 H / G49 (G41/G42 nella v0.6) |
+| Cicli | G71 sgrossatura, G70 finitura; G72, G76, G90, G94 più avanti | G81, G82, G83, G80, G98/G99 |
 | Funzioni M | M00, M01, M02, M03, M04, M05, M08, M09, M30 | come il tornio + M06 |
 
 ## Allarmi
@@ -64,7 +66,7 @@ js/
   interpreter/          stato modale della macchina -> lista di movimenti con tempi
   alarms/               catalogo e gestione degli allarmi
   machines/lathe/       dati del tornio, utensili, grezzo, asportazione e collisioni
-  machines/mill/        modello della fresa e asportazione 3D (fase successiva)
+  machines/mill/        dati della fresa, utensili, grezzo a mappa di altezze, morsa e collisioni
   render/               disegno su canvas (2D) e Three.js (3D)
   ui/                   editor, pulsanti, pannelli
 examples/               programmi di esempio (.nc) per le esercitazioni
@@ -142,7 +144,8 @@ Usiamo il [Semantic Versioning](https://semver.org/lang/it/): `MAGGIORE.MINORE.C
 - [x] **v0.3** — Tornio: fine corsa, profondità di passata, portautensile contro il pezzo, G96 senza G50, correttori utensile
 - [ ] Dati del tornio del laboratorio (corse, giri, rapido, utensili reali) al posto dei valori tipici
 - [x] **v0.4** — Tornio: cicli G71/G70, compensazione del raggio di punta G41/G42
-- [ ] **v0.5** — Fresa 3 assi: simulazione 3D
+- [x] **v0.5** — Fresa 3 assi: vista 3D, G90/G91, archi anche elicoidali, T/M06/G43, cicli G81/G82/G83, morsa
+- [ ] **v0.6** — Fresa: compensazione raggio G41/G42, piani G18/G19
 - [ ] **v1.0** — Versione stabile usata in classe, con esercitazioni in `examples/`
 
 ## Licenza
