@@ -67,5 +67,61 @@ export const ALARMS = {
     category: 'sintassi',
     message: '{word} non è ancora supportato dal simulatore',
     hint: 'Il codice esiste sulla macchina reale ma il simulatore non lo gestisce ancora. Vedi docs/codici-supportati.md.'
+  },
+  1014: {
+    category: 'sintassi',
+    message: '{a} e {b} nello stesso blocco',
+    hint: 'Usa la quota assoluta ({a}) oppure lo spostamento incrementale ({b}), non tutti e due.'
+  },
+
+  // 2000–2999 Parametri mancanti
+  2001: {
+    category: 'parametri',
+    message: 'Avanzamento F non programmato',
+    hint: 'Prima di un movimento di lavoro G01, G02 o G03 serve un avanzamento, per esempio F0.2 (mm/giro con G99).'
+  },
+  2002: {
+    category: 'parametri',
+    message: 'Movimento di lavoro con mandrino fermo',
+    hint: 'Avvia il mandrino con una velocità S e M03 (o M04) prima di G01, G02 o G03.'
+  },
+  2003: {
+    category: 'parametri',
+    message: 'Nessun utensile selezionato',
+    hint: 'Chiama un utensile con T, per esempio T0101, prima del primo movimento di lavoro.'
+  },
+  2004: {
+    category: 'parametri',
+    message: 'Utensile T{tool} non presente nella torretta',
+    hint: 'Gli utensili disponibili sono elencati sotto la simulazione, in «Utensili».'
+  },
+
+  // 3000–3999 Geometria e limiti
+  3001: {
+    category: 'geometria',
+    message: 'Arco impossibile: raggio R{r} troppo piccolo',
+    hint: 'Il punto iniziale e quello finale distano {chord} mm, quindi il raggio deve essere almeno {min} mm. Controlla le quote o il raggio.'
+  },
+  3002: {
+    category: 'geometria',
+    message: 'Arco incoerente: il centro I/K non è alla stessa distanza dai due punti',
+    hint: 'Il centro dista {r1} mm dal punto iniziale e {r2} mm da quello finale. Controlla I, K e il punto finale (I si scrive in raggio, non in diametro).'
+  },
+  3003: {
+    category: 'geometria',
+    message: 'Arco senza raggio né centro',
+    hint: 'Per G02 e G03 indica il raggio R oppure il centro con I e K.'
+  },
+
+  // 4000–4999 Collisioni
+  4001: {
+    category: 'collisione',
+    message: 'Collisione: rapido G00 dentro il materiale',
+    hint: 'In rapido l\'utensile non deve mai toccare il pezzo. Avvicinati con G00 fermandoti ad almeno 1–2 mm dal materiale, poi taglia con G01.'
+  },
+  4002: {
+    category: 'collisione',
+    message: 'Collisione: utensile contro il mandrino',
+    hint: 'L\'utensile ha toccato le griffe del mandrino. Controlla le quote Z negative rispetto alla sporgenza del pezzo.'
   }
 };
