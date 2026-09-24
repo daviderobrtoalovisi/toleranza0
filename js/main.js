@@ -1,7 +1,9 @@
 import { VERSION } from './version.js';
 import { CONFIG } from './config.js';
 import { LATHE } from './machines/lathe/codes.js';
-import { LATHE_PARAMS, DEFAULT_SETUP, normalizeSetup, setupFromProgram } from './machines/lathe/machine.js';
+import {
+  LATHE_PARAMS, DEFAULT_SETUP, DEFAULT_OFFSETS, normalizeSetup, normalizeOffsets, setupFromProgram
+} from './machines/lathe/machine.js';
 import { LATHE_TOOLS } from './machines/lathe/tools.js';
 import { createLatheSimulator } from './machines/lathe/simulator.js';
 import { checkProgram } from './parser/check-program.js';
@@ -11,10 +13,12 @@ import { createEditor } from './ui/editor.js';
 import { createAlarmPanel } from './ui/alarm-panel.js';
 import { createBlockPanel } from './ui/block-panel.js';
 import { createSetupPanel } from './ui/setup-panel.js';
+import { createToolPanel } from './ui/tool-panel.js';
 import { createRunController, formatTime } from './ui/run-controller.js';
 
 const DRAFT_KEY = 'toleranza0.bozza';
 const SETUP_KEY = 'toleranza0.grezzo';
+const OFFSETS_KEY = 'toleranza0.correttori';
 const STATE_LABELS = {
   ready: 'Pronto',
   running: 'In esecuzione',
@@ -33,6 +37,7 @@ let liveAlarms = [];
 let collision = false;
 let checkTimer = null;
 let setup = normalizeSetup(loadJson(SETUP_KEY) ?? DEFAULT_SETUP);
+let offsets = normalizeOffsets(loadJson(OFFSETS_KEY) ?? DEFAULT_OFFSETS);
 
 $('#version').textContent = `v${VERSION}`;
 if (!CONFIG.machines.mill) $('#machine option[value="mill"]').disabled = true;
@@ -53,11 +58,19 @@ const blockPanel = createBlockPanel($('#block'));
 
 const setupPanel = createSetupPanel({
   inputs: { diameter: $('#stock-d'), length: $('#stock-l'), faceAllowance: $('#stock-f') },
-  toolList: $('#tool-list'),
-  tools,
   onChange: applySetup
 });
 setupPanel.write(setup);
+
+const toolPanel = createToolPanel($('#tool-panel'), {
+  tools,
+  offsets,
+  onChange(next) {
+    offsets = next;
+    saveText(OFFSETS_KEY, JSON.stringify(offsets));
+    analyze(editor.getValue());
+  }
+});
 
 const editor = createEditor($('#editor'), {
   onChange(text) {
@@ -91,6 +104,7 @@ const controller = createRunController({
     const idle = state === 'ready';
     editor.setReadOnly(!idle);
     setupPanel.setDisabled(!idle);
+    toolPanel.setDisabled(!idle);
     collision = state === 'alarm' && info.alarm.category === 'collisione';
     if (state === 'alarm') {
       editor.setCurrentLine(info.alarm.line, { alarm: true });
@@ -103,7 +117,7 @@ const controller = createRunController({
 // Controllo del programma: sintassi + interprete (archi, F, S, T). Le collisioni si vedono solo eseguendo.
 function analyze(text) {
   const syntax = checkProgram(text, machine);
-  program = interpretLathe(syntax.blocks, { params, tools, blockDelete: $('#opt-block-delete').checked });
+  program = interpretLathe(syntax.blocks, { params, tools, offsets, blockDelete: $('#opt-block-delete').checked });
   const last = program.steps[program.steps.length - 1];
   const interpreterAlarm = last && last.alarm && !last.block.alarm ? last.alarm : null;
   liveAlarms = interpreterAlarm ? [...syntax.alarms, interpreterAlarm].sort((a, b) => a.line - b.line) : syntax.alarms;

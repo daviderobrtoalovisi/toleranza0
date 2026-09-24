@@ -74,7 +74,7 @@ export function createLatheView(canvas, { getScene, tools, params }) {
     if (scene.program && scene.showPreview) drawPreview(scene.program);
     drawTrail(scene.sim.trail);
     drawTool(scene.sim);
-    if (scene.collision) drawCollision(scene.sim.pos);
+    if (scene.collision) drawCollision(scene.sim.toolPos);
   }
 
   function drawGrid() {
@@ -271,8 +271,9 @@ export function createLatheView(canvas, { getScene, tools, params }) {
   }
 
   function drawTool(sim) {
-    const pz = sim.pos.z;
-    const pr = sim.pos.x / 2;
+    const pos = sim.toolPos;
+    const pz = pos.z;
+    const pr = pos.x / 2;
     ctx.lineWidth = 1;
     if (sim.tool === null) {
       // Torretta senza utensile: solo il riferimento

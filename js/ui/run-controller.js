@@ -77,8 +77,8 @@ export function createRunController({ simulator, getOptions, onBlock, onFrame, o
       while (moveIndex < current.moves.length) {
         const move = current.moves[moveIndex];
         if (move.duration <= 0) {
-          const code = simulator.follow(move, moveT, 1);
-          if (code) return raise(createAlarm(code, current.block.line));
+          const result = simulator.follow(move, moveT, 1);
+          if (result) return raise(createAlarm(result.code, current.block.line, result.params));
           moveIndex++;
           moveT = 0;
           continue;
@@ -88,11 +88,11 @@ export function createRunController({ simulator, getOptions, onBlock, onFrame, o
         const needed = (1 - moveT) * move.duration;
         const used = Math.min(needed, budget);
         const t1 = used >= needed ? 1 : moveT + used / move.duration;
-        const code = simulator.follow(move, moveT, t1);
+        const result = simulator.follow(move, moveT, t1);
         elapsed += used;
         real -= used / speed;
         hold -= used / speed;
-        if (code) return raise(createAlarm(code, current.block.line));
+        if (result) return raise(createAlarm(result.code, current.block.line, result.params));
         moveT = t1;
         if (t1 < 1) return;
         moveIndex++;

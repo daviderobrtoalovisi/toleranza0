@@ -1,9 +1,8 @@
 import { normalizeSetup } from '../machines/lathe/machine.js';
-import { escapeHtml } from './alarm-panel.js';
 
-// Campi del grezzo (Ø, sporgenza, sovrametallo) ed elenco degli utensili in torretta.
+// Campi del grezzo: Ø, sporgenza dal mandrino, sovrametallo sulla faccia.
 
-export function createSetupPanel({ inputs, toolList, tools, onChange }) {
+export function createSetupPanel({ inputs, onChange }) {
   const fields = Object.entries(inputs);
 
   for (const [, input] of fields) {
@@ -13,10 +12,6 @@ export function createSetupPanel({ inputs, toolList, tools, onChange }) {
       onChange(setup);
     });
   }
-
-  toolList.innerHTML = Object.entries(tools)
-    .map(([id, tool]) => `<li><span class="tool-id">T${String(id).padStart(2, '0')}</span> ${escapeHtml(tool.name)}</li>`)
-    .join('');
 
   function read() {
     const values = {};

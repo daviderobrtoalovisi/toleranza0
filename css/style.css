@@ -296,8 +296,20 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
   font-size: 13px;
 }
 .tools summary { cursor: pointer; color: var(--muted); }
-.tools ul { list-style: none; margin: 6px 0 2px; padding: 0; }
-.tools li { padding: 2px 0; }
+.tools[open] { max-height: calc(100% - 16px); overflow: auto; }
+.tool-table { border-collapse: collapse; margin: 6px 0 2px; }
+.tool-table th, .tool-table td { padding: 3px 6px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
+.tool-table thead th { color: var(--muted); font-weight: 600; font-size: 12px; }
+.tool-table .muted { font-size: 12px; }
+.tool-table input {
+  width: 5.2em;
+  padding: 2px 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  font-family: var(--code-font);
+}
+.tool-note { max-width: 34em; margin: 6px 0 2px; font-size: 12px; }
 .tool-id { font-family: var(--code-font); font-weight: 700; color: var(--accent); }
 
 /* Blocco corrente */
