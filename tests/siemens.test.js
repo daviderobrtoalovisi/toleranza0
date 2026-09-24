@@ -38,7 +38,7 @@ test('Siemens: CR senza = manca il valore (1002)', () => assertEqual(syntaxOf(la
 test('Siemens: indirizzo ripetuto (1008)', () => assertEqual(syntaxOf(lathe, 'G1 X10 X20'), 1008));
 test('Siemens: parentesi fuori posto (1001)', () => assertEqual(syntaxOf(lathe, '(COMMENTO FANUC)'), 1001));
 test('Siemens: i cicli non ancora simulati danno 1013', () => {
-  assertEqual(syntaxOf(mill, 'CYCLE81(10,0,2,-5)'), 1013);
+  assertEqual(syntaxOf(mill, 'POCKET3(10,0,2,-5)'), 1013);
   assertEqual(syntaxOf(lathe, 'CYCLE95("PROFILO",2,0.2,0.1)'), 1013);
 });
 test('Siemens: utensile con il nome dà 1013', () => assertEqual(syntaxOf(mill, 'T="FRESA10"'), 1013));
@@ -93,6 +93,34 @@ test('fresa Siemens: G74 Z1=0 poi si torna in quote assolute', () => {
 });
 
 // Allarmi con i testi Siemens
+// Cicli di foratura della fresa
+test('fresa Siemens: CYCLE81 da solo fora nella posizione attuale', () => {
+  assertEqual(fanucOf(mill, 'CYCLE81(10, 0, 2, -15)'), ['G99 G81 Z-15 R2', 'G80', 'G0 Z10']);
+});
+test('fresa Siemens: DPR è la profondità dal piano di riferimento', () => {
+  assertEqual(fanucOf(mill, 'CYCLE81(10, 5, 1, , 8)'), ['G99 G81 Z-3 R6', 'G80', 'G0 Z10']);
+});
+test('fresa Siemens: CYCLE82 sosta in secondi, CYCLE83 prima beccata', () => {
+  assertEqual(fanucOf(mill, 'CYCLE82(10, 0, 2, -8, , 0.5)')[0], 'G99 G82 Z-8 R2 P500');
+  assertEqual(fanucOf(mill, 'CYCLE83(10, 0, 2, -25, , -3)')[0], 'G99 G83 Z-25 R2 Q5');
+  assertEqual(fanucOf(mill, 'CYCLE83(10, 0, 2, -25, , , 3)')[0], 'G99 G83 Z-25 R2 Q5');
+});
+test('fresa Siemens: MCALL fora in ogni posizione finché non si annulla', () => {
+  assertEqual(fanucOf(mill, 'N10 MCALL CYCLE81(10, 0, 2, -5)\nX10 Y10\nX20\nMCALL\nX30'),
+    ['N10', 'G99 G81 X10 Y10 Z-5 R2', 'G80', 'G0 Z10', 'G99 G81 X20 Z-5 R2', 'G80', 'G0 Z10', 'X30']);
+});
+test('fresa Siemens: ciclo incompleto dà 2007 con la sintassi Siemens', () => {
+  const alarm = lastAlarm(mill, 'T3 M6\nS1000 M3\nG0 X10 Y10 Z10 F100\nCYCLE81(10, 0, 2)');
+  assertEqual(alarm?.code, 2007);
+  assert(alarm.hint.includes('CYCLE81(RTP'), alarm.hint);
+  assertEqual(fanucOf(mill, 'CYCLE83(10, 0, 2, -25)'), ['allarme 2007']);
+});
+test('fresa Siemens: parametro del ciclo non numerico (1003) e ciclo con altre parole (1013)', () => {
+  assertEqual(fanucOf(mill, 'CYCLE81(10, A, 2, -5)'), ['allarme 1003']);
+  assertEqual(fanucOf(mill, 'G0 X10 CYCLE81(10, 0, 2, -5)'), ['allarme 1013']);
+  assertEqual(fanucOf(mill, 'MCALL CYCLE81(10, 0, 2, -5)\nX10 Z5'), ['allarme 1013']);
+});
+
 test('allarme 2005 in Siemens: si parla di LIMS', () => {
   const alarm = lastAlarm(lathe, 'T1 D1\nG96 S180 M3');
   assertEqual(alarm?.code, 2005);
@@ -112,6 +140,8 @@ const fanucLathe = await example('tornio-01-cilindratura.nc');
 const siemensLathe = await example('tornio-siemens-01-cilindratura.nc');
 const fanucMill = await example('fresa-04-contorno-g41.nc');
 const siemensMill = await example('fresa-siemens-04-contorno-g41.nc');
+const fanucDrill = await example('fresa-03-foratura.nc');
+const siemensDrill = await example('fresa-siemens-03-foratura.nc');
 
 test('tornio: Siemens e Fanuc producono lo stesso pezzo e lo stesso tempo ciclo', () => {
   const a = runExample({ text: fanucLathe, machine: 'lathe' });
@@ -123,6 +153,14 @@ test('tornio: Siemens e Fanuc producono lo stesso pezzo e lo stesso tempo ciclo'
 test('fresa: Siemens e Fanuc producono lo stesso contorno', () => {
   const a = runExample({ text: fanucMill, machine: 'mill' });
   const b = runExample({ text: siemensMill, machine: 'mill', dialect: 'siemens' });
+  assertEqual([a.alarm, b.alarm], [null, null]);
+  let different = 0;
+  a.sim.stock.height.forEach((h, i) => { if (Math.abs(h - b.sim.stock.height[i]) > 1e-6) different++; });
+  assertEqual(different, 0);
+});
+test('fresa: Siemens e Fanuc producono gli stessi fori', () => {
+  const a = runExample({ text: fanucDrill, machine: 'mill' });
+  const b = runExample({ text: siemensDrill, machine: 'mill', dialect: 'siemens' });
   assertEqual([a.alarm, b.alarm], [null, null]);
   let different = 0;
   a.sim.stock.height.forEach((h, i) => { if (Math.abs(h - b.sim.stock.height[i]) > 1e-6) different++; });
