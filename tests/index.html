@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test Toleranza0</title>
+  <style>
+    body { font: 15px/1.5 system-ui, sans-serif; margin: 16px; background: #fff; color: #1c2329; }
+    ul { list-style: none; padding: 0; }
+    .ok { color: #1a7f37; }
+    .fail { color: #c62828; }
+    code { color: #1c2329; }
+  </style>
+</head>
+<body>
+  <div id="results">Esecuzione dei test…</div>
+  <script type="module">
+    import { run } from './runner.js';
+    import './parser.test.js';
+    import { registerExampleTests } from './examples.test.js';
+
+    const list = await (await fetch('../examples/index.json')).json();
+    const examples = await Promise.all(list.map(async ({ file }) => ({
+      file,
+      text: await (await fetch(`../examples/${file}`)).text()
+    })));
+    registerExampleTests(examples);
+    run(document.getElementById('results'));
+  </script>
+</body>
+</html>
