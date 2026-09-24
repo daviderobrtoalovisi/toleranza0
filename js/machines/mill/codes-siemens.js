@@ -29,13 +29,14 @@ export const MILL_SIEMENS = {
     CR: 'Raggio dell\'arco (CR=5; negativo per archi oltre 180°)',
     X1: 'Asse X per il ritorno al punto di riferimento G74 (X1=0)',
     Y1: 'Asse Y per il ritorno al punto di riferimento G74 (Y1=0)',
-    Z1: 'Asse Z per il ritorno al punto di riferimento G74 (Z1=0)'
+    Z1: 'Asse Z per il ritorno al punto di riferimento G74 (Z1=0)',
+    CYCLE81: 'Foratura: CYCLE81(RTP, RFP, SDIS, DP, DPR) = piano di ritorno, piano di riferimento, distanza di sicurezza, fondo assoluto, profondità',
+    CYCLE82: 'Foratura con sosta: CYCLE82(RTP, RFP, SDIS, DP, DPR, DTB) con DTB = sosta sul fondo in secondi',
+    CYCLE83: 'Foratura profonda: CYCLE83(RTP, RFP, SDIS, DP, DPR, FDEP, FDPR, …) con FDEP/FDPR = prima foratura assoluta/relativa',
+    MCALL: 'Richiamo modale: MCALL CYCLE81(...) fora in ogni posizione successiva; MCALL da solo annulla'
   },
-  keywords: [],
+  keywords: ['MCALL'],
   planned: {
-    CYCLE81: 'ciclo di foratura',
-    CYCLE82: 'ciclo di foratura con sosta',
-    CYCLE83: 'ciclo di foratura profonda',
     POCKET3: 'ciclo di tasca rettangolare',
     POCKET4: 'ciclo di tasca circolare',
     CYCLE71: 'ciclo di spianatura',

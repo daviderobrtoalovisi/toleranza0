@@ -11,7 +11,7 @@ import { isExecutable } from '../parser/check-program.js';
 //   tornio: G95 -> G99, G94 -> G98, G96 -> G96 G99, LIMS=n -> G50 Sn, T1 D1 -> T0101,
 //           X=IC(..)/G91 -> U, Z=IC(..)/G91 -> W, DIAMOF -> quote X raddoppiate, G74 X1=0 Z1=0 -> G28 U0 W0
 //   fresa:  T1 M6 -> T1 M06 + G43 H1 (con D la lunghezza è già attiva), G41/G42 -> con D dell'utensile,
-//           G74 Z1=0 -> G91 G28 Z0
+//           G74 Z1=0 -> G91 G28 Z0, CYCLE81/82/83 (anche con MCALL) -> G81/G82/G83 con G99
 //   entrambi: CR= -> R, G4 F.. -> G04 X.. (secondi), G70/G71 -> G20/G21, G500 -> nessuna origine
 
 export function translateSiemens(blocks, machine) {
@@ -134,6 +134,26 @@ function millBlock(block, state) {
   const after = [];
   if (w.N) words.push(word('N', w.N.value));
 
+  // Cicli di foratura: da soli forano nella posizione attuale; con MCALL diventano modali
+  const cycleName = CYCLES.find((name) => w[name]);
+  if (cycleName || w.MCALL) {
+    const extra = block.words.find((item) => !['N', 'MCALL', ...CYCLES].includes(item.letter));
+    if (extra) return unsupported(block, `${extra.letter} nello stesso blocco del ciclo: scrivere il ciclo in un blocco a parte`);
+  }
+  if (cycleName) {
+    const cycle = drillCycle(cycleName, w[cycleName].raw, block);
+    if (cycle.alarm) return cycle;
+    if (w.MCALL) {
+      state.mcall = cycle;
+      return { blocks: words.length ? [words] : [] };
+    }
+    return { blocks: [...(words.length ? [words] : []), ...drillBlocks(cycle, [])] };
+  }
+  if (w.MCALL) {
+    state.mcall = null; // MCALL da solo annulla il richiamo modale
+    return { blocks: words.length ? [words] : [] };
+  }
+
   for (const g of gs) {
     if (g === 90) {
       state.absolute = true;
@@ -175,6 +195,12 @@ function millBlock(block, state) {
     blocks.push([...words, word('G', 91), word('G', 28), ...axes]);
     if (state.absolute) blocks.push([word('G', 90)]);
     words.length = 0;
+  } else if (state.mcall && (w.X || w.Y)) {
+    // Posizionamento con un ciclo richiamato da MCALL: foro nella nuova posizione
+    if (w.Z) return unsupported(block, 'Z nel blocco di posizionamento con MCALL attivo');
+    if (w.F) words.push(word('F', w.F.value));
+    const xy = ['X', 'Y'].filter((a) => w[a]).map((a) => word(a, w[a].value));
+    after.unshift(...drillBlocks(state.mcall, xy));
   } else {
     for (const axis of ['X', 'Y', 'Z', 'I', 'J', 'K']) if (w[axis]) words.push(word(axis, w[axis].value));
     if (w.CR) words.push(word('R', w.CR.value));
@@ -191,4 +217,44 @@ function millBlock(block, state) {
   }
   if (words.length) blocks.push(words);
   return { blocks: [...blocks, ...after] };
+}
+
+// ---------- Cicli di foratura della fresa ----------
+
+const CYCLES = ['CYCLE81', 'CYCLE82', 'CYCLE83'];
+const FANUC_CYCLE = { CYCLE81: 81, CYCLE82: 82, CYCLE83: 83 };
+const HOW = {
+  CYCLE81: 'Si scrive CYCLE81(RTP, RFP, SDIS, DP, DPR): piano di ritorno, piano di riferimento (la faccia del pezzo), distanza di sicurezza, fondo assoluto oppure profondità dal piano di riferimento. Per esempio CYCLE81(10, 0, 2, -15).',
+  CYCLE82: 'Si scrive CYCLE82(RTP, RFP, SDIS, DP, DPR, DTB), con DTB = sosta sul fondo in secondi. Per esempio CYCLE82(10, 0, 2, -8, , 0.5).',
+  CYCLE83: 'Si scrive CYCLE83(RTP, RFP, SDIS, DP, DPR, FDEP, FDPR, …), con FDEP = fondo della prima foratura oppure FDPR = sua profondità. Per esempio CYCLE83(10, 0, 2, -25, , -5).'
+};
+
+// Parametri del ciclo Siemens -> piano di ritorno, piano R, fondo Z, beccata Q, sosta P (ms).
+// Ipotesi: G83 con scarico completo a ogni beccata (VARI=1); riduzione DAM e soste di CYCLE83 ignorate.
+function drillCycle(name, raw, block) {
+  const args = raw.slice(1, -1).split(',').map((s) => s.trim()).map((s) => (s === '' ? null : Number(s)));
+  if (args.some((a) => a !== null && !Number.isFinite(a))) {
+    return { alarm: createAlarm(1003, block.line, { letter: name, raw }) };
+  }
+  const [rtp = null, rfp = null, sdis = null, dp = null, dpr = null, a5 = null, a6 = null] = args;
+  const missing = (what) => ({ alarm: createAlarm(2007, block.line, { cycle: name, missing: what, how: HOW[name] }) });
+  if (rtp === null || rfp === null) return missing('il piano di ritorno RTP o il piano di riferimento RFP');
+  const z = dp ?? (dpr !== null ? rfp - dpr : null);
+  if (z === null) return missing('il fondo DP o la profondità DPR');
+  const cycle = { name, rtp, r: rfp + (sdis ?? 0), z };
+  if (name === 'CYCLE82') cycle.p = Math.round((a5 ?? 0) * 1000);
+  if (name === 'CYCLE83') {
+    const first = a5 ?? (a6 !== null ? rfp - a6 : null);
+    if (first === null || first >= cycle.r) return missing('la prima profondità FDEP o FDPR');
+    cycle.q = cycle.r - first;
+  }
+  return cycle;
+}
+
+// Foro Fanuc equivalente: G99 G8x (ritorno al piano R), G80 e risalita al piano di ritorno RTP
+function drillBlocks(cycle, xy) {
+  const drill = [word('G', 99), word('G', FANUC_CYCLE[cycle.name]), ...xy, word('Z', cycle.z), word('R', cycle.r)];
+  if (cycle.q) drill.push(word('Q', cycle.q));
+  if (cycle.p) drill.push(word('P', cycle.p));
+  return [drill, [word('G', 80)], [word('G', 0), word('Z', cycle.rtp)]];
 }

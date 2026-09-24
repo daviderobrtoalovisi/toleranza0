@@ -19,9 +19,9 @@ export function validateBlock(block, machine) {
     if (!(letter in machine.addresses)) return fail(1004, { letter, col });
     if (word.text !== undefined) return fail(1013, { word: `${letter}="${word.text}" (utensile con il nome)`, col });
     if (value === null) {
-      // Solo le parole chiave (DIAMON...) possono stare senza valore
-      if (!machine.keywords?.includes(letter)) return fail(1002, { letter, col });
-      continue;
+      // Senza valore possono stare solo le parole chiave (DIAMON...) e le chiamate di ciclo (CYCLE81(...))
+      if (word.call || machine.keywords?.includes(letter)) continue;
+      return fail(1002, { letter, col });
     }
     if (machine.keywords?.includes(letter)) return fail(1003, { letter, raw, col });
     if (machine.integerOnly.includes(letter) && !Number.isInteger(value)) return fail(1010, { letter, raw, col });
