@@ -95,6 +95,16 @@ export const ALARMS = {
     message: 'Utensile T{tool} non presente nella torretta',
     hint: 'Gli utensili disponibili sono elencati sotto la simulazione, in «Utensili».'
   },
+  2005: {
+    category: 'parametri',
+    message: 'G96 senza limite di giri G50',
+    hint: 'Con la velocità di taglio costante i giri aumentano quando il diametro cala e vicino al centro diventerebbero pericolosi. Prima di G96 scrivi il limite, per esempio G50 S2000.'
+  },
+  2006: {
+    category: 'parametri',
+    message: 'Correttore {offset} non presente',
+    hint: 'Le ultime due cifre di T sono il correttore: quelli disponibili sono {available}. Scrivi per esempio T0101.'
+  },
 
   // 3000–3999 Geometria e limiti
   3001: {
@@ -112,6 +122,16 @@ export const ALARMS = {
     message: 'Arco senza raggio né centro',
     hint: 'Per G02 e G03 indica il raggio R oppure il centro con I e K.'
   },
+  3004: {
+    category: 'geometria',
+    message: 'Fuori corsa: {axis}{value} oltre il limite della macchina',
+    hint: 'L\'asse {axis} può andare da {min} a {max}. Controlla il valore e il segno della quota.'
+  },
+  3005: {
+    category: 'geometria',
+    message: 'Passata troppo profonda: {depth} mm',
+    hint: 'L\'utensile T{tool} può togliere al massimo {max} mm per passata. Dividi la lavorazione in più passate.'
+  },
 
   // 4000–4999 Collisioni
   4001: {
@@ -122,6 +142,11 @@ export const ALARMS = {
   4002: {
     category: 'collisione',
     message: 'Collisione: utensile contro il mandrino',
-    hint: 'L\'utensile ha toccato le griffe del mandrino. Controlla le quote Z negative rispetto alla sporgenza del pezzo.'
+    hint: 'L\'utensile o il portautensile ha toccato le griffe del mandrino. Controlla le quote Z negative rispetto alla sporgenza del pezzo.'
+  },
+  4003: {
+    category: 'collisione',
+    message: 'Collisione: portautensile contro il pezzo',
+    hint: 'Non ha tagliato solo l\'inserto: anche il portautensile ha urtato il materiale. Succede se la gola è più profonda del troncatore o se l\'utensile scende dietro uno spallamento. Controlla il percorso o scegli un utensile adatto.'
   }
 };

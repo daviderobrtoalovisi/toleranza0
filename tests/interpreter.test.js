@@ -83,6 +83,36 @@ test('dopo un allarme l\'interprete si ferma', () => {
   const program = run(`${HEADER}G00 X20 Z0\nG02 X30 Z-5 F0.1\nG00 X100`);
   assertEqual(program.steps.at(-1).alarm.code, 3003);
 });
+// v0.3: G96, fine corsa, correttori
+test('2005 G96 con mandrino acceso senza G50', () => assertEqual(alarmOf('T0101\nG96 S180 M03'), 2005));
+test('G96 con G50 prima: nessun allarme', () => assertEqual(alarmOf('T0101\nG50 S2000\nG96 S180 M03'), null));
+test('G96 a mandrino fermo non dà allarme finché non parte', () => assertEqual(alarmOf('G96 S180'), null));
+test('3004 fuori corsa in X', () => assertEqual(alarmOf('G00 X400'), 3004));
+test('3004 fuori corsa in Z negativo', () => assertEqual(alarmOf('G00 Z-400'), 3004));
+test('3004 arco che esce dal fine corsa', () => {
+  assertEqual(alarmOf(`${HEADER}G00 X280 Z0\nG03 X280 Z-40 R20 F0.1`), 3004);
+});
+test('3004 riporta asse e limiti', () => {
+  const alarm = lastStep('G00 X400').alarm;
+  assert(alarm.message.includes('X400') && alarm.hint.includes('300'), alarm.message + ' / ' + alarm.hint);
+});
+
+const OFFSETS = { 1: { x: -0.2, z: 0.1 }, 2: { x: 0, z: 0 }, 3: { x: 0, z: 0 } };
+const runWithOffsets = (text) => interpretLathe(checkProgram(text, LATHE).blocks, {
+  params: LATHE_PARAMS, tools: LATHE_TOOLS, offsets: OFFSETS
+});
+test('2006 correttore inesistente', () => {
+  assertEqual(runWithOffsets('T0109').steps.at(-1).alarm?.code, 2006);
+});
+test('i movimenti portano l\'usura del correttore attivo', () => {
+  const move = runWithOffsets('T0101\nG00 X50 Z2').steps.at(-1).moves[0];
+  assertEqual(move.offset, { x: -0.2, z: 0.1 });
+});
+test('T0100 annulla il correttore', () => {
+  const move = runWithOffsets('T0101\nT0100\nG00 X50 Z2').steps.at(-1).moves[0];
+  assertEqual(move.offset, { x: 0, z: 0 });
+});
+
 test('M30 chiude il programma', () => {
   assertEqual(lastStep('G00 X50\nM30\nG00 X10').stop, 'end');
 });

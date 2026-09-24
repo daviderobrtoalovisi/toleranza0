@@ -11,8 +11,10 @@ import { pointAt, segmentLength } from './path.js';
 const INCH = 25.4;
 const AXES = ['X', 'Z', 'U', 'W'];
 
-export function interpretLathe(blocks, { params, tools, blockDelete = false }) {
+// offsets: tabella dei correttori { 1: { x, z }, ... }; se manca, correttori tutti a zero e nessun controllo
+export function interpretLathe(blocks, { params, tools, offsets = null, blockDelete = false }) {
   const state = {
+    offsetId: 0,
     pos: { ...params.home },
     motion: 0,
     units: 21,
@@ -34,7 +36,7 @@ export function interpretLathe(blocks, { params, tools, blockDelete = false }) {
       steps.push({ block, moves: [], alarm: block.alarm, stop: null, state: snapshot(state), time });
       break;
     }
-    const { moves, alarm, stop } = interpretBlock(block, state, params, tools);
+    const { moves, alarm, stop } = interpretBlock(block, state, params, tools, offsets);
     for (const move of moves) time += move.duration;
     steps.push({ block, moves, alarm: alarm ?? null, stop: stop ?? null, state: snapshot(state), time });
     if (alarm || stop === 'end') break;
@@ -56,7 +58,7 @@ function snapshot(state) {
   return { ...state, pos: { ...state.pos } };
 }
 
-function interpretBlock(block, state, params, tools) {
+function interpretBlock(block, state, params, tools, offsets) {
   const fail = (code, p) => ({ moves: [], alarm: createAlarm(code, block.line, p) });
   const w = {};
   const gs = [];
@@ -92,19 +94,24 @@ function interpretBlock(block, state, params, tools) {
   const moves = [];
   const from = () => ({ ...state.pos });
 
+  // Txxyy: xx utensile, yy correttore (T1 o T01 scritti a due cifre valgono come utensile e correttore uguali)
   if ('T' in w) {
     const id = w.T >= 100 ? Math.floor(w.T / 100) : w.T;
-    if (id !== 0) {
-      if (!tools[id]) return fail(2004, { tool: String(id).padStart(2, '0') });
-      if (id !== state.tool) {
-        moves.push({ type: 'tool', tool: id, from: from(), to: from(), length: 0, duration: params.toolChangeTime });
-        state.tool = id;
-      }
+    const offsetId = w.T >= 100 ? w.T % 100 : w.T;
+    if (id !== 0 && !tools[id]) return fail(2004, { tool: pad(id) });
+    if (offsetId !== 0 && offsets && !offsets[offsetId]) {
+      return fail(2006, { offset: pad(offsetId), available: Object.keys(offsets).map(pad).join(', ') });
     }
+    if (id !== 0 && id !== state.tool) {
+      moves.push({ type: 'tool', tool: id, from: from(), to: from(), length: 0, duration: params.toolChangeTime });
+      state.tool = id;
+    }
+    state.offsetId = offsetId;
   }
   if (m === 3) state.spindle = 'cw';
   if (m === 4) state.spindle = 'ccw';
   if (m === 8) state.coolant = true;
+  if (state.speedMode === 96 && state.spindle !== 'off' && state.maxRpm === null) return fail(2005);
 
   // Movimento
   if (has(4)) {
@@ -113,6 +120,8 @@ function interpretBlock(block, state, params, tools) {
   } else if (has(28)) {
     if (hasAxis) {
       const middle = target(state.pos, w, k);
+      const outside = outOfLimits([middle], params);
+      if (outside) return fail(3004, outside);
       const home = {
         x: 'X' in w || 'U' in w ? params.home.x : middle.x,
         z: 'Z' in w || 'W' in w ? params.home.z : middle.z
@@ -122,6 +131,8 @@ function interpretBlock(block, state, params, tools) {
     }
   } else if (hasAxis) {
     const to = target(state.pos, w, k);
+    const outside = outOfLimits([to], params);
+    if (outside) return fail(3004, outside);
     if (state.motion === 0) {
       moves.push(rapid(state.pos, to, params));
     } else {
@@ -136,12 +147,19 @@ function interpretBlock(block, state, params, tools) {
         const arc = arcMove(state.pos, to, w, k, state.motion === 2);
         if (arc.alarm) return fail(arc.alarm, arc.params);
         move = arc.move;
+        const points = Array.from({ length: 33 }, (_, i) => pointAt(move, i / 32));
+        const arcOutside = outOfLimits(points, params);
+        if (arcOutside) return fail(3004, arcOutside);
       }
       move.duration = feedDuration(move, state, params);
       moves.push(move);
     }
     state.pos = to;
   }
+
+  // Ogni movimento porta l'usura del correttore attivo: il simulatore la aggiunge alla quota programmata
+  const offset = offsets?.[state.offsetId] ?? { x: 0, z: 0 };
+  for (const move of moves) move.offset = { x: offset.x, z: offset.z };
 
   // Dopo il movimento
   if (m === 5) state.spindle = 'off';
@@ -154,6 +172,20 @@ function interpretBlock(block, state, params, tools) {
   if (m === 0) return { moves, stop: 'program' };
   if (m === 1) return { moves, stop: 'optional' };
   return { moves };
+}
+
+// Primo punto oltre il fine corsa, con i dati per l'allarme 3004; null se sono tutti dentro
+function outOfLimits(points, params) {
+  const { x, z } = params.limits;
+  for (const p of points) {
+    if (p.x < x.min - 1e-6 || p.x > x.max + 1e-6) return { axis: 'X', value: fmt(p.x), min: x.min, max: x.max };
+    if (p.z < z.min - 1e-6 || p.z > z.max + 1e-6) return { axis: 'Z', value: fmt(p.z), min: z.min, max: z.max };
+  }
+  return null;
+}
+
+function pad(value) {
+  return String(value).padStart(2, '0');
 }
 
 function target(pos, w, k) {

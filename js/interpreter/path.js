@@ -15,6 +15,23 @@ export function pointAt(move, t) {
   };
 }
 
+// Direzione del movimento nel punto t, come versore { z, r } (r = raggio)
+export function directionAt(move, t) {
+  let dz;
+  let dr;
+  if (move.type === 'arc') {
+    const a = move.a0 + move.sweep * t;
+    const sign = Math.sign(move.sweep);
+    dz = -Math.sin(a) * sign;
+    dr = Math.cos(a) * sign;
+  } else {
+    dz = move.to.z - move.from.z;
+    dr = (move.to.x - move.from.x) / 2;
+  }
+  const length = Math.hypot(dz, dr) || 1;
+  return { z: dz / length, r: dr / length };
+}
+
 // Lunghezza reale del tratto (in raggio, non in diametro)
 export function segmentLength(from, to) {
   return Math.hypot(to.z - from.z, (to.x - from.x) / 2);
