@@ -25,7 +25,10 @@ function simulate(text, setup = SETUP) {
 
 // Sintassi e codici
 test('fresa: Y e H sono indirizzi validi', () => assertEqual(checkProgram('G43 H1 Z50\nG00 X10 Y20', MILL).alarms, []));
-test('fresa: G18 non ancora supportato', () => assertEqual(checkProgram('G18', MILL).alarms[0]?.code, 1013));
+test('fresa: G18 e G19 supportati, G95 non ancora', () => {
+  assertEqual(checkProgram('G18\nG19\nG17', MILL).alarms, []);
+  assertEqual(checkProgram('G95', MILL).alarms[0]?.code, 1013);
+});
 test('fresa: G98 e G81 insieme sono ammessi (gruppi diversi)', () => {
   assertEqual(checkProgram('G98 G81 X10 Y10 Z-5 R2 F100', MILL).alarms, []);
 });
@@ -158,4 +161,69 @@ test('4004 utensile contro la ganascia della morsa', () => {
 });
 test('passare sopra le ganasce a Z0 non urta', () => {
   assertEqual(simulate(`${HEAD}G00 X-8 Y2 Z0\nG01 X108 F600`).alarm, null);
+});
+
+// v0.6: piani G18/G19 e compensazione del raggio fresa G41/G42
+test('G18 G02: arco nel piano ZX, verso il basso (visto da +Y)', () => {
+  const move = last(`${HEAD}G00 X20 Y40 Z0\nG18 G02 X40 Z0 R10 F300`).moves[0];
+  assertEqual(move.axes, ['z', 'x', 'y']);
+  assert(near(move.center.x, 30) && near(move.center.z, 0), JSON.stringify(move.center));
+  assert(near(pointAt3(move, 0.5).z, -10), `z a metà ${pointAt3(move, 0.5).z}`);
+  assert(near(pointAt3(move, 0.5).y, 40), 'Y resta costante');
+});
+test('G18 G03 con I e K: verso l\'alto', () => {
+  const move = last(`${HEAD}G00 X20 Y40 Z0\nG18 G03 X40 Z0 I10 K0 F300`).moves[0];
+  assert(near(pointAt3(move, 0.5).z, 10), `z a metà ${pointAt3(move, 0.5).z}`);
+});
+test('G19: arco nel piano YZ con J e K', () => {
+  const move = last(`${HEAD}G00 X50 Y20 Z0\nG19 G02 Y40 Z0 J10 K0 F300`).moves[0];
+  assertEqual(move.axes, ['y', 'z', 'x']);
+  assert(near(move.center.y, 30) && near(move.center.z, 0) && near(move.length, Math.PI * 10), JSON.stringify(move));
+  assert(near(pointAt3(move, 0.5).x, 50));
+});
+test('2010 G41 con D diverso dall\'utensile', () => assertEqual(alarmOf(`${HEAD}G41 D2 X0 Y0`), 2010));
+test('2010 G42 senza D', () => assertEqual(alarmOf(`${HEAD}G42 X0 Y0`), 2010));
+test('1013 G41 fuori dal piano G17', () => assertEqual(alarmOf(`${HEAD}G18\nG41 D1 X0 Y0`), 1013));
+test('1013 ciclo di foratura con G41 attiva', () => {
+  assertEqual(alarmOf(`${HEAD}G00 X-10 Y10 Z5\nG41 D1 G01 X0 F300\nG81 X20 Y20 Z-5 R2`), 1013);
+});
+
+const COMP = `${HEAD}G00 X-10 Y10 Z5\nG01 Z-2 F200\nG41 D1 X0 Y10 F400\n`;
+const compMoves = (text) => run(text).steps.flatMap((s) => s.moves.map((m) => ({ line: s.block.source, m })));
+test('G41 sposta il centro della fresa del raggio a sinistra', () => {
+  const moves = compMoves(`${COMP}X40\nG40 X60`);
+  const cut = moves.find((e) => e.line === 'X40').m;
+  assert(near(cut.from.y, 15) && near(cut.to.y, 15), `Y ${cut.from.y} -> ${cut.to.y}`);
+});
+test('G42 sposta a destra', () => {
+  const moves = compMoves(`${COMP.replace('G41', 'G42')}X40\nG40 X60`);
+  const cut = moves.find((e) => e.line === 'X40').m;
+  assert(near(cut.from.y, 5), `Y ${cut.from.y}`);
+});
+test('spigolo interno: i tratti si fermano dove si incontrano', () => {
+  const moves = compMoves(`${COMP}X40\nY50\nG40 X60`);
+  const first = moves.find((e) => e.line === 'X40').m;
+  const second = moves.find((e) => e.line === 'Y50').m;
+  assert(near(first.to.x, 35) && near(first.to.y, 15), JSON.stringify(first.to));
+  assert(near(second.from.x, 35) && near(second.from.y, 15), JSON.stringify(second.from));
+});
+test('spigolo esterno: arco di raggio 5 attorno allo spigolo', () => {
+  const moves = compMoves(`${COMP}X40\nY-20\nG40 X60`).filter((e) => e.line === 'X40').map((e) => e.m);
+  const arc = moves.find((m) => m.type === 'arc');
+  assert(arc && near(arc.radius, 5) && near(arc.center.x, 40) && near(arc.center.y, 10), JSON.stringify(arc));
+});
+test('un movimento solo in Z resta nel punto compensato', () => {
+  const moves = compMoves(`${COMP}G01 Z-3\nX40\nG40 X60`);
+  const down = moves.find((e) => e.line === 'G01 Z-3').m;
+  assert(near(down.from.x, 0) && near(down.from.y, 15) && near(down.to.z, -3), JSON.stringify(down));
+});
+test('dopo G40 la fresa torna sulla quota programmata', () => {
+  const moves = compMoves(`${COMP}X40\nG40 X60`);
+  assertEqual(moves.at(-1).m.to, { x: 60, y: 10, z: -2 });
+});
+test('contorno con G41: il bordo del pezzo è sul profilo', () => {
+  const { sim, alarm } = simulate(`${COMP}X40\nG40 X60`);
+  assertEqual(alarm, null);
+  assert(sim.stock.heightAt(20, 12) < 0, 'tagliato sopra il profilo');
+  assert(near(sim.stock.heightAt(20, 8), 1), 'intatto sotto il profilo');
 });
