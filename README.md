@@ -23,6 +23,8 @@ Così si provano i programmi **senza occupare la macchina e senza rischiare uten
 4. Premere **Avvia** oppure **Blocco singolo**; con **Velocità** si sceglie quante volte più veloce della macchina vera (da ×1 a ×500)
 5. Se compare un allarme: leggere il messaggio, correggere la riga indicata e premere **Reset**
 
+Il pulsante **Guida** (o F1) spiega come si usa il simulatore ed elenca codici G/M e allarmi della macchina scelta. Scorciatoie: **Ctrl+Invio** avvia, **Esc** mette in pausa, **Ctrl+S** salva.
+
 Nella simulazione il tratteggio rosso è il rapido G00, il blu la lavorazione. L'**anteprima percorso** mostra in chiaro tutto il percorso prima di eseguirlo. Rotella del mouse = zoom, trascinamento = spostamento, doppio clic = adatta la vista. In alto a destra si leggono le quote X (in diametro) e Z, l'utensile, i giri, l'avanzamento e il tempo ciclo. Il menu **Utensili e correttori** elenca gli utensili in torretta (T01 sgrossatore, T02 troncatore, T03 finitore) con la passata massima di ciascuno. Lì si imposta anche l'usura dei correttori: se il pezzo esce Ø42,10 invece di 42,00, si mette usura X −0.1 e si riesegue, come sulla macchina.
 
 **Fresa.** Si sceglie in alto a destra, in **Macchina**. Il grezzo si imposta con lunghezza X, larghezza Y, altezza Z, sovrametallo sopra e posizione dello zero (angolo o centro), oppure con `(GREZZO X100 Y80 Z30)` nel programma. La vista è in 3D: si ruota trascinando con il tasto sinistro, si sposta con il destro, si ingrandisce con la rotella; doppio clic = adatta la vista. Dopo ogni cambio utensile (`T1 M06`) serve `G43 H1` prima di muovere Z. La vista 3D usa Three.js scaricato da Internet: senza connessione la fresa non si apre, il tornio funziona lo stesso.
@@ -72,8 +74,14 @@ js/
 examples/               programmi di esempio (.nc) per le esercitazioni
 tests/                  test nel browser (aprire tests/index.html)
 tools/serve.py          server locale in Python che imita GitHub Pages
-docs/                   codici supportati, allarmi, note didattiche
+docs/                   codici supportati, allarmi, esercitazioni, configurazione delle macchine
 ```
+
+## Per i docenti
+
+- [Esercitazioni](docs/esercitazioni.md): esercizi "trova l'errore" con soluzioni e tracce da disegno
+- [Configurare le macchine del laboratorio](docs/configurare-le-macchine.md): dove inserire corse, giri, mandrino, morsa e utensili reali
+- [Codici supportati](docs/codici-supportati.md) e [catalogo allarmi](docs/allarmi.md)
 
 ## Sviluppo (docenti)
 
@@ -146,7 +154,10 @@ Usiamo il [Semantic Versioning](https://semver.org/lang/it/): `MAGGIORE.MINORE.C
 - [x] **v0.4** — Tornio: cicli G71/G70, compensazione del raggio di punta G41/G42
 - [x] **v0.5** — Fresa 3 assi: vista 3D, G90/G91, archi anche elicoidali, T/M06/G43, cicli G81/G82/G83, morsa
 - [x] **v0.6** — Fresa: compensazione raggio G41/G42 con D, piani G18/G19
-- [ ] **v1.0** — Versione stabile usata in classe, con esercitazioni in `examples/`
+- [x] **v1.0** — Versione stabile per la classe: guida nella pagina, esercitazioni con guida per il docente, test di robustezza
+- [ ] Dati reali delle macchine del laboratorio (vedi [`docs/configurare-le-macchine.md`](docs/configurare-le-macchine.md))
+
+Le novità di ogni versione sono in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Licenza
 

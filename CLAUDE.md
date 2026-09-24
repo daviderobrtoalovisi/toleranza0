@@ -70,6 +70,10 @@ testo -> parser -> blocchi -> interpreter (stato modale) -> movimenti -> machine
 - `js/render/mill-3d.js` — vista 3D. **È l'unico file che importa Three.js** (`import ... from 'three'`, risolto dall'importmap in `index.html` con la versione fissa 0.170.0). Si carica solo quando si sceglie la fresa: nessun altro modulo, test compresi, deve importare `three`, così il tornio e i test funzionano anche senza rete.
 - Le viste ricevono la scena solo quando la loro macchina è attiva (`getScene()` restituisce `null` altrimenti) e devono gestire quel caso.
 - `examples/index.json` indica per ogni esempio la macchina (`"machine": "lathe" | "mill"`): il menu Esempi e i test la usano.
+- `js/ui/help-dialog.js` — guida nella pagina (F1): codici e allarmi sono **generati** dalle tabelle della macchina attiva e dal catalogo. Non scrivere elenchi di codici a mano nella guida; i testi fissi (uso, scorciatoie) stanno solo lì.
+- Tutti i dati delle macchine (anche mandrino `chuck` e morsa `vise`) stanno in `js/machines/*/machine.js` e `tools.js`; i simulatori non devono avere misure scritte dentro. Guida per i docenti: `docs/configurare-le-macchine.md`.
+- Esercizi: ogni `examples/esercizio-*.nc` deve avere il suo allarme atteso (codice e riga) in `tests/examples.test.js`, altrimenti i test falliscono; descrizione e soluzione in `docs/esercitazioni.md`.
+- `tests/robustness.test.js`: programmi strani e casuali non devono mai causare errori JavaScript. Se si aggiunge un codice o un ramo nuovo all'interprete, aggiungere un caso strano che lo attraversi.
 - `js/alarms/` — catalogo degli allarmi. Ogni allarme: `{ code, category, message, hint }`.
 - Ogni movimento porta con sé il numero di riga di origine: serve per evidenziare la riga nell'editor e per gli allarmi.
 - Parser e interpreter devono essere **funzioni pure** (niente DOM), così sono testabili.
