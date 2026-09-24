@@ -3,8 +3,10 @@ import { validateBlock } from './validate-block.js';
 
 // Analizza tutto il programma per la macchina indicata.
 // Restituisce i blocchi (uno per riga) e l'elenco degli allarmi di sintassi.
+// La tabella dei codici può indicare un lettore diverso (per esempio Siemens) con parseProgram.
 export function checkProgram(text, machine) {
-  const blocks = parseProgram(text).map((block) => validateBlock(block, machine));
+  const parse = machine.parseProgram ?? parseProgram;
+  const blocks = parse(text).map((block) => validateBlock(block, machine));
   const alarms = blocks.filter((block) => block.alarm).map((block) => block.alarm);
   return { blocks, alarms };
 }

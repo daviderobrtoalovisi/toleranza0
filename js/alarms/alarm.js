@@ -10,7 +10,8 @@ export function createAlarm(code, line, params = {}) {
     col: params.col ?? null,
     category: entry.category,
     message: fill(entry.message, params),
-    hint: fill(entry.hint, params)
+    hint: fill(entry.hint, params),
+    params // per riscrivere i testi in un altro linguaggio (siemens-hints.js)
   };
 }
 
