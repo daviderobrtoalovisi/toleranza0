@@ -1,7 +1,8 @@
 import { VERSION } from './version.js';
 import { CONFIG } from './config.js';
-import { latheAdapter } from './machines/lathe/adapter.js';
-import { millAdapter } from './machines/mill/adapter.js';
+import { createLatheAdapter } from './machines/lathe/adapter.js';
+import { createMillAdapter } from './machines/mill/adapter.js';
+import { modelsFor, findModel, modelSheet, ISO_SUPPORT } from './machines/catalog.js';
 import { checkProgram } from './parser/check-program.js';
 import { createEditor } from './ui/editor.js';
 import { createAlarmPanel, escapeHtml } from './ui/alarm-panel.js';
@@ -14,8 +15,9 @@ import { createHelpDialog } from './ui/help-dialog.js';
 // Collega interfaccia, interprete, simulatore e vista della macchina scelta (tornio o fresa).
 // Tutto ciò che cambia tra le macchine sta negli adattatori (js/machines/*/adapter.js).
 
-const MACHINES = { lathe: latheAdapter, mill: millAdapter };
+const MACHINES = { lathe: createLatheAdapter, mill: createMillAdapter };
 const MACHINE_KEY = 'toleranza0.macchina';
+const modelKey = (id) => `toleranza0.modello.${id}`;
 const OFFSETS_KEY = 'toleranza0.correttori';
 // Le chiavi senza macchina sono quelle delle versioni fino alla 0.4, che avevano solo il tornio
 const draftKey = (id) => `toleranza0.bozza.${id}`;
@@ -146,23 +148,29 @@ function loadProgram(text) {
   editor.setValue(text);
 }
 
-// Cambio macchina: nuovo simulatore, campi del grezzo, utensili, esempi e bozza della macchina scelta
-async function selectMachine(id, { initial = false } = {}) {
-  const next = MACHINES[id] && CONFIG.machines[id] ? MACHINES[id] : latheAdapter;
-  if (adapter && next === adapter) return;
+// Cambio macchina o modello: nuovo simulatore con i dati del modello, campi del grezzo, utensili.
+// Cambiando tipo di macchina si passa anche a esempi e bozza di quella macchina; cambiando solo il
+// modello il programma nell'editor resta com'è.
+async function selectMachine(id, { initial = false, modelId = null } = {}) {
+  const type = MACHINES[id] && CONFIG.machines[id] ? id : 'lathe';
+  const model = findModel(type, modelId ?? loadText(modelKey(type)));
+  if (adapter && adapter.id === type && adapter.model.id === model.id) return;
   if (!initial && controller.state !== 'ready') {
     $('#machine').value = adapter.id;
+    fillModels();
     return;
   }
+  const sameType = adapter?.id === type;
+  const next = MACHINES[type](model);
   const previous = { adapter, simulator, setup, offsets, program };
-  if (adapter) saveText(draftKey(adapter.id), editor.getValue());
+  if (adapter && !sameType) saveText(draftKey(adapter.id), editor.getValue());
 
   adapter = next;
   simulator = next.createSimulator();
-  setup = next.normalizeSetup(loadJson(setupKey(next.id)) ?? (next.id === 'lathe' ? loadJson(LEGACY.setup) : null) ?? next.defaultSetup);
+  const saved = loadJson(setupKey(next.id)) ?? (next.id === 'lathe' ? loadJson(LEGACY.setup) : null);
+  setup = next.normalizeSetup(sameType ? setup : saved ?? next.defaultSetup);
   simulator.reset(setup);
   offsets = next.offsets ? next.offsets.normalize(loadJson(OFFSETS_KEY) ?? next.offsets.defaults) : null;
-  program = null;
   for (const [key, canvas] of Object.entries(canvases)) canvas.hidden = key !== next.id;
 
   try {
@@ -172,6 +180,7 @@ async function selectMachine(id, { initial = false } = {}) {
     ({ adapter, simulator, setup, offsets, program } = previous);
     for (const [key, canvas] of Object.entries(canvases)) canvas.hidden = key !== (adapter?.id ?? 'lathe');
     $('#machine').value = adapter?.id ?? 'lathe';
+    fillModels();
     $('#status-message').textContent = 'Impossibile caricare la vista 3D della fresa: serve la connessione a Internet (Three.js).';
     if (!adapter) await selectMachine('lathe', { initial: true });
     return;
@@ -179,24 +188,57 @@ async function selectMachine(id, { initial = false } = {}) {
   view = views[next.id];
   $('#machine').value = next.id;
   saveText(MACHINE_KEY, next.id);
+  saveText(modelKey(next.id), model.id);
+  fillModels();
+  showModelInfo();
 
   setupPanel.build(next.setupFields, next.normalizeSetup, setup);
   toolPanel.build(next, offsets);
   $('#tools-title').textContent = next.offsets ? 'Utensili e correttori' : 'Utensili';
-  fillExamples();
 
   controller.reset();
   collision = false;
   blockPanel.show(null);
   editor.setCurrentLine(null);
-  $('#file-name').value = 'programma';
-  const draft = loadText(draftKey(next.id)) ?? (next.id === 'lathe' ? loadText(LEGACY.draft) : null);
-  const first = examples.find((e) => e.machine === next.id);
-  if (draft && draft.trim()) editor.setValue(draft);
-  else if (first) await loadExample(first.file);
-  else editor.setValue(next.newProgram);
+  if (!sameType) {
+    fillExamples();
+    $('#file-name').value = 'programma';
+    const draft = loadText(draftKey(next.id)) ?? (next.id === 'lathe' ? loadText(LEGACY.draft) : null);
+    const first = examples.find((e) => e.machine === next.id);
+    if (draft && draft.trim()) editor.setValue(draft);
+    else if (first) await loadExample(first.file);
+    else editor.setValue(next.newProgram);
+  }
   analyze(editor.getValue());
   view.fit();
+}
+
+// Menu dei modelli della macchina attiva, raggruppati per produttore
+function fillModels() {
+  const select = $('#model');
+  const groups = new Map();
+  for (const model of modelsFor(adapter?.id ?? 'lathe')) {
+    const key = model.generic ? 'Didattica' : model.maker;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(model);
+  }
+  select.innerHTML = [...groups].map(([maker, list]) => `<optgroup label="${escapeHtml(maker)}">${
+    list.map((m) => `<option value="${escapeHtml(m.id)}">${escapeHtml(m.generic ? m.model : `${m.maker} ${m.model}`)}</option>`).join('')
+  }</optgroup>`).join('');
+  if (adapter) select.value = adapter.model.id;
+}
+
+// Scheda della macchina scelta: dati dal catalogo, fonte e compatibilità con la programmazione ISO
+function showModelInfo() {
+  const model = adapter.model;
+  const rows = modelSheet(model).map(([label, value]) => `<tr><th scope="row">${escapeHtml(label)}</th><td>${escapeHtml(String(value))}</td></tr>`).join('');
+  const iso = model.generic ? '' : `<p class="model-iso model-iso-${escapeHtml(model.iso)}">${escapeHtml(ISO_SUPPORT[model.iso] ?? '')}</p>`;
+  const source = model.sourceUrl
+    ? `<p class="muted">Dati indicativi dal catalogo del produttore (${escapeHtml(model.checked ?? '')}): verificare sulla macchina vera. <a href="${escapeHtml(model.sourceUrl)}" target="_blank" rel="noopener">Fonte</a></p>`
+    : '';
+  const note = model.note ? `<p class="muted">${escapeHtml(model.note)}</p>` : '';
+  $('#model-title').textContent = model.generic ? 'Macchina' : `${model.maker} ${model.model}`;
+  $('#model-info').innerHTML = `<table class="tool-table"><tbody>${rows}</tbody></table>${iso}${note}${source}`;
 }
 
 function updateButtons(state) {
@@ -204,7 +246,7 @@ function updateButtons(state) {
   $('#btn-pause').disabled = state !== 'running';
   $('#btn-step').disabled = state === 'running' || state === 'alarm' || state === 'finished';
   $('#btn-reset').disabled = state === 'ready';
-  for (const id of ['#btn-new', '#btn-open', '#examples', '#opt-block-delete', '#machine']) $(id).disabled = state !== 'ready';
+  for (const id of ['#btn-new', '#btn-open', '#examples', '#opt-block-delete', '#machine', '#model']) $(id).disabled = state !== 'ready';
 }
 
 function updateDro() {
@@ -246,6 +288,7 @@ $('#btn-fit').addEventListener('click', () => view?.fit());
 $('#opt-preview').addEventListener('change', () => view?.draw());
 $('#opt-block-delete').addEventListener('change', () => analyze(editor.getValue()));
 $('#machine').addEventListener('change', (event) => selectMachine(event.target.value));
+$('#model').addEventListener('change', (event) => selectMachine(adapter.id, { modelId: event.target.value }));
 $('#btn-help').addEventListener('click', () => help.open());
 
 // Scorciatoie da tastiera (elencate anche nella guida)
@@ -327,10 +370,14 @@ $('#examples').addEventListener('change', async (event) => {
 });
 
 async function loadExample(file) {
+  // Se nel frattempo si cambia macchina, l'esempio non va caricato (finirebbe nella bozza dell'altra macchina)
+  const machine = adapter?.id;
   try {
     const response = await fetch(`examples/${file}`);
     if (!response.ok) throw new Error(response.statusText);
-    loadProgram(await response.text());
+    const text = await response.text();
+    if (adapter?.id !== machine) return;
+    loadProgram(text);
     $('#file-name').value = file.replace(/\.[^.]+$/, '');
   } catch {
     $('#status-message').textContent = `Impossibile caricare l'esempio ${file}.`;

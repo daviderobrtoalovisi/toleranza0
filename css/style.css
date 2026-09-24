@@ -426,3 +426,14 @@ body[data-state="alarm"] .status-message { color: var(--error); font-weight: 600
 .help-table th { white-space: nowrap; width: 1%; color: var(--accent); }
 .help-table .is-planned { opacity: 0.65; }
 .help-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0 24px; }
+
+/* Scheda della macchina scelta dal database */
+#model { max-width: min(18em, 100%); }
+.tools.machine-info { top: auto; bottom: 8px; }
+.machine-info[open] { max-width: min(34em, calc(100% - 16px)); }
+.machine-info .tool-table th { white-space: nowrap; color: var(--muted); font-weight: 600; }
+.model-iso { margin: 6px 0; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+.model-iso-yes { background: color-mix(in srgb, var(--start) 15%, transparent); }
+.model-iso-mode { background: var(--current-bg); }
+.model-iso-no { background: var(--error-bg); }
+.machine-info a { color: var(--accent); }
