@@ -2,6 +2,7 @@ import { createAlarm } from '../alarms/alarm.js';
 import { isExecutable } from '../parser/check-program.js';
 import { pointAt3, length3 } from './path-3d.js';
 import { INCH, positiveAngle, fmt } from './lathe-geometry.js';
+import { compensateCutterRadius } from './cutter-compensation.js';
 
 // Interprete della fresatrice 3 assi (Fanuc serie M): blocchi -> passi con movimenti, stato modale e tempi.
 // Stessa struttura dell'interprete del tornio: passi { block, moves, alarm, stop, state, time },
@@ -11,8 +12,17 @@ import { INCH, positiveAngle, fmt } from './lathe-geometry.js';
 // Regole didattiche (come in officina a scuola):
 // - T prepara l'utensile, M06 lo monta; dopo M06 serve G43 H(numero utensile) prima di muovere Z.
 // - Cicli di foratura G81/G82/G83 modali fino a G80 o a un G00–G03.
+// - G41/G42 D(numero utensile): compensazione del raggio fresa nel piano G17, applicata alla fine
+//   da cutter-compensation.js come sul tornio.
 
 const AXES = ['X', 'Y', 'Z'];
+
+// Piani degli archi: assi del piano, asse perpendicolare e lettere del centro
+const PLANES = {
+  17: { axes: ['x', 'y', 'z'], center: ['I', 'J'] },
+  18: { axes: ['z', 'x', 'y'], center: ['K', 'I'] },
+  19: { axes: ['y', 'z', 'x'], center: ['J', 'K'] }
+};
 
 export function interpretMill(blocks, { params, tools, blockDelete = false }) {
   const state = {
@@ -29,7 +39,9 @@ export function interpretMill(blocks, { params, tools, blockDelete = false }) {
     lengthComp: null,
     cycle: null,
     cycleReturn: 98,
-    initialZ: null
+    initialZ: null,
+    plane: 17,
+    comp: null
   };
   const steps = [];
   let time = 0;
@@ -43,6 +55,12 @@ export function interpretMill(blocks, { params, tools, blockDelete = false }) {
     for (const move of moves) time += move.duration;
     steps.push({ block, moves, alarm: alarm ?? null, stop: stop ?? null, state: snapshot(state), time });
     if (alarm || stop === 'end') break;
+  }
+  compensateCutterRadius(steps);
+  time = 0;
+  for (const step of steps) {
+    for (const move of step.moves) time += move.duration;
+    step.time = time;
   }
   return { steps, totalTime: time };
 }
@@ -75,6 +93,8 @@ function interpretBlock(block, state, params, tools) {
     else if (g === 98 || g === 99) state.cycleReturn = g;
     else if (g === 49) state.lengthComp = null;
     else if (g === 80) state.cycle = null;
+    else if (g === 17 || g === 18 || g === 19) state.plane = g;
+    else if (g === 40) state.comp = null;
     else if (g <= 3) {
       state.motion = g;
       state.cycle = null; // G00–G03 annullano il ciclo di foratura
@@ -107,6 +127,12 @@ function interpretBlock(block, state, params, tools) {
     if (!('H' in w) || w.H !== state.tool) return fail(2009, { h: 'H' in w ? w.H : '', tool: state.tool });
     state.lengthComp = { h: w.H };
   }
+  if (has(41) || has(42)) {
+    if (state.tool === null) return fail(2003);
+    if (!('D' in w) || w.D !== state.tool) return fail(2010, { d: 'D' in w ? w.D : '', tool: state.tool });
+    if (state.plane !== 17) return fail(1013, { word: 'G41/G42 fuori dal piano G17' });
+    state.comp = has(41) ? 'left' : 'right';
+  }
   if (m === 3) state.spindle = 'cw';
   if (m === 4) state.spindle = 'ccw';
   if (m === 8) state.coolant = true;
@@ -120,7 +146,9 @@ function interpretBlock(block, state, params, tools) {
   const checkZ = (fromZ, toZ) =>
     state.tool !== null && !state.lengthComp && Math.abs(toZ - fromZ) > 1e-9 ? fail(2008) : null;
 
-  if (cycleCode !== undefined || (state.cycle && ('X' in w || 'Y' in w))) {
+  const isCycle = cycleCode !== undefined || (state.cycle && ('X' in w || 'Y' in w));
+  if (isCycle && state.comp) return fail(1013, { word: 'ciclo di foratura con G41/G42 attiva' });
+  if (isCycle) {
     // Ciclo di foratura: definizione (G81/G82/G83) e/o foro nella posizione X/Y del blocco
     const result = drillCycle(block, w, k, cycleCode, state, params, fail, checkCutting, checkZ);
     if (result.alarm) return result;
@@ -153,7 +181,7 @@ function interpretBlock(block, state, params, tools) {
       if (state.motion === 1) {
         move = { type: 'line', from: from(), to, length: length3(state.pos, to) };
       } else {
-        const arc = arcXY(state.pos, to, w, k, state.motion === 2);
+        const arc = arcInPlane(state.pos, to, w, k, state.motion === 2, PLANES[state.plane]);
         if (arc.alarm) return fail(arc.alarm, arc.params);
         move = arc.move;
         const points = Array.from({ length: 33 }, (_, i) => pointAt3(move, i / 32));
@@ -164,6 +192,16 @@ function interpretBlock(block, state, params, tools) {
       moves.push(move);
     }
     state.pos = to;
+  }
+
+  // Dati per la compensazione del raggio fresa (non per i cicli e i ritorni G28)
+  const radius = state.tool !== null ? tools[state.tool].diameter / 2 : 0;
+  const compensable = !isCycle && !has(28);
+  for (const move of moves) {
+    if (move.type === 'rapid' || move.type === 'line' || move.type === 'arc') {
+      move.comp = compensable ? state.comp : null;
+      move.rn = radius;
+    }
   }
 
   if (m === 5) state.spindle = 'off';
@@ -259,42 +297,44 @@ function rapid(from, to, params) {
   return { type: 'rapid', from: { ...from }, to: { ...to }, length, duration: (length / params.rapidRate) * 60 };
 }
 
-// Arco nel piano XY visto dall'alto: G02 orario, G03 antiorario. Z cambia in modo lineare (elica).
-function arcXY(fromPos, to, w, k, clockwise) {
-  const s = fromPos;
-  const e = to;
+// Arco nel piano scelto (G17 XY, G18 ZX, G19 YZ), guardando dal lato positivo dell'asse
+// perpendicolare: G02 orario, G03 antiorario. Lungo l'asse perpendicolare l'arco può essere un'elica.
+function arcInPlane(s, e, w, k, clockwise, plane) {
+  const [A, B, C] = plane.axes;
+  const [ci, cj] = plane.center;
   let center;
   let radius;
   if ('R' in w) {
     const R = w.R * k;
-    const dx = e.x - s.x;
-    const dy = e.y - s.y;
-    const chord = Math.hypot(dx, dy);
+    const da = e[A] - s[A];
+    const db = e[B] - s[B];
+    const chord = Math.hypot(da, db);
     if (chord < 1e-9 || Math.abs(R) < chord / 2 - 1e-6) {
       return { alarm: 3001, params: { r: fmt(R), chord: fmt(chord), min: fmt(chord / 2) } };
     }
     const h = Math.sqrt(Math.max(0, R * R - (chord * chord) / 4));
     let side = clockwise ? -1 : 1;
     if (R < 0) side = -side;
-    center = { x: (s.x + e.x) / 2 + (side * h * -dy) / chord, y: (s.y + e.y) / 2 + (side * h * dx) / chord };
+    center = { [A]: (s[A] + e[A]) / 2 + (side * h * -db) / chord, [B]: (s[B] + e[B]) / 2 + (side * h * da) / chord };
     radius = Math.abs(R);
-  } else if ('I' in w || 'J' in w) {
-    center = { x: s.x + (w.I ?? 0) * k, y: s.y + (w.J ?? 0) * k };
-    const r1 = Math.hypot(s.x - center.x, s.y - center.y);
-    const r2 = Math.hypot(e.x - center.x, e.y - center.y);
+  } else if (ci in w || cj in w) {
+    center = { [A]: s[A] + (w[ci] ?? 0) * k, [B]: s[B] + (w[cj] ?? 0) * k };
+    const r1 = Math.hypot(s[A] - center[A], s[B] - center[B]);
+    const r2 = Math.hypot(e[A] - center[A], e[B] - center[B]);
     if (Math.abs(r1 - r2) > 0.02) return { alarm: 3002, params: { r1: fmt(r1), r2: fmt(r2) } };
     radius = r1;
   } else {
     return { alarm: 3003 };
   }
-  const a0 = Math.atan2(s.y - center.y, s.x - center.x);
-  const a1 = Math.atan2(e.y - center.y, e.x - center.x);
+  const a0 = Math.atan2(s[B] - center[B], s[A] - center[A]);
+  const a1 = Math.atan2(e[B] - center[B], e[A] - center[A]);
   let sweep = clockwise ? -positiveAngle(a0 - a1) : positiveAngle(a1 - a0);
   if (Math.abs(sweep) < 1e-9 && !('R' in w)) sweep = clockwise ? -2 * Math.PI : 2 * Math.PI; // cerchio completo
   const flat = radius * Math.abs(sweep);
   return {
     move: {
       type: 'arc',
+      axes: plane.axes,
       from: { ...s },
       to: { ...e },
       center,
@@ -302,7 +342,7 @@ function arcXY(fromPos, to, w, k, clockwise) {
       a0,
       sweep,
       clockwise,
-      length: Math.hypot(flat, e.z - s.z)
+      length: Math.hypot(flat, e[C] - s[C])
     }
   };
 }

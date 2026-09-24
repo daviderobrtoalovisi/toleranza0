@@ -120,6 +120,11 @@ export const ALARMS = {
     message: 'G43 H{h}: correttore di lunghezza sbagliato per l\'utensile T{tool}',
     hint: 'Il numero H deve essere quello dell\'utensile montato: con T{tool} M06 si scrive G43 H{tool}. Con un H sbagliato la macchina userebbe la lunghezza di un altro utensile.'
   },
+  2010: {
+    category: 'parametri',
+    message: 'G41/G42 D{d}: correttore di raggio sbagliato per l\'utensile T{tool}',
+    hint: 'Con la compensazione del raggio serve D con il numero dell\'utensile montato: con T{tool} M06 si scrive G41 D{tool} (o G42 D{tool}). Con un D sbagliato la macchina userebbe il raggio di un\'altra fresa.'
+  },
 
   // 3000–3999 Geometria e limiti
   3001: {
