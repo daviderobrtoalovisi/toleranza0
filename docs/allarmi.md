@@ -29,7 +29,7 @@ I testi mostrati agli studenti sono in [`js/alarms/catalog.js`](../js/alarms/cat
 | 1010 | Valore decimale non ammesso | `M3.5` | `M03` |
 | 1011 | Valore negativo non ammesso | `F-0.2` | `F0.2` |
 | 1012 | N non all'inizio della riga | `X50 N85` | `N85 X50` |
-| 1013 | Codice non ancora supportato dal simulatore | `G71 U2 R1`, `G50 X100 Z50`, `G01 X30 Z-5 R2` | vedi [codici supportati](codici-supportati.md) |
+| 1013 | Codice non ancora supportato dal simulatore | `G72 W2 R1`, `G50 X100 Z50`, `G01 X30 Z-5 R2` | vedi [codici supportati](codici-supportati.md) |
 | 1014 | Quota assoluta e incrementale dello stesso asse nel blocco | `G00 X20 U5` | usare X oppure U (Z oppure W) |
 
 Note:
@@ -47,6 +47,7 @@ Note:
 | 2004 | Utensile non presente nella torretta | `T0909` | usare T01, T02 o T03 |
 | 2005 | G96 senza limite di giri G50 | `G96 S180 M03` senza un `G50 S..` prima | `G50 S2000` prima di G96 |
 | 2006 | Correttore non presente | `T0109` | correttori 01, 02, 03: `T0101` |
+| 2007 | Ciclo incompleto | `G71 P100 Q180 ...` senza il blocco `G71 U2 R0.5` prima; `G70 P100` senza Q | scrivere il ciclo completo (il suggerimento mostra la sintassi) |
 
 Un programma senza M30 non dà allarme: alla fine compare il messaggio «Programma terminato senza M30».
 
@@ -59,6 +60,8 @@ Un programma senza M30 non dà allarme: alla fine compare il messaggio «Program
 | 3003 | Arco senza raggio né centro | `G02 X30 Z-5` | aggiungere R oppure I e K |
 | 3004 | Fuori corsa | `G00 X400` (limite X300) | controllare valore e segno |
 | 3005 | Passata troppo profonda | T01 da Ø50 direttamente a X30 | dividere in più passate |
+| 3006 | Blocco del profilo non trovato | `G71 P100 Q999` senza una riga N999 | P e Q devono essere numeri N presenti |
+| 3007 | Profilo non adatto a G71 | primo blocco con Z, oppure una gola nel profilo | primo blocco solo X, X sempre crescenti, Z sempre decrescenti |
 
 Fine corsa (quote pezzo, X in diametro): X da -10 a 300, Z da -300 a 200. Si cambiano in `js/machines/lathe/machine.js`.
 

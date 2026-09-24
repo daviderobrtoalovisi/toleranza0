@@ -45,11 +45,11 @@ Convenzioni:
 | G28 | Ritorno al punto di riferimento | ✅ |
 | G32 | Filettatura | 🕓 |
 | G40 | Annulla compensazione raggio | ✅ |
-| G41 / G42 | Compensazione raggio sinistra / destra | 🕓 v0.4 |
+| G41 / G42 | Compensazione raggio sinistra / destra | ✅ |
 | G50 | Limite massimo giri mandrino | ✅ |
 | G54–G59 | Origini pezzo | ✅ |
-| G70 | Ciclo di finitura | 🕓 v0.4 |
-| G71 | Sgrossatura longitudinale | 🕓 v0.4 |
+| G70 | Ciclo di finitura | ✅ |
+| G71 | Sgrossatura longitudinale (tipo I) | ✅ |
 | G72 | Sgrossatura frontale | 🕓 |
 | G76 | Ciclo di filettatura | 🕓 |
 | G90 | Ciclo di tornitura cilindrica/conica | 🕓 |
@@ -90,6 +90,36 @@ Convenzioni:
 - **G20**: le quote vengono convertite in millimetri; S in G96 resta in m/min.
 - **Correttori utensile** (le ultime due cifre di T, per esempio T0101): registri 01, 02 e 03 con l'usura in X (diametro) e Z, da impostare in *Utensili e correttori* sopra la simulazione. L'utensile si trova nella quota programmata più l'usura; le quote X/Z mostrate restano quelle programmate, come sulla macchina. `T0100` annulla il correttore. La geometria degli utensili si considera già misurata.
 - **Fine corsa**: X da -10 a 300 (diametro), Z da -300 a 200, in quote pezzo.
+
+### Cicli G71 e G70
+
+```
+N70 G00 X42 Z2                        (punto di partenza, fuori dal grezzo)
+N80 G71 U2 R0.5                       (U = passata in raggio, R = scarico a 45°)
+N90 G71 P100 Q180 U0.6 W0.2 F0.25     (P..Q = profilo, U/W = sovrametallo X diametro / Z)
+N100 G00 X18                          (primo blocco del profilo: solo X)
+...                                   (profilo finito)
+N180 X41                              (ultimo blocco del profilo)
+N190 ...                              (dopo G71 si riparte da qui)
+...
+N260 G70 P100 Q180                    (finitura lungo il profilo)
+```
+
+- **G71** fa passate in Z alla profondità U, ciascuna con uno scarico a 45° di R, fino al profilo spostato del sovrametallo. Poi fa una passata lungo il profilo con il sovrametallo e torna al punto di partenza. F e S scritti nei blocchi del profilo non valgono in G71.
+- Il profilo (**tipo I**) deve avere il primo blocco solo in X, poi le X sempre crescenti e le Z sempre decrescenti: niente gole (allarme 3007).
+- Dopo G71 il programma riprende dal blocco che segue Q: i blocchi del profilo non vengono eseguiti da soli.
+- **G70** esegue i blocchi del profilo con i loro F e S (durante la finitura si evidenziano le righe del profilo), poi torna in rapido al punto di partenza e prosegue dopo G70.
+- Durante G71 la compensazione del raggio non si applica; si usa con G70.
+
+### Compensazione del raggio di punta G41 / G42
+
+- **G42**: utensile a destra del profilo rispetto al verso del movimento. È il caso normale per la tornitura esterna verso il mandrino. **G41**: a sinistra. **G40**: annulla.
+- Si attiva in un blocco di avvicinamento (`G00 G42 X42 Z2`) e si annulla in un blocco di allontanamento (`G00 G40 X100 Z100`), fuori dal pezzo.
+- Con la compensazione il raggio di punta passa esattamente sul profilo programmato. Senza, su smussi e raggi resta materiale in più. Esempio con T01 (r0,8) su uno smusso a 45°: circa 0,9 mm in più sul diametro.
+- Agli spigoli esterni il raggio di punta gira attorno allo spigolo, a quelli interni i due tratti si fermano dove si incontrano.
+- Vale per gli utensili con orientamento 3 (T01 e T03); il troncatore T02 non ha raggio di punta.
+
+L'esempio *Tornio 4* fa lo stesso pezzo dell'esempio 2 con G71, G70 e G42: confrontandoli si vede la differenza sui raggi.
 
 ### Utensili in torretta
 
