@@ -5,6 +5,8 @@
 Toleranza0 è un simulatore CNC didattico per studenti. Programma ISO/Fanuc in un editor di testo → simulazione grafica dell'asportazione, riga in esecuzione evidenziata, allarmi in italiano. Vedi `README.md` per obiettivi e tabella di marcia.
 
 - Prima il **tornio 2 assi (X/Z, vista 2D su canvas)**, poi la **fresa 3 assi (X/Y/Z, Three.js)**
+- Tornio: **Fanuc sistema A**. X in diametro, X/Z assolute, U/W incrementali, G98/G99 per l'avanzamento. Sul tornio G90/G94 sono cicli, non assoluto/avanzamento.
+- La tabella dei codici di ogni macchina (`js/machines/*/codes.js`) è la fonte unica: parser, pannello *Blocco corrente* e `docs/codici-supportati.md` devono essere coerenti con essa. Un codice che esiste sulla macchina ma non è ancora simulato ha `status: 'planned'` e dà l'allarme 1013.
 - Utenti finali: studenti. I messaggi di allarme devono essere chiari per chi sta imparando: cosa è successo, su quale riga, come correggere.
 - Sviluppatori: 2–5 docenti, tutti su `main`, alcuni usano Claude Code.
 
@@ -19,7 +21,7 @@ Toleranza0 è un simulatore CNC didattico per studenti. Programma ISO/Fanuc in u
 - **HTML + CSS + JavaScript puro, moduli ES**. Nessun Node, npm, bundler o TypeScript.
 - Unica libreria esterna prevista: **Three.js da CDN** (jsdelivr/cdnjs), solo per la fresa 3D. Non aggiungere altre dipendenze senza chiedere.
 - Deve funzionare sui browser recenti (Chrome, Edge, Firefox) e servito come file statici (GitHub Pages).
-- Test in `tests/` eseguiti nel browser (`tests/index.html`), con un piccolo runner fatto in casa: nessun framework.
+- Test in `tests/` eseguiti nel browser (`tests/index.html`), con un piccolo runner fatto in casa (`tests/runner.js`): nessun framework. Il risultato è anche in `window.testResults` e nel titolo della pagina (`OK` / `FALLITI`). Ogni programma in `examples/` viene controllato automaticamente: gli esempi devono essere senza errori, tranne gli esercizi `esercizio-*` che hanno errori voluti ed elencati nel test.
 - Per provare in locale: `python -m http.server 8000` o Live Server di VS Code.
 
 ## Pubblicazione su GitHub Pages
@@ -47,7 +49,8 @@ testo -> parser -> blocchi -> interpreter (stato modale) -> movimenti -> machine
                                           \-> alarms (in ogni stadio)
 ```
 
-- `js/parser/` — trasforma ogni riga in un blocco `{ line, words: [{ letter, value }], comment }`. Solo sintassi, nessuna logica di macchina.
+- `js/parser/` — `parse-program.js` trasforma ogni riga in un blocco `{ line, source, words: [{ letter, value, raw, col }], comment, blockDelete, alarm }` (sintassi pura); `validate-block.js` controlla il blocco sulla tabella codici della macchina; `check-program.js` unisce le due cose.
+- `js/ui/run-controller.js` — esecuzione blocco per blocco (avvio, pausa, blocco singolo, reset, M00/M01/M30). Dalla v0.2 riceverà i movimenti dall'interprete.
 - `js/interpreter/` — mantiene lo stato modale (G00/G01, G90/G91, unità, F, S, utensile, mandrino) e produce movimenti `{ line, type, from, to, feed, ... }`. Comune a tornio e fresa dove possibile.
 - `js/machines/lathe/`, `js/machines/mill/` — geometria del grezzo, utensili, calcolo dell'asportazione, controlli di collisione e fine corsa.
 - `js/render/` — solo disegno. Non contiene logica CNC.

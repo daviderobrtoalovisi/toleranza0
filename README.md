@@ -27,15 +27,17 @@ Così si provano i programmi **senza occupare la macchina e senza rischiare uten
 
 Si parte dal sottoinsieme usato a scuola; l'elenco completo e aggiornato è in [`docs/codici-supportati.md`](docs/codici-supportati.md).
 
-| Gruppo | Tornio (v0.x) | Fresa (dopo) |
+Il tornio segue il **Fanuc sistema A**, il più diffuso nelle scuole: X in diametro, X/Z assolute e U/W incrementali.
+
+| Gruppo | Tornio (Fanuc sistema A) | Fresa (dopo) |
 |---|---|---|
 | Movimenti | G00, G01, G02, G03, G04 | come il tornio + piano G17/G18/G19 |
-| Quote | G90/G91, G20/G21, U/W incrementali | G90/G91, G20/G21 |
-| Avanzamento / velocità | G94/G95, G96/G97, G50 (limite giri) | G94, S, F |
+| Quote | X/Z assolute, U/W incrementali, G20/G21 | G90/G91, G20/G21 |
+| Avanzamento / velocità | G98/G99, G96/G97, G50 (limite giri) | G94/G95, S, F |
 | Origini | G54–G59, G28 | G54–G59, G28 |
-| Utensile | Txxyy, G40/G41/G42 | Txx M06, G43 H, G40/G41/G42 D |
-| Cicli | G70, G71, G76 (in una fase successiva) | G81, G83 (in una fase successiva) |
-| Funzioni M | M00, M01, M03, M04, M05, M08, M09, M30 | come il tornio + M06 |
+| Utensile | T0101, G40 (G41/G42 nella v0.4) | T01 M06, G43 H, G40/G41/G42 D |
+| Cicli | G70, G71 (v0.4), G72, G76, G90, G94 (più avanti) | G81, G83 (più avanti) |
+| Funzioni M | M00, M01, M02, M03, M04, M05, M08, M09, M30 | come il tornio + M06 |
 
 ## Allarmi
 
@@ -75,7 +77,7 @@ Nessuno strumento di build: HTML, CSS e JavaScript puro con moduli ES. Three.js 
 Poiché i moduli ES non funzionano aprendo il file con doppio clic, per provare in locale serve un piccolo server:
 
 - **VS Code**: estensione *Live Server* → tasto destro su `index.html` → *Open with Live Server*
-- **oppure** con Python installato, dalla cartella del progetto:
+- **oppure**, se Python è installato, dalla cartella del progetto:
 
 ```bash
 python -m http.server 8000
@@ -130,7 +132,7 @@ Usiamo il [Semantic Versioning](https://semver.org/lang/it/): `MAGGIORE.MINORE.C
 
 ## Tabella di marcia
 
-- [ ] **v0.1** — Editor, parser ISO, evidenziazione riga, allarmi di sintassi
+- [x] **v0.1** — Editor, parser ISO, evidenziazione riga, allarmi di sintassi
 - [ ] **v0.2** — Tornio: grezzo, utensili, simulazione 2D dell'asportazione (G00/G01/G02/G03)
 - [ ] **v0.3** — Tornio: tutti gli allarmi (parametri, limiti, collisioni), blocco singolo, velocità
 - [ ] **v0.4** — Tornio: cicli G70/G71, compensazione raggio G41/G42
