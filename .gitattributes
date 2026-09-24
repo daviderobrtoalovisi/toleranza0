@@ -1,0 +1,6 @@
+# Fine riga uniformi (LF) su tutti i PC, anche Windows: evita conflitti "fantasma"
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
