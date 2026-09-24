@@ -2,7 +2,7 @@
 
 Ogni versione ha un tag git (`vX.Y.Z`). Il numero è in `js/version.js` e si vede in alto nella pagina.
 
-## Non ancora rilasciato
+## 1.1.0 — database delle macchine
 
 - Database delle macchine utensili: menu **Modello** con 32 macchine reali (20 torni e 12 frese) di DMG MORI (6 torni e 2 centri di lavoro), Haas, Mazak, Okuma, DN Solutions ed EMCO, più la macchina didattica generica. Il simulatore usa giri, rapido, corse e grezzo massimo del modello scelto; una scheda mostra dati, fonte ufficiale e compatibilità del controllo con la programmazione ISO
 - Corregge un caso in cui, cambiando macchina mentre si caricava un esempio, l'esempio finiva nella bozza dell'altra macchina
