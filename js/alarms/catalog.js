@@ -88,7 +88,7 @@ export const ALARMS = {
   2003: {
     category: 'parametri',
     message: 'Nessun utensile selezionato',
-    hint: 'Chiama un utensile con T, per esempio T0101, prima del primo movimento di lavoro.'
+    hint: 'Chiama un utensile prima del primo movimento di lavoro: sul tornio T0101, sulla fresa T1 M06.'
   },
   2004: {
     category: 'parametri',
@@ -109,6 +109,16 @@ export const ALARMS = {
     category: 'parametri',
     message: 'Ciclo {cycle} incompleto: manca {missing}',
     hint: '{how}'
+  },
+  2008: {
+    category: 'parametri',
+    message: 'Movimento in Z senza correzione di lunghezza G43',
+    hint: 'Dopo il cambio utensile (M06) la macchina non conosce la lunghezza del nuovo utensile: prima di muovere Z scrivi G43 H con il numero dell\'utensile, per esempio G43 H1 Z50.'
+  },
+  2009: {
+    category: 'parametri',
+    message: 'G43 H{h}: correttore di lunghezza sbagliato per l\'utensile T{tool}',
+    hint: 'Il numero H deve essere quello dell\'utensile montato: con T{tool} M06 si scrive G43 H{tool}. Con un H sbagliato la macchina userebbe la lunghezza di un altro utensile.'
   },
 
   // 3000–3999 Geometria e limiti
@@ -147,6 +157,11 @@ export const ALARMS = {
     message: 'Profilo non adatto al ciclo: {reason}',
     hint: 'G71 lavora profili esterni che salgono sempre in X e scendono sempre in Z, senza gole, e il primo blocco del profilo muove solo X. Le gole si fanno a parte, per esempio con il troncatore.'
   },
+  3008: {
+    category: 'geometria',
+    message: 'Punta da foratura mossa di lato nel materiale',
+    hint: 'La punta taglia solo scendendo lungo il suo asse. Per spostarti in X o Y risali prima sopra il pezzo; per fresare usa una fresa.'
+  },
 
   // 4000–4999 Collisioni
   4001: {
@@ -162,6 +177,11 @@ export const ALARMS = {
   4003: {
     category: 'collisione',
     message: 'Collisione: portautensile contro il pezzo',
-    hint: 'Non ha tagliato solo l\'inserto: anche il portautensile ha urtato il materiale. Succede se la gola è più profonda del troncatore o se l\'utensile scende dietro uno spallamento. Controlla il percorso o scegli un utensile adatto.'
+    hint: 'Non ha tagliato solo la parte tagliente: anche il gambo o il portautensile ha urtato il materiale. Succede se si lavora più in profondità della lunghezza del tagliente, se la gola è più profonda del troncatore o se l\'utensile scende dietro uno spallamento. Controlla il percorso o scegli un utensile adatto.'
+  },
+  4004: {
+    category: 'collisione',
+    message: 'Collisione: utensile contro la morsa',
+    hint: 'L\'utensile o il portautensile ha toccato le ganasce o la base della morsa. Controlla le quote Z negative e le quote X/Y vicino ai bordi del pezzo: il grezzo sporge dalla morsa solo di pochi millimetri.'
   }
 };
