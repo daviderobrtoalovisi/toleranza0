@@ -15,6 +15,7 @@ export function createMillSimulator({ params, tools }) {
     setup: null,
     stock: null,
     vise: null,
+    home: params.home,
     pos: { ...params.home },
     tool: null,
     trail: [],

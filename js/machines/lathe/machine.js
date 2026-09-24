@@ -57,9 +57,10 @@ export function setupFromProgram(text) {
   return normalizeSetup(setup);
 }
 
-export function normalizeSetup(setup) {
+// limits: limiti del grezzo del modello di tornio scelto (predefiniti: SETUP_LIMITS)
+export function normalizeSetup(setup, limits = SETUP_LIMITS) {
   const result = {};
-  for (const [key, { min, max }] of Object.entries(SETUP_LIMITS)) {
+  for (const [key, { min, max }] of Object.entries(limits)) {
     const value = Number(setup[key]);
     result[key] = Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : DEFAULT_SETUP[key];
   }

@@ -51,7 +51,7 @@ export function createLatheView(canvas, { getScene, tools, params }) {
   function sceneBounds({ sim, program }) {
     const R = sim.setup.diameter / 2;
     const b = { minZ: sim.chuck.bodyZ - 10, maxZ: Math.max(sim.stock.zMax, 0) + 15, minR: -(R + 12), maxR: R + 20 };
-    const home = params.home;
+    const home = sim.home ?? params.home; // cambia con il modello di tornio scelto
     const include = (p) => {
       if (Math.abs(p.x - home.x) < 1e-6 || Math.abs(p.z - home.z) < 1e-6) return;
       b.minZ = Math.min(b.minZ, p.z - 5);

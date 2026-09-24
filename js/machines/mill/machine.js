@@ -22,9 +22,10 @@ export const MILL_SETUP_LIMITS = {
   topAllowance: { min: 0, max: 10 }
 };
 
-export function normalizeMillSetup(setup) {
+// limits: limiti del grezzo del modello di fresa scelto (predefiniti: MILL_SETUP_LIMITS)
+export function normalizeMillSetup(setup, limits = MILL_SETUP_LIMITS) {
   const result = {};
-  for (const [key, { min, max }] of Object.entries(MILL_SETUP_LIMITS)) {
+  for (const [key, { min, max }] of Object.entries(limits)) {
     const value = Number(setup?.[key]);
     result[key] = Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : DEFAULT_MILL_SETUP[key];
   }

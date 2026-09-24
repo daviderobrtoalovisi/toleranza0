@@ -20,6 +20,7 @@ export function createLatheSimulator({ params, tools }) {
     setup: null,
     stock: null,
     chuck: null,
+    home: params.home,
     pos: { ...params.home },
     offset: NO_OFFSET,
     tool: null,
