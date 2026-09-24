@@ -14,6 +14,25 @@
   --alarm-bg: #ffcdd2;
   --code-font: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
   --line-height: 22px;
+
+  /* Simulazione (letti anche da js/render/lathe-2d.js: i colori del materiale vanno in #rrggbb) */
+  --sim-bg: #f7f9fb;
+  --sim-grid: #e3e8ee;
+  --sim-text: #7a8692;
+  --sim-axis: #5f6b76;
+  --sim-origin: #1c2329;
+  --sim-material: #8d99a6;
+  --sim-material-hidden: rgba(141, 153, 166, 0.45);
+  --sim-chuck: #4b5561;
+  --sim-chuck-edge: #2b323a;
+  --sim-jaw: #6b7684;
+  --sim-tool: #e0a526;
+  --sim-tool-edge: #6d4c00;
+  --sim-holder: #b9c1ca;
+  --sim-holder-edge: #6f7a86;
+  --sim-rapid: #d7263d;
+  --sim-feed: #1f6feb;
+  --sim-collision: #d7263d;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -31,6 +50,24 @@
     --error-bg: #3a1d1d;
     --current-bg: #4a4213;
     --alarm-bg: #5c1f1f;
+
+    --sim-bg: #0f1419;
+    --sim-grid: #1f2830;
+    --sim-text: #6e7b87;
+    --sim-axis: #93a0ac;
+    --sim-origin: #e3e8ed;
+    --sim-material: #7d8995;
+    --sim-material-hidden: rgba(125, 137, 149, 0.35);
+    --sim-chuck: #2e3843;
+    --sim-chuck-edge: #56626e;
+    --sim-jaw: #46515d;
+    --sim-tool: #e3b341;
+    --sim-tool-edge: #fff3c4;
+    --sim-holder: #3d4955;
+    --sim-holder-edge: #8b98a5;
+    --sim-rapid: #ff6b7a;
+    --sim-feed: #58a6ff;
+    --sim-collision: #ff6b7a;
   }
 }
 
@@ -104,8 +141,8 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
   display: grid;
   gap: 12px;
   padding: 12px 16px;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.5fr) minmax(0, 0.5fr);
-  grid-template-rows: minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 0.6fr) minmax(0, 0.6fr);
+  grid-template-rows: minmax(0, 1.8fr) minmax(0, 1fr);
   grid-template-areas:
     "editor sim sim"
     "editor block alarms";
@@ -189,17 +226,79 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .editor.is-readonly .editor-textarea { cursor: default; }
 
 /* Simulazione */
-.sim-placeholder {
+.panel-head {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 24px;
-  text-align: center;
-  color: var(--muted);
-  background:
-    repeating-linear-gradient(45deg, transparent 0 14px, var(--surface-2) 14px 28px);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  border-bottom: 1px solid var(--border);
+  padding-right: 8px;
 }
-.sim-placeholder p { margin: 4px 0; }
+.panel-head .panel-title { border-bottom: 0; }
+.setup { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13px; color: var(--muted); padding: 4px 0; }
+.setup input {
+  width: 4.2em;
+  padding: 2px 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  font-family: var(--code-font);
+}
+.setup input:disabled { opacity: 0.6; }
+.btn-small { padding: 2px 8px; font-size: 13px; }
+
+.panel > div.sim-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--sim-bg);
+}
+#sim-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+#sim-canvas:active { cursor: grabbing; }
+
+.dro {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 1px 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  font-size: 13px;
+  pointer-events: none;
+}
+.dro div { display: contents; }
+.dro span { color: var(--muted); }
+.dro b { font-family: var(--code-font); font-weight: 600; text-align: right; }
+
+.tools {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  max-width: calc(100% - 16px);
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  font-size: 13px;
+}
+.tools summary { cursor: pointer; color: var(--muted); }
+.tools ul { list-style: none; margin: 6px 0 2px; padding: 0; }
+.tools li { padding: 2px 0; }
+.tool-id { font-family: var(--code-font); font-weight: 700; color: var(--accent); }
 
 /* Blocco corrente */
 .muted { color: var(--muted); margin: 0; }
@@ -265,9 +364,9 @@ body[data-state="alarm"] .status-message { color: var(--error); font-weight: 600
   .layout {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: none;
-    grid-template-areas: "editor" "alarms" "block" "sim";
+    grid-template-areas: "editor" "sim" "alarms" "block";
   }
-  .panel-editor { height: 60vh; }
-  .panel-sim { min-height: 160px; }
+  .panel-editor { height: 55vh; }
+  .panel-sim { height: 60vh; }
   .status-bar { position: sticky; bottom: 0; flex-wrap: wrap; }
 }

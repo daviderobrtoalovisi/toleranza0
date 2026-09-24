@@ -5,6 +5,7 @@ export const CONFIG = {
     lathe: true,
     mill: false
   },
-  // Righe al secondo con velocità 100%
-  baseSpeed: 2
+  // Fattori di velocità della simulazione (×1 = tempo reale della macchina)
+  speedFactors: [1, 2, 5, 10, 20, 50, 100, 200, 500],
+  defaultSpeedIndex: 3
 };

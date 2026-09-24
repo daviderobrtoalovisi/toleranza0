@@ -41,11 +41,12 @@
       <button type="button" id="btn-reset" class="btn-reset">Reset</button>
       <label class="field field-inline">
         <span>Velocità</span>
-        <input type="range" id="speed" min="25" max="500" step="25" value="100">
-        <output id="speed-value">100%</output>
+        <input type="range" id="speed" min="0" max="8" step="1" value="3">
+        <output id="speed-value">×10</output>
       </label>
       <label class="check"><input type="checkbox" id="opt-block-delete"> Salta blocchi /</label>
       <label class="check"><input type="checkbox" id="opt-optional-stop"> Arresto M01</label>
+      <label class="check"><input type="checkbox" id="opt-preview" checked> Anteprima percorso</label>
     </div>
   </div>
 
@@ -56,10 +57,23 @@
     </section>
 
     <section class="panel panel-sim" aria-label="Simulazione">
-      <h2 class="panel-title">Simulazione</h2>
-      <div class="sim-placeholder">
-        <p><strong>La simulazione grafica del tornio arriva nella versione 0.2.</strong></p>
-        <p>Per ora puoi scrivere il programma, controllarne la sintassi ed eseguirlo blocco per blocco.</p>
+      <div class="panel-head">
+        <h2 class="panel-title">Simulazione</h2>
+        <div class="setup" role="group" aria-label="Grezzo">
+          <label>Grezzo Ø <input type="number" id="stock-d" min="5" max="200" step="1"></label>
+          <label>Sporgenza <input type="number" id="stock-l" min="5" max="300" step="1"></label>
+          <label>Sovrametallo faccia <input type="number" id="stock-f" min="0" max="10" step="0.5"></label>
+          <span class="unit">mm</span>
+          <button type="button" id="btn-fit" class="btn-small">Adatta vista</button>
+        </div>
+      </div>
+      <div class="sim-body">
+        <canvas id="sim-canvas" aria-label="Vista del tornio: Z verso destra, X verso l'alto"></canvas>
+        <div id="dro" class="dro" aria-live="off"></div>
+        <details class="tools">
+          <summary>Utensili</summary>
+          <ul id="tool-list"></ul>
+        </details>
       </div>
     </section>
 
