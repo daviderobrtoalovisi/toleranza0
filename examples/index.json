@@ -1,8 +1,12 @@
 [
-  { "file": "tornio-01-cilindratura.nc", "title": "Tornio 1 — Sfacciatura e cilindratura" },
-  { "file": "tornio-02-profilo-raggi.nc", "title": "Tornio 2 — Sgrossatura e finitura con smusso e raggi" },
-  { "file": "tornio-03-gola.nc", "title": "Tornio 3 — Gola con il troncatore" },
-  { "file": "tornio-04-cicli-g71-g70.nc", "title": "Tornio 4 — Lo stesso profilo con G71, G70 e G42" },
-  { "file": "esercizio-trova-errori.nc", "title": "Esercizio — Trova gli errori" },
-  { "file": "esercizio-collisione.nc", "title": "Esercizio — Perché si rompe l'utensile?" }
+  { "machine": "lathe", "file": "tornio-01-cilindratura.nc", "title": "Tornio 1 — Sfacciatura e cilindratura" },
+  { "machine": "lathe", "file": "tornio-02-profilo-raggi.nc", "title": "Tornio 2 — Sgrossatura e finitura con smusso e raggi" },
+  { "machine": "lathe", "file": "tornio-03-gola.nc", "title": "Tornio 3 — Gola con il troncatore" },
+  { "machine": "lathe", "file": "tornio-04-cicli-g71-g70.nc", "title": "Tornio 4 — Lo stesso profilo con G71, G70 e G42" },
+  { "machine": "lathe", "file": "esercizio-trova-errori.nc", "title": "Esercizio — Trova gli errori" },
+  { "machine": "lathe", "file": "esercizio-collisione.nc", "title": "Esercizio — Perché si rompe l'utensile?" },
+  { "machine": "mill", "file": "fresa-01-spianatura.nc", "title": "Fresa 1 — Spianatura della faccia" },
+  { "machine": "mill", "file": "fresa-02-cave.nc", "title": "Fresa 2 — Cave con archi G02/G03" },
+  { "machine": "mill", "file": "fresa-03-foratura.nc", "title": "Fresa 3 — Foratura con G81 e G83" },
+  { "machine": "mill", "file": "esercizio-fresa-g43.nc", "title": "Esercizio fresa — Cosa manca dopo il cambio utensile?" }
 ]
