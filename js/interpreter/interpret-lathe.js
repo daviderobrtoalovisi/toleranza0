@@ -1,14 +1,20 @@
 import { createAlarm } from '../alarms/alarm.js';
 import { isExecutable } from '../parser/check-program.js';
-import { pointAt, segmentLength } from './path.js';
+import { pointAt } from './path.js';
+import { INCH, target, rapidMove, lineMove, arcMove, fmt } from './lathe-geometry.js';
+import { profileRange, profileElements, g71Path } from './cycles-lathe.js';
+import { compensateNoseRadius } from './nose-compensation.js';
 
 // Interprete del tornio (Fanuc sistema A): blocchi -> passi con movimenti, stato modale e tempi.
 // Funzione pura: non tocca il DOM e non conosce il grezzo (le collisioni le controlla il simulatore).
 //
 // Passo: { block, moves, alarm, stop, state, time }
 // Movimento: { type: 'rapid' | 'line' | 'arc' | 'dwell' | 'tool', from, to, length, duration, ... }
+//
+// Il programma si esegue in ordine, con due salti:
+// - dopo G71 si riparte dal blocco che segue Q (il profilo non viene eseguito);
+// - G70 esegue i blocchi del profilo da P a Q, poi torna al punto di partenza e prosegue dopo G70.
 
-const INCH = 25.4;
 const AXES = ['X', 'Z', 'U', 'W'];
 
 // offsets: tabella dei correttori { 1: { x, z }, ... }; se manca, correttori tutti a zero e nessun controllo
@@ -25,21 +31,59 @@ export function interpretLathe(blocks, { params, tools, offsets = null, blockDel
     maxRpm: null,
     spindle: 'off',
     coolant: false,
-    tool: null
+    tool: null,
+    comp: null,
+    g71: null
   };
+  const ctx = { blocks, params, tools, offsets };
   const steps = [];
-  let time = 0;
+  const skip = (block) => !isExecutable(block) || (blockDelete && block.blockDelete);
+  const push = (block, result) => {
+    steps.push({ block, moves: result.moves ?? [], alarm: result.alarm ?? null, stop: result.stop ?? null, state: snapshot(state) });
+  };
 
-  for (const block of blocks) {
-    if (!isExecutable(block) || (blockDelete && block.blockDelete)) continue;
+  let i = 0;
+  run: while (i < blocks.length) {
+    const block = blocks[i];
+    if (skip(block)) {
+      i++;
+      continue;
+    }
     if (block.alarm) {
-      steps.push({ block, moves: [], alarm: block.alarm, stop: null, state: snapshot(state), time });
+      push(block, { alarm: block.alarm });
       break;
     }
-    const { moves, alarm, stop } = interpretBlock(block, state, params, tools, offsets);
-    for (const move of moves) time += move.duration;
-    steps.push({ block, moves, alarm: alarm ?? null, stop: stop ?? null, state: snapshot(state), time });
-    if (alarm || stop === 'end') break;
+    const result = interpretBlock(block, state, ctx);
+    push(block, result);
+    if (result.alarm || result.stop === 'end') break;
+
+    if (result.g70) {
+      const { from, to, start } = result.g70;
+      for (let j = from; j <= to; j++) {
+        const profileBlock = blocks[j];
+        if (skip(profileBlock)) continue;
+        if (profileBlock.alarm) {
+          push(profileBlock, { alarm: profileBlock.alarm });
+          break run;
+        }
+        const r = interpretBlock(profileBlock, state, ctx, { inCycle: true });
+        push(profileBlock, { moves: r.moves, alarm: r.alarm });
+        if (r.alarm) break run;
+      }
+      // Fine di G70: ritorno in rapido al punto di partenza del ciclo
+      const back = [rapidMove(state.pos, start, ctx.params)];
+      decorate(back, state, ctx);
+      state.pos = { ...start };
+      push(block, { moves: back });
+    }
+    i = result.jumpTo ?? i + 1;
+  }
+
+  compensateNoseRadius(steps);
+  let time = 0;
+  for (const step of steps) {
+    for (const move of step.moves) time += move.duration;
+    step.time = time;
   }
   return { steps, totalTime: time };
 }
@@ -58,7 +102,8 @@ function snapshot(state) {
   return { ...state, pos: { ...state.pos } };
 }
 
-function interpretBlock(block, state, params, tools, offsets) {
+function interpretBlock(block, state, ctx, { inCycle = false } = {}) {
+  const { params, tools, offsets } = ctx;
   const fail = (code, p) => ({ moves: [], alarm: createAlarm(code, block.line, p) });
   const w = {};
   const gs = [];
@@ -68,24 +113,28 @@ function interpretBlock(block, state, params, tools, offsets) {
     else if (word.letter === 'M') m = word.value;
     else w[word.letter] = word.value;
   }
+  const has = (g) => gs.includes(g);
+  const isCycle = has(70) || has(71);
 
-  if ('X' in w && 'U' in w) return fail(1014, { a: 'X', b: 'U' });
-  if ('Z' in w && 'W' in w) return fail(1014, { a: 'Z', b: 'W' });
+  if (!isCycle && 'X' in w && 'U' in w) return fail(1014, { a: 'X', b: 'U' });
+  if (!isCycle && 'Z' in w && 'W' in w) return fail(1014, { a: 'Z', b: 'W' });
 
   for (const g of gs) {
     if (g === 20 || g === 21) state.units = g;
     else if (g === 96 || g === 97) state.speedMode = g;
     else if (g === 98 || g === 99) state.feedMode = g;
+    else if (g === 40) state.comp = null;
+    else if (g === 41) state.comp = 'left';
+    else if (g === 42) state.comp = 'right';
     else if (g <= 3) state.motion = g;
   }
   const k = state.units === 20 ? INCH : 1;
-  const has = (g) => gs.includes(g);
-  const hasAxis = AXES.some((l) => l in w);
+  const hasAxis = !isCycle && AXES.some((l) => l in w);
 
   if (has(50) && hasAxis) return fail(1013, { word: 'G50 con X/Z (impostazione origine)' });
 
   // Prima del movimento: F, S, utensile, mandrino e refrigerante
-  if ('F' in w) state.feed = w.F * k;
+  if ('F' in w && !(has(71) && !('P' in w))) state.feed = w.F * k;
   if ('S' in w) {
     if (has(50)) state.maxRpm = w.S;
     else state.S = w.S;
@@ -93,6 +142,9 @@ function interpretBlock(block, state, params, tools, offsets) {
 
   const moves = [];
   const from = () => ({ ...state.pos });
+  let jumpTo;
+  let g70;
+  let cycleMoves = false;
 
   // Txxyy: xx utensile, yy correttore (T1 o T01 scritti a due cifre valgono come utensile e correttore uguali)
   if ('T' in w) {
@@ -113,8 +165,32 @@ function interpretBlock(block, state, params, tools, offsets) {
   if (m === 8) state.coolant = true;
   if (state.speedMode === 96 && state.spindle !== 'off' && state.maxRpm === null) return fail(2005);
 
+  const checkCutting = () => {
+    if (state.tool === null) return fail(2003);
+    if (!state.feed) return fail(2001);
+    if (spindleRpm(state, state.pos.x, params) <= 0) return fail(2002);
+    return null;
+  };
+
   // Movimento
-  if (has(4)) {
+  if (has(71) && !inCycle) {
+    const result = cycleG71(block, w, k, state, ctx, checkCutting);
+    if (result.alarm) return result;
+    moves.push(...result.moves);
+    jumpTo = result.jumpTo;
+    cycleMoves = true;
+  } else if (has(70) && !inCycle) {
+    if (!('P' in w) || !('Q' in w)) {
+      return fail(2007, {
+        cycle: 'G70',
+        missing: 'P' in w ? 'Q (ultimo blocco del profilo)' : 'P (primo blocco del profilo)',
+        how: 'La finitura si scrive G70 P(numero N del primo blocco del profilo) Q(numero N dell\'ultimo).'
+      });
+    }
+    const range = profileRange(ctx.blocks, w.P, w.Q);
+    if (range.alarm) return fail(range.alarm, range.params);
+    g70 = { ...range, start: from() };
+  } else if (has(4)) {
     const seconds = 'P' in w ? w.P / 1000 : 'X' in w ? w.X : 'U' in w ? w.U : 0;
     moves.push({ type: 'dwell', from: from(), to: from(), length: 0, duration: Math.max(0, seconds) });
   } else if (has(28)) {
@@ -126,7 +202,7 @@ function interpretBlock(block, state, params, tools, offsets) {
         x: 'X' in w || 'U' in w ? params.home.x : middle.x,
         z: 'Z' in w || 'W' in w ? params.home.z : middle.z
       };
-      moves.push(rapid(state.pos, middle, params), rapid(middle, home, params));
+      moves.push(rapidMove(state.pos, middle, params), rapidMove(middle, home, params));
       state.pos = home;
     }
   } else if (hasAxis) {
@@ -134,15 +210,14 @@ function interpretBlock(block, state, params, tools, offsets) {
     const outside = outOfLimits([to], params);
     if (outside) return fail(3004, outside);
     if (state.motion === 0) {
-      moves.push(rapid(state.pos, to, params));
+      moves.push(rapidMove(state.pos, to, params));
     } else {
-      if (state.tool === null) return fail(2003);
-      if (!state.feed) return fail(2001);
-      if (spindleRpm(state, state.pos.x, params) <= 0) return fail(2002);
+      const problem = checkCutting();
+      if (problem) return problem;
       let move;
       if (state.motion === 1) {
         if ('R' in w) return fail(1013, { word: 'R in G01 (raccordo automatico)' });
-        move = { type: 'line', from: from(), to, length: segmentLength(state.pos, to) };
+        move = lineMove(state.pos, to);
       } else {
         const arc = arcMove(state.pos, to, w, k, state.motion === 2);
         if (arc.alarm) return fail(arc.alarm, arc.params);
@@ -157,21 +232,73 @@ function interpretBlock(block, state, params, tools, offsets) {
     state.pos = to;
   }
 
-  // Ogni movimento porta l'usura del correttore attivo: il simulatore la aggiunge alla quota programmata
-  const offset = offsets?.[state.offsetId] ?? { x: 0, z: 0 };
-  for (const move of moves) move.offset = { x: offset.x, z: offset.z };
+  decorate(moves, state, ctx, { noComp: cycleMoves });
 
   // Dopo il movimento
+  const result = { moves, jumpTo, g70 };
   if (m === 5) state.spindle = 'off';
   if (m === 9) state.coolant = false;
+  if (inCycle) return result;
   if (m === 30 || m === 2) {
     state.spindle = 'off';
     state.coolant = false;
-    return { moves, stop: 'end' };
+    result.stop = 'end';
+  } else if (m === 0) {
+    result.stop = 'program';
+  } else if (m === 1) {
+    result.stop = 'optional';
   }
-  if (m === 0) return { moves, stop: 'program' };
-  if (m === 1) return { moves, stop: 'optional' };
-  return { moves };
+  return result;
+}
+
+// G71: primo blocco con profondità e scarico, secondo con profilo, sovrametalli e avanzamento
+function cycleG71(block, w, k, state, ctx, checkCutting) {
+  const fail = (code, p) => ({ alarm: createAlarm(code, block.line, p) });
+  const how = 'Il ciclo G71 si scrive in due blocchi: G71 U(profondità di passata) R(scarico), poi G71 P(primo blocco del profilo) Q(ultimo blocco) U(sovrametallo in X) W(sovrametallo in Z) F(avanzamento).';
+  if (!('P' in w)) {
+    if (!('U' in w)) return fail(2007, { cycle: 'G71', missing: 'la profondità di passata U', how });
+    if (w.U <= 0) return fail(2007, { cycle: 'G71', missing: 'una profondità di passata U maggiore di zero', how });
+    state.g71 = { depth: w.U * k, retract: ('R' in w ? w.R : 0.5) * k };
+    return { moves: [] };
+  }
+  if (!state.g71) return fail(2007, { cycle: 'G71', missing: 'il primo blocco G71 U.. R..', how });
+  if (!('Q' in w)) return fail(2007, { cycle: 'G71', missing: 'Q (ultimo blocco del profilo)', how });
+  const problem = checkCutting();
+  if (problem) return problem;
+
+  const range = profileRange(ctx.blocks, w.P, w.Q);
+  if (range.alarm) return fail(range.alarm, range.params);
+  const profile = profileElements(ctx.blocks, range, state.pos, state);
+  if (profile.existing) return { alarm: profile.existing };
+  if (profile.alarm) return { alarm: createAlarm(profile.alarm, profile.line ?? block.line, profile.params) };
+
+  const path = g71Path(state.pos, profile.elements, {
+    depth: state.g71.depth,
+    retract: state.g71.retract,
+    allowX: (w.U ?? 0) * k,
+    allowZ: (w.W ?? 0) * k
+  });
+  const moves = path.map(({ kind, move }) => {
+    if (kind === 'rapid') return rapidMove(move.from, move.to, ctx.params);
+    return { ...move, duration: feedDuration(move, state, ctx.params) };
+  });
+  const points = moves.flatMap((mv) => (mv.type === 'arc' ? [0, 0.5, 1].map((t) => pointAt(mv, t)) : [mv.to]));
+  const outside = outOfLimits(points, ctx.params);
+  if (outside) return fail(3004, outside);
+  return { moves, jumpTo: range.to + 1 };
+}
+
+// Usura del correttore attivo e dati per la compensazione del raggio di punta
+function decorate(moves, state, ctx, { noComp = false } = {}) {
+  const offset = ctx.offsets?.[state.offsetId] ?? { x: 0, z: 0 };
+  const rn = ctx.tools[state.tool]?.noseRadius ?? 0;
+  for (const move of moves) {
+    move.offset = { x: offset.x, z: offset.z };
+    if (move.type === 'rapid' || move.type === 'line' || move.type === 'arc') {
+      move.comp = noComp ? null : state.comp;
+      move.rn = rn;
+    }
+  }
 }
 
 // Primo punto oltre il fine corsa, con i dati per l'allarme 3004; null se sono tutti dentro
@@ -188,69 +315,6 @@ function pad(value) {
   return String(value).padStart(2, '0');
 }
 
-function target(pos, w, k) {
-  return {
-    x: 'X' in w ? w.X * k : 'U' in w ? pos.x + w.U * k : pos.x,
-    z: 'Z' in w ? w.Z * k : 'W' in w ? pos.z + w.W * k : pos.z
-  };
-}
-
-function rapid(from, to, params) {
-  const length = segmentLength(from, to);
-  return { type: 'rapid', from: { ...from }, to: { ...to }, length, duration: (length / params.rapidRate) * 60 };
-}
-
-// Arco nel piano Z–r. G02 = orario con Z verso destra e X verso l'alto (come nei disegni a scuola).
-function arcMove(fromPos, to, w, k, clockwise) {
-  const s = { z: fromPos.z, r: fromPos.x / 2 };
-  const e = { z: to.z, r: to.x / 2 };
-  let center;
-  let radius;
-  if ('R' in w) {
-    const R = w.R * k;
-    const dz = e.z - s.z;
-    const dr = e.r - s.r;
-    const chord = Math.hypot(dz, dr);
-    if (chord < 1e-9 || Math.abs(R) < chord / 2 - 1e-6) {
-      return { alarm: 3001, params: { r: fmt(R), chord: fmt(chord), min: fmt(chord / 2) } };
-    }
-    const h = Math.sqrt(Math.max(0, R * R - (chord * chord) / 4));
-    // Centro a sinistra della corda per gli archi antiorari minori di 180°, a destra per gli orari; R negativo inverte
-    let side = clockwise ? -1 : 1;
-    if (R < 0) side = -side;
-    center = { z: (s.z + e.z) / 2 + (side * h * -dr) / chord, r: (s.r + e.r) / 2 + (side * h * dz) / chord };
-    radius = Math.abs(R);
-  } else if ('I' in w || 'K' in w) {
-    center = { z: s.z + (w.K ?? 0) * k, r: s.r + (w.I ?? 0) * k };
-    const r1 = Math.hypot(s.z - center.z, s.r - center.r);
-    const r2 = Math.hypot(e.z - center.z, e.r - center.r);
-    if (Math.abs(r1 - r2) > 0.02) return { alarm: 3002, params: { r1: fmt(r1), r2: fmt(r2) } };
-    radius = r1;
-  } else {
-    return { alarm: 3003 };
-  }
-
-  const a0 = Math.atan2(s.r - center.r, s.z - center.z);
-  const a1 = Math.atan2(e.r - center.r, e.z - center.z);
-  const full = 2 * Math.PI;
-  const positive = (a) => ((a % full) + full) % full;
-  let sweep = clockwise ? -positive(a0 - a1) : positive(a1 - a0);
-  if (Math.abs(sweep) < 1e-9 && !('R' in w)) sweep = clockwise ? -full : full; // cerchio completo con I/K
-  return {
-    move: {
-      type: 'arc',
-      from: { ...fromPos },
-      to: { ...to },
-      center,
-      radius,
-      a0,
-      sweep,
-      clockwise,
-      length: radius * Math.abs(sweep)
-    }
-  };
-}
-
 // Tempo di un movimento di lavoro in secondi; con G96 i giri cambiano con il diametro
 function feedDuration(move, state, params) {
   if (state.feedMode === 98) return (move.length / state.feed) * 60;
@@ -262,8 +326,4 @@ function feedDuration(move, state, params) {
     seconds += ((move.length / parts) / mmPerMin) * 60;
   }
   return seconds;
-}
-
-function fmt(value) {
-  return Number(value.toFixed(3)).toString();
 }

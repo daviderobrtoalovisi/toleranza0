@@ -105,6 +105,11 @@ export const ALARMS = {
     message: 'Correttore {offset} non presente',
     hint: 'Le ultime due cifre di T sono il correttore: quelli disponibili sono {available}. Scrivi per esempio T0101.'
   },
+  2007: {
+    category: 'parametri',
+    message: 'Ciclo {cycle} incompleto: manca {missing}',
+    hint: '{how}'
+  },
 
   // 3000–3999 Geometria e limiti
   3001: {
@@ -131,6 +136,16 @@ export const ALARMS = {
     category: 'geometria',
     message: 'Passata troppo profonda: {depth} mm',
     hint: 'L\'utensile T{tool} può togliere al massimo {max} mm per passata. Dividi la lavorazione in più passate.'
+  },
+  3006: {
+    category: 'geometria',
+    message: 'Blocco N{n} del profilo non trovato',
+    hint: 'P e Q del ciclo devono essere i numeri N del primo e dell\'ultimo blocco del profilo, scritti all\'inizio di quelle righe.'
+  },
+  3007: {
+    category: 'geometria',
+    message: 'Profilo non adatto al ciclo: {reason}',
+    hint: 'G71 lavora profili esterni che salgono sempre in X e scendono sempre in Z, senza gole, e il primo blocco del profilo muove solo X. Le gole si fanno a parte, per esempio con il troncatore.'
   },
 
   // 4000–4999 Collisioni

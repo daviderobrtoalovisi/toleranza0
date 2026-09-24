@@ -60,7 +60,7 @@ test('1009 due G dello stesso gruppo', () => assertEqual(alarmOf('G00 G01 Z2'), 
 test('1010 decimale in M', () => assertEqual(alarmOf('M3.5'), 1010));
 test('1011 avanzamento negativo', () => assertEqual(alarmOf('G01 X10 F-0.2'), 1011));
 test('1012 N non all\'inizio', () => assertEqual(alarmOf('X50 N85'), 1012));
-test('1013 ciclo non ancora supportato', () => assertEqual(alarmOf('G71 U2 R1'), 1013));
+test('1013 ciclo non ancora supportato', () => assertEqual(alarmOf('G72 W2 R1'), 1013));
 
 test('l\'allarme riporta la riga giusta', () => {
   const { alarms } = checkProgram('G00 X10\n\nG13', LATHE);
