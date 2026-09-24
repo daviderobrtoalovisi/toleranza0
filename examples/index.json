@@ -2,6 +2,7 @@
   { "file": "tornio-01-cilindratura.nc", "title": "Tornio 1 — Sfacciatura e cilindratura" },
   { "file": "tornio-02-profilo-raggi.nc", "title": "Tornio 2 — Sgrossatura e finitura con smusso e raggi" },
   { "file": "tornio-03-gola.nc", "title": "Tornio 3 — Gola con il troncatore" },
+  { "file": "tornio-04-cicli-g71-g70.nc", "title": "Tornio 4 — Lo stesso profilo con G71, G70 e G42" },
   { "file": "esercizio-trova-errori.nc", "title": "Esercizio — Trova gli errori" },
   { "file": "esercizio-collisione.nc", "title": "Esercizio — Perché si rompe l'utensile?" }
 ]
