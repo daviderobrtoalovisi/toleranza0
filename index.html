@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Toleranza0 — Simulatore CNC</title>
+  <meta name="description" content="Simulatore CNC didattico: scrivi un programma ISO e provalo senza occupare la macchina.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-state="ready">
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-name">Toleranza0</span>
+      <span class="brand-sub">Simulatore CNC</span>
+      <span id="version" class="version"></span>
+    </div>
+    <label class="field">
+      <span>Macchina</span>
+      <select id="machine">
+        <option value="lathe" selected>Tornio 2 assi (Fanuc)</option>
+        <option value="mill">Fresa 3 assi (in arrivo)</option>
+      </select>
+    </label>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="Comandi">
+    <div class="toolbar-group">
+      <button type="button" id="btn-new">Nuovo</button>
+      <button type="button" id="btn-open">Apri…</button>
+      <input type="file" id="file-input" accept=".nc,.txt,.cnc,.iso,.tap,.ngc" hidden>
+      <input type="text" id="file-name" class="file-name" value="programma" aria-label="Nome del file">
+      <button type="button" id="btn-save">Salva</button>
+      <select id="examples" aria-label="Esempi">
+        <option value="">Esempi…</option>
+      </select>
+    </div>
+    <div class="toolbar-group">
+      <button type="button" id="btn-start" class="btn-start">▶ Avvia</button>
+      <button type="button" id="btn-pause">❚❚ Pausa</button>
+      <button type="button" id="btn-step">Blocco singolo</button>
+      <button type="button" id="btn-reset" class="btn-reset">Reset</button>
+      <label class="field field-inline">
+        <span>Velocità</span>
+        <input type="range" id="speed" min="25" max="500" step="25" value="100">
+        <output id="speed-value">100%</output>
+      </label>
+      <label class="check"><input type="checkbox" id="opt-block-delete"> Salta blocchi /</label>
+      <label class="check"><input type="checkbox" id="opt-optional-stop"> Arresto M01</label>
+    </div>
+  </div>
+
+  <main class="layout">
+    <section class="panel panel-editor" aria-label="Programma">
+      <h2 class="panel-title">Programma</h2>
+      <div id="editor" class="editor"></div>
+    </section>
+
+    <section class="panel panel-sim" aria-label="Simulazione">
+      <h2 class="panel-title">Simulazione</h2>
+      <div class="sim-placeholder">
+        <p><strong>La simulazione grafica del tornio arriva nella versione 0.2.</strong></p>
+        <p>Per ora puoi scrivere il programma, controllarne la sintassi ed eseguirlo blocco per blocco.</p>
+      </div>
+    </section>
+
+    <section class="panel panel-block" aria-label="Blocco corrente">
+      <h2 class="panel-title">Blocco corrente</h2>
+      <div id="block"></div>
+    </section>
+
+    <section class="panel panel-alarms" aria-label="Allarmi">
+      <h2 class="panel-title">Allarmi</h2>
+      <div id="alarms" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="status-bar" aria-live="polite">
+    <span id="status-state" class="status-state">Pronto</span>
+    <span id="status-line" class="status-line"></span>
+    <span id="status-message" class="status-message"></span>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
