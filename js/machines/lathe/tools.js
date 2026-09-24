@@ -2,6 +2,7 @@
 // Punto programmato: punta teorica con orientamento 3 (utensile esterno che lavora verso il mandrino):
 // il raggio di punta è tangente alle rette r = 0 e z = 0, quindi senza G41/G42 cilindri e facce
 // vengono esatti mentre coni e raggi hanno il piccolo errore reale dovuto al raggio di punta.
+// maxDepth: profondità massima di passata in mm, misurata perpendicolarmente al movimento (allarme 3005).
 
 export const LATHE_TOOLS = {
   1: {
@@ -10,13 +11,15 @@ export const LATHE_TOOLS = {
     tipAngle: 80,
     approach: 95,
     noseRadius: 0.8,
-    size: 12
+    size: 12,
+    maxDepth: 4
   },
   2: {
     name: 'Troncatore larghezza 3 mm (riferimento: spigolo destro)',
     shape: 'groove',
     width: 3,
-    depth: 18
+    depth: 18,
+    maxDepth: 3
   },
   3: {
     name: 'Finitore esterno 35° (VBMT) r0.4',
@@ -24,32 +27,36 @@ export const LATHE_TOOLS = {
     tipAngle: 35,
     approach: 93,
     noseRadius: 0.4,
-    size: 11
+    size: 11,
+    maxDepth: 2
   }
 };
 
 // Contorno dell'inserto come poligono { z, r } relativo al punto programmato
 export function toolOutline(tool) {
-  const points = tool.shape === 'groove' ? grooveOutline(tool) : rhombicOutline(tool);
+  const points = tool.shape === 'groove' ? grooveOutline(tool) : rhombicOutline(rhombicGeometry(tool));
   return withBounds(points);
 }
 
-// Portautensile, solo per il disegno
+// Portautensile: appoggiato sul retro dell'inserto, non tocca la zona che taglia.
+// Serve per il disegno e per la collisione 4003.
 export function toolHolder(tool) {
   if (tool.shape === 'groove') {
+    const { width, depth } = tool;
     return withBounds([
-      { z: 2, r: tool.depth }, { z: 2, r: tool.depth + 40 },
-      { z: -tool.width - 16, r: tool.depth + 40 }, { z: -tool.width - 16, r: tool.depth }
+      { z: -width, r: depth }, { z: 16, r: depth }, { z: 16, r: depth + 40 }, { z: -width, r: depth + 40 }
     ]);
   }
-  const s = tool.size;
+  const { back, sideEnd, mainEnd, size } = rhombicGeometry(tool);
+  const top = size * 4.5;
+  const right = sideEnd.z + size * 0.6;
   return withBounds([
-    { z: s * 0.35, r: s * 0.55 }, { z: s * 1.25, r: s * 0.2 }, { z: s * 2, r: s * 0.2 },
-    { z: s * 2, r: s * 4.5 }, { z: s * 0.35, r: s * 4.5 }
+    mainEnd, back, sideEnd,
+    { z: right, r: sideEnd.r }, { z: right, r: top }, { z: mainEnd.z, r: top }
   ]);
 }
 
-function rhombicOutline({ tipAngle, approach, noseRadius: rn, size }) {
+function rhombicGeometry({ tipAngle, approach, noseRadius: rn, size }) {
   const deg = Math.PI / 180;
   const alpha = tipAngle * deg;
   const secondary = (180 - approach - tipAngle) * deg; // tagliente secondario, quasi parallelo a Z
@@ -58,25 +65,30 @@ function rhombicOutline({ tipAngle, approach, noseRadius: rn, size }) {
   const move = (p, v, k) => ({ z: p.z + v.z * k, r: p.r + v.r * k });
 
   const center = { z: rn, r: rn };
-  const bisector = dir(secondary + alpha / 2);
-  const tip = move(center, bisector, -rn / Math.sin(alpha / 2)); // punta dello spigolo vivo
-  const tangent = rn / Math.tan(alpha / 2);
+  const tip = move(center, dir(secondary + alpha / 2), -rn / Math.sin(alpha / 2)); // spigolo vivo teorico
   const es = dir(secondary);
   const em = dir(main);
+  const sideEnd = move(tip, es, size);
+  const mainEnd = move(tip, em, size);
+  return {
+    rn, size, center, tip, es, em, secondary, main, alpha,
+    sideEnd,
+    mainEnd,
+    back: move(sideEnd, em, size),
+    tangent: rn / Math.tan(alpha / 2)
+  };
+}
 
-  const points = [
-    move(tip, es, tangent),
-    move(tip, es, size),
-    move(move(tip, es, size), em, size),
-    move(tip, em, size),
-    move(tip, em, tangent)
-  ];
-  const a0 = main + Math.PI / 2;
-  const a1 = secondary - Math.PI / 2 + 2 * Math.PI;
+function rhombicOutline(g) {
+  const move = (p, v, k) => ({ z: p.z + v.z * k, r: p.r + v.r * k });
+  const points = [move(g.tip, g.es, g.tangent), g.sideEnd, g.back, g.mainEnd, move(g.tip, g.em, g.tangent)];
+  // Raggio di punta, dal tagliente principale a quello secondario
+  const a0 = g.main + Math.PI / 2;
+  const a1 = g.secondary - Math.PI / 2 + 2 * Math.PI;
   const segments = 16;
   for (let k = 1; k < segments; k++) {
     const a = a0 + ((a1 - a0) * k) / segments;
-    points.push({ z: center.z + rn * Math.cos(a), r: center.r + rn * Math.sin(a) });
+    points.push({ z: g.center.z + g.rn * Math.cos(a), r: g.center.r + g.rn * Math.sin(a) });
   }
   return points;
 }

@@ -3,14 +3,14 @@ import { checkProgram } from '../js/parser/check-program.js';
 import { interpretLathe } from '../js/interpreter/interpret-lathe.js';
 import { LATHE } from '../js/machines/lathe/codes.js';
 import { LATHE_PARAMS, setupFromProgram } from '../js/machines/lathe/machine.js';
-import { LATHE_TOOLS, toolOutline } from '../js/machines/lathe/tools.js';
+import { LATHE_TOOLS, toolOutline, toolHolder } from '../js/machines/lathe/tools.js';
 import { createLatheSimulator, runAll } from '../js/machines/lathe/simulator.js';
 
 const SETUP = { diameter: 50, length: 80, faceAllowance: 1 };
 const HEADER = 'G21 G99\nT0101\nG97 S1000 M03\n';
 
-function simulate(text, setup = SETUP) {
-  const program = interpretLathe(checkProgram(text, LATHE).blocks, { params: LATHE_PARAMS, tools: LATHE_TOOLS });
+function simulate(text, setup = SETUP, offsets = null) {
+  const program = interpretLathe(checkProgram(text, LATHE).blocks, { params: LATHE_PARAMS, tools: LATHE_TOOLS, offsets });
   const sim = createLatheSimulator({ params: LATHE_PARAMS, tools: LATHE_TOOLS });
   sim.reset(setup);
   return { sim, alarm: runAll(program, sim) };
@@ -58,6 +58,45 @@ test('4002 utensile contro il mandrino', () => {
 });
 test('senza utensile il simulatore non controlla collisioni', () => {
   assertEqual(simulate('G00 X40 Z-10').alarm, null);
+});
+
+// v0.3: portautensile, profondità di passata, correttori
+for (const [id, tool] of Object.entries(LATHE_TOOLS)) {
+  test(`T${id}: il portautensile sta sopra la zona che taglia`, () => {
+    const holder = toolHolder(tool);
+    const outline = toolOutline(tool);
+    assert(holder.minR > outline.minR + 0.5, `portautensile a r ${holder.minR}`);
+    assert(holder.minR >= Math.min(tool.maxDepth, 0.9), `portautensile troppo basso: r ${holder.minR}`);
+  });
+}
+test('3005 passata più profonda del massimo dell\'utensile', () => {
+  const { alarm } = simulate(`${HEADER}G00 X52 Z2\nX30\nG01 Z-10 F0.2`);
+  assertEqual(alarm?.code, 3005);
+  assert(alarm.hint.includes('4'), alarm.hint);
+});
+test('3005 il finitore accetta al massimo 2 mm', () => {
+  const tool3 = 'G21 G99\nT0303\nG97 S1000 M03\n';
+  assertEqual(simulate(`${tool3}G00 X52 Z2\nX46\nG01 Z-10 F0.1`).alarm, null);
+  assertEqual(simulate(`${tool3}G00 X52 Z2\nX44\nG01 Z-10 F0.1`).alarm?.code, 3005);
+});
+test('4003 gola più profonda del troncatore', () => {
+  const tool2 = 'G21 G99\nT0202\nG97 S600 M03\n';
+  assertEqual(simulate(`${tool2}G00 X52 Z-10\nG01 X20 F0.05\nG00 X52`).alarm, null);
+  assertEqual(simulate(`${tool2}G00 X52 Z-10\nG01 X10 F0.05`).alarm?.code, 4003);
+});
+test('4003 il portautensile urta anche in rapido', () => {
+  const tool2 = 'G21 G99\nT0202\nG97 S600 M03\n';
+  // Troncatore in fondo a una gola profonda 16 mm, poi rapido verso sinistra dentro il pezzo
+  const alarm = simulate(`${tool2}G00 X52 Z-10\nG01 X18 F0.05\nG00 W-5`).alarm;
+  assert(alarm && (alarm.code === 4001 || alarm.code === 4003), JSON.stringify(alarm));
+});
+test('l\'usura X del correttore cambia il diametro ottenuto', () => {
+  const offsets = { 1: { x: 0.4, z: 0 }, 2: { x: 0, z: 0 }, 3: { x: 0, z: 0 } };
+  const { sim, alarm } = simulate(`${HEADER}G00 X52 Z2\nX46\nG01 Z-30 F0.25\nX52`, SETUP, offsets);
+  assertEqual(alarm, null);
+  const c = sim.stock.c;
+  assert(near(2 * sim.stock.radiusAt(-15), 46.4, 2 * c), `Ø ${2 * sim.stock.radiusAt(-15)}`);
+  assertEqual(sim.pos, { x: 52, z: -30 });
 });
 
 // Grezzo nel programma

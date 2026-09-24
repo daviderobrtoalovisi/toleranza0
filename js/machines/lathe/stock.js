@@ -27,13 +27,17 @@ export function createStock({ diameter, length, faceAllowance }) {
       return false;
     },
 
+    // Toglie il materiale nelle celle da i0 a i1 della riga j.
+    // Restituisce la prima e l'ultima cella tolta (-1 se non c'era materiale).
     remove(j, i0, i1) {
       const offset = j * nz;
-      let count = 0;
+      let first = -1;
+      let last = -1;
       for (let i = i0; i <= i1; i++) {
         if (data[offset + i]) {
           data[offset + i] = 0;
-          count++;
+          if (first < 0) first = i;
+          last = i;
           if (!stock.fullRedraw) stock.changed.push(offset + i);
         }
       }
@@ -41,7 +45,7 @@ export function createStock({ diameter, length, faceAllowance }) {
         stock.changed.length = 0;
         stock.fullRedraw = true;
       }
-      return count;
+      return { first, last };
     },
 
     // Raggio esterno del materiale alla quota z (0 se non c'è materiale)
