@@ -5,9 +5,14 @@
   { "machine": "lathe", "file": "tornio-04-cicli-g71-g70.nc", "title": "Tornio 4 — Lo stesso profilo con G71, G70 e G42" },
   { "machine": "lathe", "file": "esercizio-trova-errori.nc", "title": "Esercizio — Trova gli errori" },
   { "machine": "lathe", "file": "esercizio-collisione.nc", "title": "Esercizio — Perché si rompe l'utensile?" },
+  { "machine": "lathe", "file": "esercizio-tornio-g96.nc", "title": "Esercizio — Perché la macchina non parte?" },
+  { "machine": "lathe", "file": "esercizio-tornio-passata.nc", "title": "Esercizio — Troppo materiale in una volta" },
   { "machine": "mill", "file": "fresa-01-spianatura.nc", "title": "Fresa 1 — Spianatura della faccia" },
   { "machine": "mill", "file": "fresa-02-cave.nc", "title": "Fresa 2 — Cave con archi G02/G03" },
   { "machine": "mill", "file": "fresa-03-foratura.nc", "title": "Fresa 3 — Foratura con G81 e G83" },
   { "machine": "mill", "file": "fresa-04-contorno-g41.nc", "title": "Fresa 4 — Contorno con compensazione G41" },
-  { "machine": "mill", "file": "esercizio-fresa-g43.nc", "title": "Esercizio fresa — Cosa manca dopo il cambio utensile?" }
+  { "machine": "mill", "file": "esercizio-fresa-g43.nc", "title": "Esercizio fresa — Cosa manca dopo il cambio utensile?" },
+  { "machine": "mill", "file": "esercizio-fresa-passata.nc", "title": "Esercizio fresa — La fresa piccola non ce la fa" },
+  { "machine": "mill", "file": "esercizio-fresa-punta.nc", "title": "Esercizio fresa — Si può fresare con la punta?" },
+  { "machine": "mill", "file": "esercizio-fresa-morsa.nc", "title": "Esercizio fresa — Attenzione alla morsa" }
 ]

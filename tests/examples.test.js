@@ -16,8 +16,16 @@ import { createMillSimulator, runAllMill } from '../js/machines/mill/simulator.j
 const EXPECTED = {
   'esercizio-trova-errori.nc': { syntax: [1010, 1008, 1002, 1012, 1009, 1005, 1002, 1007, 1003, 1006] },
   'esercizio-collisione.nc': { run: { code: 4001, line: 14 } },
-  'esercizio-fresa-g43.nc': { run: { code: 2008, line: 18 } }
+  'esercizio-fresa-g43.nc': { run: { code: 2008, line: 18 } },
+  'esercizio-tornio-g96.nc': { run: { code: 2005, line: 6 } },
+  'esercizio-tornio-passata.nc': { run: { code: 3005, line: 11 } },
+  'esercizio-fresa-passata.nc': { run: { code: 3005, line: 11 } },
+  'esercizio-fresa-punta.nc': { run: { code: 3008, line: 11 } },
+  'esercizio-fresa-morsa.nc': { run: { code: 4004, line: 10 } }
 };
+
+// Ogni esercizio deve avere il suo risultato atteso qui: un esercizio senza errore non insegna niente
+export const EXERCISE_PREFIX = 'esercizio-';
 
 const MACHINES = {
   lathe: {
@@ -44,6 +52,11 @@ export function registerExampleTests(examples) {
   for (const { file, text, machine = 'lathe' } of examples) {
     const expected = EXPECTED[file] ?? {};
     const m = MACHINES[machine];
+    if (file.startsWith(EXERCISE_PREFIX)) {
+      test(`${file}: l'esercizio ha un errore atteso dichiarato nel test`, () => {
+        assertEqual(Boolean(EXPECTED[file]), true);
+      });
+    }
     const { blocks, alarms } = checkProgram(text, m.codes);
 
     test(`${file}: errori di sintassi attesi`, () => {
