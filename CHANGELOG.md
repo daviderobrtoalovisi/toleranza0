@@ -2,6 +2,11 @@
 
 Ogni versione ha un tag git (`vX.Y.Z`). Il numero è in `js/version.js` e si vede in alto nella pagina.
 
+## 1.3.0 — Siemens fase 2: cicli di foratura
+
+- Fresa in Siemens: cicli di foratura `CYCLE81`, `CYCLE82` (con sosta) e `CYCLE83` (a beccate), da soli nella posizione attuale oppure modali con `MCALL`; vengono simulati come i cicli Fanuc G81/G82/G83. Parametri mancanti: allarme 2007 con la scrittura Siemens del ciclo
+- Nuovo esempio Siemens *Fresa 3* con gli stessi fori dell'esempio Fanuc (un test controlla che il pezzo sia identico)
+
 ## 1.2.0 — linguaggio Siemens SINUMERIK (fase 1)
 
 - Menu **Linguaggio**: Fanuc ISO oppure Siemens SINUMERIK, per tornio e fresa. Il programma Siemens è tradotto nei movimenti equivalenti: stessa simulazione, stessi allarmi (con i suggerimenti in sintassi Siemens), stessa grafica. Guida in `docs/siemens.md`

@@ -1,4 +1,4 @@
-# Linguaggio Siemens SINUMERIK (fase 1)
+# Linguaggio Siemens SINUMERIK
 
 Nel menu **Linguaggio** si sceglie tra **Fanuc ISO** e **Siemens SINUMERIK**, sia per il tornio sia per la fresa. Esempi, bozza e guida cambiano con il linguaggio.
 
@@ -44,15 +44,31 @@ Attenzione: in Siemens `G70`/`G71` sono le unità di misura, non i cicli di fini
 | `G2 X.. Y.. CR=8` | arco con raggio | `R8` |
 | `G74 Z1=0` | ritorno al punto di riferimento in Z | `G91 G28 Z0` |
 | `G4 F2` | sosta di 2 secondi | `G04 X2` |
+| `CYCLE81(RTP, RFP, SDIS, DP, DPR)` | foratura nella posizione attuale | `G99 G81 Z.. R..` + `G80` + `G0 Z` RTP |
+| `CYCLE82(RTP, RFP, SDIS, DP, DPR, DTB)` | foratura con sosta di DTB secondi sul fondo | `G99 G82 … P` (ms) |
+| `CYCLE83(RTP, RFP, SDIS, DP, DPR, FDEP, FDPR, …)` | foratura profonda a beccate | `G99 G83 … Q` |
+| `MCALL CYCLE81(...)` | da qui ogni blocco con X/Y fora nella nuova posizione | un ciclo Fanuc per ogni foro |
+| `MCALL` da solo | annulla il richiamo modale | `G80` |
+
+### Parametri dei cicli di foratura
+
+- **RTP** piano di ritorno: dopo ogni foro l'utensile risale qui in rapido
+- **RFP** piano di riferimento, cioè la faccia del pezzo (di solito 0)
+- **SDIS** distanza di sicurezza sopra RFP: il rapido arriva fino a RFP + SDIS (il piano R del Fanuc)
+- **DP** fondo del foro in quota assoluta, oppure **DPR** profondità misurata da RFP (si lascia vuoto DP: `CYCLE81(10, 0, 2, , 15)`)
+- **DTB** (CYCLE82) sosta sul fondo in secondi
+- **FDEP** (CYCLE83) quota della prima foratura, oppure **FDPR** sua profondità da RFP: la beccata Q del Fanuc è la distanza tra RFP + SDIS e la prima foratura. Gli altri parametri di CYCLE83 (riduzione, soste, scarico) non sono simulati: si simula sempre lo scarico completo a ogni beccata
+- I parametri vuoti si lasciano tra due virgole; RTP, RFP e il fondo sono obbligatori (altrimenti allarme 2007)
+- Il ciclo va scritto in un blocco a parte (solo con il numero N); nei blocchi di posizionamento con `MCALL` attivo non si scrive Z
 
 ## Non ancora simulato (allarme 1013)
 
-- Cicli: `CYCLE95` (sgrossatura), `CYCLE93` (gola), `CYCLE97` (filettatura), `CYCLE81`/`82`/`83` (foratura), `POCKET3`/`POCKET4` (tasche), `CYCLE71`/`72`
+- Cicli: `CYCLE95` (sgrossatura), `CYCLE93` (gola), `CYCLE97` (filettatura), `POCKET3`/`POCKET4` (tasche), `CYCLE71`/`72`
 - Filettatura `G33`, sottoprogrammi (`M17`), variabili e parametri R, istruzioni come `MSG`, `IF`, `GOTO`
 - Utensili con il nome (`T="FRESA10"`) e taglienti oltre il primo (`D2`…)
 - Sulla fresa: `X=IC(..)` e `X=AC(..)` nei singoli blocchi (usare `G90`/`G91` per tutto il blocco) e `G95`
 
-I cicli di foratura sono i primi candidati per la fase 2, poi `CYCLE95`.
+Il prossimo candidato è `CYCLE95` (sgrossatura del tornio).
 
 ## Esempi
 
@@ -61,4 +77,5 @@ I cicli di foratura sono i primi candidati per la fase 2, poi `CYCLE95`.
 | *Tornio 1* (`tornio-siemens-01-cilindratura.nc`) | lo stesso pezzo dell'esempio Fanuc: `T1 D1`, `G95`, `G96 … LIMS=` |
 | *Tornio 2* (`tornio-siemens-02-raccordi.nc`) | sgrossatura con `X=IC(1)`, finitura con `G42` e archi `CR=` |
 | *Esercizio — Perché la macchina non parte?* (`esercizio-tornio-siemens-lims.nc`) | `G96` senza `LIMS`: allarme 2005 alla riga 5 |
+| *Fresa 3* (`fresa-siemens-03-foratura.nc`) | gli stessi fori dell'esempio Fanuc: `MCALL CYCLE81`, poi `CYCLE83` a beccate |
 | *Fresa 4* (`fresa-siemens-04-contorno-g41.nc`) | lo stesso contorno dell'esempio Fanuc: `T1 M6` senza `G43`, `G41`, `CR=`, `G74` |
