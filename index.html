@@ -23,14 +23,19 @@
       <span class="brand-sub">Simulatore CNC</span>
       <span id="version" class="version"></span>
     </div>
-    <label class="field">
-      <span>Macchina</span>
-      <select id="machine">
-        <option value="lathe" selected>Tornio 2 assi (Fanuc)</option>
-        <option value="mill">Fresa 3 assi (Fanuc)</option>
-      </select>
-    </label>
+    <div class="header-actions">
+      <button type="button" id="btn-help" title="Guida (F1)">? Guida</button>
+      <label class="field">
+        <span>Macchina</span>
+        <select id="machine">
+          <option value="lathe" selected>Tornio 2 assi (Fanuc)</option>
+          <option value="mill">Fresa 3 assi (Fanuc)</option>
+        </select>
+      </label>
+    </div>
   </header>
+
+  <dialog id="help" class="help-dialog" aria-label="Guida"></dialog>
 
   <div class="toolbar" role="toolbar" aria-label="Comandi">
     <div class="toolbar-group">

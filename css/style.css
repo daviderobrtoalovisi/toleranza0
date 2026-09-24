@@ -390,3 +390,39 @@ body[data-state="alarm"] .status-message { color: var(--error); font-weight: 600
   .panel-sim { height: 60vh; }
   .status-bar { position: sticky; bottom: 0; flex-wrap: wrap; }
 }
+
+/* Guida */
+.header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.help-dialog {
+  width: min(900px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+}
+.help-dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+.help { display: flex; flex-direction: column; max-height: calc(100vh - 34px); }
+.help-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.help-head h2 { margin: 0; font-size: 18px; }
+.help-tabs { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+.help-tabs [aria-selected="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.help-close { padding: 4px 10px; }
+.help-body { overflow: auto; padding: 12px 16px 20px; }
+.help-body h3 { margin: 16px 0 6px; font-size: 15px; }
+.help-body code, .help-body kbd { font-family: var(--code-font); }
+.help-body kbd { padding: 1px 6px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface-2); white-space: nowrap; }
+.help-steps li, .help-notes li { margin: 4px 0; }
+.help-table { border-collapse: collapse; width: 100%; }
+.help-table th, .help-table td { text-align: left; vertical-align: top; padding: 4px 8px; border-bottom: 1px solid var(--border); }
+.help-table th { white-space: nowrap; width: 1%; color: var(--accent); }
+.help-table .is-planned { opacity: 0.65; }
+.help-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0 24px; }

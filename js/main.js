@@ -9,6 +9,7 @@ import { createBlockPanel } from './ui/block-panel.js';
 import { createSetupPanel } from './ui/setup-panel.js';
 import { createToolPanel } from './ui/tool-panel.js';
 import { createRunController, formatTime } from './ui/run-controller.js';
+import { createHelpDialog } from './ui/help-dialog.js';
 
 // Collega interfaccia, interprete, simulatore e vista della macchina scelta (tornio o fresa).
 // Tutto ciò che cambia tra le macchine sta negli adattatori (js/machines/*/adapter.js).
@@ -57,6 +58,7 @@ const alarmPanel = createAlarmPanel($('#alarms'), {
   onSelectLine: (line) => editor.goToLine(line)
 });
 const blockPanel = createBlockPanel($('#block'));
+const help = createHelpDialog($('#help'), { getAdapter: () => adapter });
 const setupPanel = createSetupPanel($('#setup-fields'), { onChange: applySetup });
 const toolPanel = createToolPanel($('#tool-panel'), {
   onOffsetsChange(next) {
@@ -244,6 +246,26 @@ $('#btn-fit').addEventListener('click', () => view?.fit());
 $('#opt-preview').addEventListener('change', () => view?.draw());
 $('#opt-block-delete').addEventListener('change', () => analyze(editor.getValue()));
 $('#machine').addEventListener('change', (event) => selectMachine(event.target.value));
+$('#btn-help').addEventListener('click', () => help.open());
+
+// Scorciatoie da tastiera (elencate anche nella guida)
+document.addEventListener('keydown', (event) => {
+  if (help.isOpen) return; // Esc chiude la guida da solo
+  const ctrl = event.ctrlKey || event.metaKey;
+  if (event.key === 'F1') {
+    event.preventDefault();
+    help.open();
+  } else if (ctrl && event.key === 'Enter') {
+    event.preventDefault();
+    if (!$('#btn-start').disabled) $('#btn-start').click();
+  } else if (event.key === 'Escape' && controller.state === 'running') {
+    event.preventDefault();
+    controller.pause();
+  } else if (ctrl && (event.key === 's' || event.key === 'S')) {
+    event.preventDefault();
+    $('#btn-save').click();
+  }
+});
 
 function showSpeed() {
   $('#speed-value').textContent = `×${CONFIG.speedFactors[Number($('#speed').value)]}`;
