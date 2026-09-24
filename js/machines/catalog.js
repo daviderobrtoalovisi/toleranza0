@@ -27,8 +27,8 @@ export function findModel(type, id) {
 export const ISO_SUPPORT = {
   yes: 'Programmazione ISO in stile Fanuc: uguale a quella del simulatore.',
   mode: 'Il controllo accetta anche la programmazione ISO (G-code), accanto al suo linguaggio: verificare le opzioni installate e le piccole differenze rispetto al Fanuc.',
-  option: 'Si vende con controlli diversi: con Fanuc (o MAPPS su Fanuc) si programma in ISO come nel simulatore, con Siemens o Heidenhain no. Controllare quale controllo ha la macchina del laboratorio.',
-  no: 'Il controllo usa un linguaggio diverso (per esempio Siemens o Heidenhain): il simulatore usa i dati di questa macchina, ma il programma va scritto in ISO Fanuc.'
+  option: 'Si vende con controlli diversi: con Fanuc (o MAPPS su Fanuc) si programma in ISO come nel simulatore; con Siemens scegliere «Siemens SINUMERIK» nel menu Linguaggio; Heidenhain non è simulato. Controllare quale controllo ha la macchina del laboratorio.',
+  no: 'Il controllo usa un linguaggio diverso dall\'ISO Fanuc: se è Siemens scegliere «Siemens SINUMERIK» nel menu Linguaggio; Heidenhain non è simulato, il simulatore usa comunque i dati di questa macchina.'
 };
 
 const positive = (v) => (Number.isFinite(v) && v > 0 ? v : null);

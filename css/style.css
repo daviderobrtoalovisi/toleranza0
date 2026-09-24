@@ -437,3 +437,8 @@ body[data-state="alarm"] .status-message { color: var(--error); font-weight: 600
 .model-iso-mode { background: var(--current-bg); }
 .model-iso-no { background: var(--error-bg); }
 .machine-info a { color: var(--accent); }
+
+/* Da telefono i menu dell'intestazione si restringono invece di uscire dallo schermo */
+.header-actions { min-width: 0; max-width: 100%; }
+.header-actions .field { min-width: 0; max-width: 100%; }
+.header-actions .field select { min-width: 0; max-width: 100%; }

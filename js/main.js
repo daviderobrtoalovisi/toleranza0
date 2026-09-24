@@ -3,7 +3,6 @@ import { CONFIG } from './config.js';
 import { createLatheAdapter } from './machines/lathe/adapter.js';
 import { createMillAdapter } from './machines/mill/adapter.js';
 import { modelsFor, findModel, modelSheet, ISO_SUPPORT } from './machines/catalog.js';
-import { checkProgram } from './parser/check-program.js';
 import { createEditor } from './ui/editor.js';
 import { createAlarmPanel, escapeHtml } from './ui/alarm-panel.js';
 import { createBlockPanel } from './ui/block-panel.js';
@@ -20,7 +19,9 @@ const MACHINE_KEY = 'toleranza0.macchina';
 const modelKey = (id) => `toleranza0.modello.${id}`;
 const OFFSETS_KEY = 'toleranza0.correttori';
 // Le chiavi senza macchina sono quelle delle versioni fino alla 0.4, che avevano solo il tornio
-const draftKey = (id) => `toleranza0.bozza.${id}`;
+// Bozze separate per macchina e linguaggio (il Fanuc tiene le chiavi delle versioni precedenti)
+const draftKey = (id, dialect = 'fanuc') => (dialect === 'siemens' ? `toleranza0.bozza.${id}.siemens` : `toleranza0.bozza.${id}`);
+const dialectKey = (id) => `toleranza0.linguaggio.${id}`;
 const setupKey = (id) => `toleranza0.grezzo.${id}`;
 const LEGACY = { draft: 'toleranza0.bozza', setup: 'toleranza0.grezzo' };
 const STATE_LABELS = {
@@ -74,7 +75,7 @@ const editor = createEditor($('#editor'), {
   onChange(text) {
     clearTimeout(checkTimer);
     checkTimer = setTimeout(() => analyze(text), 250);
-    if (adapter) saveText(draftKey(adapter.id), text);
+    if (adapter) saveText(draftKey(adapter.id, adapter.dialect), text);
   }
 });
 
@@ -87,14 +88,15 @@ const controller = createRunController({
   }),
   onBlock(step) {
     editor.setCurrentLine(step.block.line, { alarm: Boolean(step.alarm) });
-    blockPanel.show(step.block, adapter.codes);
+    blockPanel.show(step.block.original ?? step.block, adapter.codes); // in Siemens le parole scritte dallo studente
     $('#status-line').textContent = `Riga ${step.block.line}`;
   },
   onFrame() {
     view?.draw();
     updateDro();
   },
-  onStateChange(state, info) {
+  onStateChange(state, rawInfo) {
+    const info = { ...rawInfo, alarm: rawInfo.alarm && adapter.localizeAlarm(rawInfo.alarm) };
     document.body.dataset.state = state;
     $('#status-state').textContent = STATE_LABELS[state];
     $('#status-message').textContent = info.alarm
@@ -116,7 +118,7 @@ const controller = createRunController({
 // Controllo del programma: sintassi + interprete. Collisioni e profondità di passata si vedono solo eseguendo.
 function analyze(text) {
   if (!adapter) return;
-  const syntax = checkProgram(text, adapter.codes);
+  const syntax = adapter.check(text);
   program = adapter.interpret(syntax.blocks, { offsets, blockDelete: $('#opt-block-delete').checked });
   const last = program.steps[program.steps.length - 1];
   const interpreterAlarm = last && last.alarm && !last.block.alarm ? last.alarm : null;
@@ -151,19 +153,22 @@ function loadProgram(text) {
 // Cambio macchina o modello: nuovo simulatore con i dati del modello, campi del grezzo, utensili.
 // Cambiando tipo di macchina si passa anche a esempi e bozza di quella macchina; cambiando solo il
 // modello il programma nell'editor resta com'è.
-async function selectMachine(id, { initial = false, modelId = null } = {}) {
+async function selectMachine(id, { initial = false, modelId = null, dialect = null } = {}) {
   const type = MACHINES[id] && CONFIG.machines[id] ? id : 'lathe';
   const model = findModel(type, modelId ?? loadText(modelKey(type)));
-  if (adapter && adapter.id === type && adapter.model.id === model.id) return;
+  const language = (dialect ?? loadText(dialectKey(type))) === 'siemens' ? 'siemens' : 'fanuc';
+  if (adapter && adapter.id === type && adapter.model.id === model.id && adapter.dialect === language) return;
   if (!initial && controller.state !== 'ready') {
     $('#machine').value = adapter.id;
+    $('#dialect').value = adapter.dialect;
     fillModels();
     return;
   }
-  const sameType = adapter?.id === type;
-  const next = MACHINES[type](model);
+  // Stesso tipo di macchina e stesso linguaggio: cambia solo il modello e il programma resta nell'editor
+  const sameType = adapter?.id === type && adapter?.dialect === language;
+  const next = MACHINES[type](model, language);
   const previous = { adapter, simulator, setup, offsets, program };
-  if (adapter && !sameType) saveText(draftKey(adapter.id), editor.getValue());
+  if (adapter && !sameType) saveText(draftKey(adapter.id, adapter.dialect), editor.getValue());
 
   adapter = next;
   simulator = next.createSimulator();
@@ -189,6 +194,8 @@ async function selectMachine(id, { initial = false, modelId = null } = {}) {
   $('#machine').value = next.id;
   saveText(MACHINE_KEY, next.id);
   saveText(modelKey(next.id), model.id);
+  saveText(dialectKey(next.id), next.dialect);
+  $('#dialect').value = next.dialect;
   fillModels();
   showModelInfo();
 
@@ -203,8 +210,8 @@ async function selectMachine(id, { initial = false, modelId = null } = {}) {
   if (!sameType) {
     fillExamples();
     $('#file-name').value = 'programma';
-    const draft = loadText(draftKey(next.id)) ?? (next.id === 'lathe' ? loadText(LEGACY.draft) : null);
-    const first = examples.find((e) => e.machine === next.id);
+    const draft = loadText(draftKey(next.id, next.dialect)) ?? (next.id === 'lathe' && next.dialect === 'fanuc' ? loadText(LEGACY.draft) : null);
+    const first = examples.find((e) => e.machine === next.id && (e.dialect ?? 'fanuc') === next.dialect);
     if (draft && draft.trim()) editor.setValue(draft);
     else if (first) await loadExample(first.file);
     else editor.setValue(next.newProgram);
@@ -246,7 +253,7 @@ function updateButtons(state) {
   $('#btn-pause').disabled = state !== 'running';
   $('#btn-step').disabled = state === 'running' || state === 'alarm' || state === 'finished';
   $('#btn-reset').disabled = state === 'ready';
-  for (const id of ['#btn-new', '#btn-open', '#examples', '#opt-block-delete', '#machine', '#model']) $(id).disabled = state !== 'ready';
+  for (const id of ['#btn-new', '#btn-open', '#examples', '#opt-block-delete', '#machine', '#model', '#dialect']) $(id).disabled = state !== 'ready';
 }
 
 function updateDro() {
@@ -289,6 +296,7 @@ $('#opt-preview').addEventListener('change', () => view?.draw());
 $('#opt-block-delete').addEventListener('change', () => analyze(editor.getValue()));
 $('#machine').addEventListener('change', (event) => selectMachine(event.target.value));
 $('#model').addEventListener('change', (event) => selectMachine(adapter.id, { modelId: event.target.value }));
+$('#dialect').addEventListener('change', (event) => selectMachine(adapter.id, { dialect: event.target.value }));
 $('#btn-help').addEventListener('click', () => help.open());
 
 // Scorciatoie da tastiera (elencate anche nella guida)
@@ -353,7 +361,7 @@ async function loadExamples() {
 function fillExamples() {
   const select = $('#examples');
   select.innerHTML = '<option value="">Esempi…</option>';
-  for (const example of examples.filter((e) => (e.machine ?? 'lathe') === adapter.id)) {
+  for (const example of examples.filter((e) => (e.machine ?? 'lathe') === adapter.id && (e.dialect ?? 'fanuc') === adapter.dialect)) {
     const option = document.createElement('option');
     option.value = example.file;
     option.textContent = example.title;

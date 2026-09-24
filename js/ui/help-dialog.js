@@ -58,16 +58,24 @@ export function createHelpDialog(dialog, { getAdapter }) {
   };
 }
 
+// Consigli per macchina e linguaggio
+const MACHINE_NOTES = {
+  'mill-fanuc': 'Z0 è la faccia superiore finita. Si monta l\'utensile con <code>T1 M06</code> e poi, prima di muovere Z, si richiama la sua lunghezza con <code>G43 H1</code>.',
+  'mill-siemens': 'Z0 è la faccia superiore finita. Si monta l\'utensile con <code>T1 M6</code>: con il correttore <code>D1</code> (predefinito) lunghezza e raggio sono già attivi. Commenti dopo <code>;</code>, raggio degli archi con <code>CR=</code>, ritorno al riferimento con <code>G74 Z1=0</code>.',
+  'lathe-fanuc': 'X è in diametro, Z0 è la faccia finita del pezzo. L\'utensile si chiama con <code>T0101</code> (utensile 01, correttore 01).',
+  'lathe-siemens': 'X è in diametro (<code>DIAMON</code>), Z0 è la faccia finita del pezzo. L\'utensile si chiama con <code>T1 D1</code>; avanzamento al giro con <code>G95</code>, velocità di taglio costante con <code>G96 S180 LIMS=2000</code>, quote incrementali con <code>X=IC(2)</code>, raggio degli archi con <code>CR=</code>, commenti dopo <code>;</code>.'
+};
+
 function usage(adapter) {
-  const machine = adapter.id === 'mill'
-    ? `<li><b>Fresa:</b> Z0 è la faccia superiore finita. Si monta l'utensile con <code>T1 M06</code> e poi, prima di muovere Z, si richiama la sua lunghezza con <code>G43 H1</code>.</li>
-       <li>Vista 3D: trascina con il tasto sinistro per ruotare, con il destro per spostare, rotella per lo zoom.</li>`
-    : `<li><b>Tornio:</b> X è in diametro, Z0 è la faccia finita del pezzo. L'utensile si chiama con <code>T0101</code> (utensile 01, correttore 01).</li>
-       <li>Vista: rotella per lo zoom, trascina per spostare.</li>`;
+  const siemens = adapter.dialect === 'siemens';
+  const stock = adapter.id === 'mill' ? '(GREZZO X100 Y80 Z30)' : '(GREZZO D50 L80)';
+  const machine = `<li><b>${adapter.id === 'mill' ? 'Fresa' : 'Tornio'}${siemens ? ' in Siemens SINUMERIK' : ''}:</b> ${MACHINE_NOTES[`${adapter.id}-${adapter.dialect}`]}</li>
+    ${siemens ? '<li>Il programma Siemens viene tradotto nei movimenti equivalenti: cicli (<code>CYCLE…</code>) e sottoprogrammi non sono ancora simulati.</li>' : ''}
+    <li>${adapter.id === 'mill' ? 'Vista 3D: trascina con il tasto sinistro per ruotare, con il destro per spostare, rotella per lo zoom.' : 'Vista: rotella per lo zoom, trascina per spostare.'}</li>`;
   return `
     <ol class="help-steps">
       <li>Scrivi il programma o scegli un esempio. Gli errori di scrittura compaiono subito in rosso.</li>
-      <li>Imposta il grezzo sopra la simulazione, oppure scrivi nel programma la riga <code>${adapter.id === 'mill' ? '(GREZZO X100 Y80 Z30)' : '(GREZZO D50 L80)'}</code>.</li>
+      <li>Imposta il grezzo sopra la simulazione, oppure scrivi nel programma la riga <code>${siemens ? `; ${stock}` : stock}</code>.</li>
       <li>Premi <b>Avvia</b>, oppure <b>Blocco singolo</b> per andare una riga alla volta.</li>
       <li>Se compare un allarme leggi il messaggio e il suggerimento, correggi la riga evidenziata e premi <b>Reset</b>.</li>
     </ol>
