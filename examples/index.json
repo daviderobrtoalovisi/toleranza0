@@ -14,5 +14,9 @@
   { "machine": "mill", "file": "esercizio-fresa-g43.nc", "title": "Esercizio fresa — Cosa manca dopo il cambio utensile?" },
   { "machine": "mill", "file": "esercizio-fresa-passata.nc", "title": "Esercizio fresa — La fresa piccola non ce la fa" },
   { "machine": "mill", "file": "esercizio-fresa-punta.nc", "title": "Esercizio fresa — Si può fresare con la punta?" },
-  { "machine": "mill", "file": "esercizio-fresa-morsa.nc", "title": "Esercizio fresa — Attenzione alla morsa" }
+  { "machine": "mill", "file": "esercizio-fresa-morsa.nc", "title": "Esercizio fresa — Attenzione alla morsa" },
+  { "machine": "lathe", "dialect": "siemens", "file": "tornio-siemens-01-cilindratura.nc", "title": "Tornio 1 — Sfacciatura e cilindratura" },
+  { "machine": "lathe", "dialect": "siemens", "file": "tornio-siemens-02-raccordi.nc", "title": "Tornio 2 — Profilo con CR=, IC() e G42" },
+  { "machine": "lathe", "dialect": "siemens", "file": "esercizio-tornio-siemens-lims.nc", "title": "Esercizio — Perché la macchina non parte?" },
+  { "machine": "mill", "dialect": "siemens", "file": "fresa-siemens-04-contorno-g41.nc", "title": "Fresa 4 — Contorno con compensazione G41" }
 ]

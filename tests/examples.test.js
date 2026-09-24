@@ -1,17 +1,11 @@
 import { test, assertEqual } from './runner.js';
-import { checkProgram } from '../js/parser/check-program.js';
-import { interpretLathe } from '../js/interpreter/interpret-lathe.js';
-import { interpretMill } from '../js/interpreter/interpret-mill.js';
-import { LATHE } from '../js/machines/lathe/codes.js';
-import { LATHE_PARAMS, DEFAULT_SETUP, setupFromProgram } from '../js/machines/lathe/machine.js';
-import { LATHE_TOOLS } from '../js/machines/lathe/tools.js';
-import { createLatheSimulator, runAll } from '../js/machines/lathe/simulator.js';
-import { MILL } from '../js/machines/mill/codes.js';
-import { MILL_PARAMS, DEFAULT_MILL_SETUP, millSetupFromProgram } from '../js/machines/mill/machine.js';
-import { MILL_TOOLS } from '../js/machines/mill/tools.js';
-import { createMillSimulator, runAllMill } from '../js/machines/mill/simulator.js';
+import { createLatheAdapter } from '../js/machines/lathe/adapter.js';
+import { createMillAdapter } from '../js/machines/mill/adapter.js';
+import { runAll } from '../js/machines/lathe/simulator.js';
+import { runAllMill } from '../js/machines/mill/simulator.js';
 
-// Risultato atteso di ogni esempio eseguito per intero (sintassi + interprete + simulazione).
+// Risultato atteso di ogni esempio eseguito per intero (sintassi + interprete + simulazione),
+// con la macchina e il linguaggio indicati in examples/index.json.
 // Gli esercizi hanno errori voluti; tutti gli altri esempi devono arrivare a M30 senza allarmi.
 const EXPECTED = {
   'esercizio-trova-errori.nc': { syntax: [1010, 1008, 1002, 1012, 1009, 1005, 1002, 1007, 1003, 1006] },
@@ -21,43 +15,34 @@ const EXPECTED = {
   'esercizio-tornio-passata.nc': { run: { code: 3005, line: 11 } },
   'esercizio-fresa-passata.nc': { run: { code: 3005, line: 11 } },
   'esercizio-fresa-punta.nc': { run: { code: 3008, line: 11 } },
-  'esercizio-fresa-morsa.nc': { run: { code: 4004, line: 10 } }
+  'esercizio-fresa-morsa.nc': { run: { code: 4004, line: 10 } },
+  'esercizio-tornio-siemens-lims.nc': { run: { code: 2005, line: 5 } }
 };
 
 // Ogni esercizio deve avere il suo risultato atteso qui: un esercizio senza errore non insegna niente
 export const EXERCISE_PREFIX = 'esercizio-';
 
-const MACHINES = {
-  lathe: {
-    codes: LATHE,
-    run(blocks, text) {
-      const program = interpretLathe(blocks, { params: LATHE_PARAMS, tools: LATHE_TOOLS });
-      const sim = createLatheSimulator({ params: LATHE_PARAMS, tools: LATHE_TOOLS });
-      sim.reset(setupFromProgram(text) ?? DEFAULT_SETUP);
-      return { program, alarm: runAll(program, sim) };
-    }
-  },
-  mill: {
-    codes: MILL,
-    run(blocks, text) {
-      const program = interpretMill(blocks, { params: MILL_PARAMS, tools: MILL_TOOLS });
-      const sim = createMillSimulator({ params: MILL_PARAMS, tools: MILL_TOOLS });
-      sim.reset(millSetupFromProgram(text) ?? DEFAULT_MILL_SETUP);
-      return { program, alarm: runAllMill(program, sim) };
-    }
-  }
-};
+// Esegue un esempio per intero; restituisce programma, simulatore e primo allarme
+export function runExample({ text, machine = 'lathe', dialect = 'fanuc' }) {
+  const adapter = machine === 'mill' ? createMillAdapter(undefined, dialect) : createLatheAdapter(undefined, dialect);
+  const { blocks, alarms } = adapter.check(text);
+  const program = adapter.interpret(blocks, { offsets: adapter.offsets?.defaults ?? null, blockDelete: false });
+  const sim = adapter.createSimulator();
+  sim.reset(adapter.setupFromProgram(text) ?? adapter.defaultSetup);
+  const alarm = (machine === 'mill' ? runAllMill : runAll)(program, sim);
+  return { alarms, program, sim, alarm };
+}
 
 export function registerExampleTests(examples) {
-  for (const { file, text, machine = 'lathe' } of examples) {
+  for (const example of examples) {
+    const { file } = example;
     const expected = EXPECTED[file] ?? {};
-    const m = MACHINES[machine];
     if (file.startsWith(EXERCISE_PREFIX)) {
       test(`${file}: l'esercizio ha un errore atteso dichiarato nel test`, () => {
         assertEqual(Boolean(EXPECTED[file]), true);
       });
     }
-    const { blocks, alarms } = checkProgram(text, m.codes);
+    const { alarms, program, alarm } = runExample(example);
 
     test(`${file}: errori di sintassi attesi`, () => {
       assertEqual(alarms.map((a) => a.code), expected.syntax ?? []);
@@ -65,7 +50,6 @@ export function registerExampleTests(examples) {
 
     if (expected.syntax) continue;
     test(`${file}: esecuzione completa`, () => {
-      const { program, alarm } = m.run(blocks, text);
       assertEqual(alarm && { code: alarm.code, line: alarm.line }, expected.run ?? null);
       if (!expected.run) assertEqual(program.steps[program.steps.length - 1].stop, 'end', 'il programma finisce con M30');
     });

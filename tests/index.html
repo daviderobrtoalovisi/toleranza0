@@ -23,12 +23,14 @@
     import './mill.test.js';
     import './robustness.test.js';
     import './catalog.test.js';
+    import './siemens.test.js';
     import { registerExampleTests } from './examples.test.js';
 
     const list = await (await fetch('../examples/index.json')).json();
-    const examples = await Promise.all(list.map(async ({ file, machine }) => ({
+    const examples = await Promise.all(list.map(async ({ file, machine, dialect }) => ({
       file,
       machine,
+      dialect,
       text: await (await fetch(`../examples/${file}`)).text()
     })));
     registerExampleTests(examples);
