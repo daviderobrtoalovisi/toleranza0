@@ -23,7 +23,7 @@ Così si provano i programmi **senza occupare la macchina e senza rischiare uten
 4. Premere **Avvia** oppure **Blocco singolo**; con **Velocità** si sceglie quante volte più veloce della macchina vera (da ×1 a ×500)
 5. Se compare un allarme: leggere il messaggio, correggere la riga indicata e premere **Reset**
 
-Il menu **Modello**, accanto a **Macchina**, permette di scegliere una macchina reale (DMG MORI, Haas, Mazak, Okuma, DN Solutions, EMCO): il simulatore usa i suoi giri, rapidi e corse, e la scheda **Macchina** sotto la simulazione mostra i dati con la fonte e dice se il suo controllo accetta la programmazione ISO. Il linguaggio resta Fanuc ISO per tutte le macchine.
+Il menu **Modello**, accanto a **Macchina**, permette di scegliere una macchina reale (DMG MORI, Haas, Mazak, Okuma, DN Solutions, EMCO): il simulatore usa i suoi giri, rapidi e corse, e la scheda **Macchina** sotto la simulazione mostra i dati con la fonte e dice se il suo controllo accetta la programmazione ISO. Nel menu **Linguaggio** si sceglie **Fanuc ISO** oppure **Siemens SINUMERIK** (fase 1: movimenti, utensili, avanzamenti, archi e compensazione; i cicli `CYCLE…` non ancora): vedi [`docs/siemens.md`](docs/siemens.md).
 
 Il pulsante **Guida** (o F1) spiega come si usa il simulatore ed elenca codici G/M e allarmi della macchina scelta. Scorciatoie: **Ctrl+Invio** avvia, **Esc** mette in pausa, **Ctrl+S** salva.
 
@@ -83,7 +83,7 @@ docs/                   codici supportati, allarmi, esercitazioni, configurazion
 
 - [Esercitazioni](docs/esercitazioni.md): esercizi "trova l'errore" con soluzioni e tracce da disegno
 - [Configurare le macchine del laboratorio](docs/configurare-le-macchine.md): dove inserire corse, giri, mandrino, morsa e utensili reali, e come aggiungere un modello al database
-- [Codici supportati](docs/codici-supportati.md) e [catalogo allarmi](docs/allarmi.md)
+- [Codici supportati](docs/codici-supportati.md), [linguaggio Siemens](docs/siemens.md) e [catalogo allarmi](docs/allarmi.md)
 
 ## Sviluppo (docenti)
 
@@ -157,6 +157,9 @@ Usiamo il [Semantic Versioning](https://semver.org/lang/it/): `MAGGIORE.MINORE.C
 - [x] **v0.5** — Fresa 3 assi: vista 3D, G90/G91, archi anche elicoidali, T/M06/G43, cicli G81/G82/G83, morsa
 - [x] **v0.6** — Fresa: compensazione raggio G41/G42 con D, piani G18/G19
 - [x] **v1.0** — Versione stabile per la classe: guida nella pagina, esercitazioni con guida per il docente, test di robustezza
+- [x] **v1.1** — Database delle macchine utensili
+- [x] **v1.2** — Linguaggio Siemens SINUMERIK, fase 1
+- [ ] Siemens fase 2: cicli di foratura `CYCLE81`/`83`, poi `CYCLE95`
 - [ ] Dati reali delle macchine del laboratorio (vedi [`docs/configurare-le-macchine.md`](docs/configurare-le-macchine.md))
 
 Le novità di ogni versione sono in [`CHANGELOG.md`](CHANGELOG.md).

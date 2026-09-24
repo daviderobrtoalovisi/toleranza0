@@ -1,6 +1,6 @@
 # Codici supportati
 
-La tabella di riferimento è in [`js/machines/lathe/codes.js`](../js/machines/lathe/codes.js): questa pagina va tenuta allineata a quel file.
+La tabella di riferimento è in [`js/machines/lathe/codes.js`](../js/machines/lathe/codes.js): questa pagina va tenuta allineata a quel file. Questa pagina descrive il **Fanuc ISO**; per il **Siemens SINUMERIK** vedi [`siemens.md`](siemens.md).
 
 Legenda: ✅ supportato · 🕓 previsto (oggi dà l'allarme 1013)
 

@@ -20,6 +20,12 @@ Ogni esercizio è in `examples/` e i test controllano che dia proprio l'allarme 
 | *Perché la macchina non parte?* (`esercizio-tornio-g96.nc`) | G96 senza limite di giri | 2005 alla riga 6 | `G50 S2000` prima di `G96` | con G96 i giri salgono quando il diametro cala |
 | *Troppo materiale in una volta* (`esercizio-tornio-passata.nc`) | da Ø50 a Ø40 in una passata: 5 mm per lato | 3005 alla riga 11 | due passate: `X45` e poi `X40` | profondità di passata e limiti dell'utensile |
 
+### Tornio in Siemens SINUMERIK
+
+| Esempio | Cosa succede | Allarme | Correzione | Cosa si impara |
+|---|---|---|---|---|
+| *Perché la macchina non parte?* (`esercizio-tornio-siemens-lims.nc`, linguaggio Siemens) | `G96` senza limite di giri | 2005 alla riga 5 | `G96 S180 LIMS=2000 M3` | con G96 i giri salgono quando il diametro cala |
+
 ### Fresa
 
 | Esempio | Cosa succede | Allarme | Correzione | Cosa si impara |
