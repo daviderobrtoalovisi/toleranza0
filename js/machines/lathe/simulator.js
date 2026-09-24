@@ -102,7 +102,10 @@ export function createLatheSimulator({ params, tools }) {
     const { c, zMin } = stock;
     const rows = rowsOf(outline, pz, pr);
     if (!rows) return null;
+    // Profondità misurata dal raggio di punta (centro = punta + (rn, rn)), non dalla punta teorica:
+    // sui tratti dritti è lo stesso, su quelli obliqui la punta teorica sta fuori dal tagliente
     const normal = { z: -direction.r, r: direction.z };
+    const rn = tools[sim.tool].noseRadius ?? 0;
     let depth = 0;
     for (let j = rows.j0; j <= rows.j1; j++) {
       for (const [i0, i1] of spans(outline, pz, pr, j)) {
@@ -112,10 +115,10 @@ export function createLatheSimulator({ params, tools }) {
         }
         const { first, last } = stock.remove(j, i0, i1);
         if (first < 0) continue;
-        const dr = (j + 0.5) * c - pr;
+        const dr = (j + 0.5) * c - (pr + rn);
         for (const i of [first, last]) {
-          const dz = zMin + (i + 0.5) * c - pz;
-          depth = Math.max(depth, Math.abs(dz * normal.z + dr * normal.r));
+          const dz = zMin + (i + 0.5) * c - (pz + rn);
+          depth = Math.max(depth, Math.abs(dz * normal.z + dr * normal.r) + rn);
         }
       }
     }
