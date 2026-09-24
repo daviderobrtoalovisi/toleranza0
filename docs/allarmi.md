@@ -7,9 +7,11 @@ I testi mostrati agli studenti sono in [`js/alarms/catalog.js`](../js/alarms/cat
 | Codici | Categoria | Stato |
 |---|---|---|
 | 1000–1999 | Sintassi | attivi dalla v0.1 |
-| 2000–2999 | Parametri mancanti | previsti per la v0.3 |
-| 3000–3999 | Geometria e limiti | previsti per la v0.3 |
-| 4000–4999 | Collisioni | previsti per la v0.3 |
+| 2000–2999 | Parametri mancanti | primi allarmi dalla v0.2, altri nella v0.3 |
+| 3000–3999 | Geometria e limiti | archi dalla v0.2, limiti nella v0.3 |
+| 4000–4999 | Collisioni | rapido nel materiale e mandrino dalla v0.2, portautensile nella v0.3 |
+
+**Quando scattano:** gli allarmi di sintassi, parametri e geometria compaiono già mentre si scrive, nel pannello *Allarmi*; per quelli di parametri e geometria viene mostrato solo il primo. Le collisioni si scoprono solo eseguendo il programma, come sulla macchina vera: l'esecuzione si ferma nel punto dell'urto, cerchiato in rosso nella simulazione.
 
 ## 1000–1999 Sintassi
 
@@ -27,24 +29,45 @@ I testi mostrati agli studenti sono in [`js/alarms/catalog.js`](../js/alarms/cat
 | 1010 | Valore decimale non ammesso | `M3.5` | `M03` |
 | 1011 | Valore negativo non ammesso | `F-0.2` | `F0.2` |
 | 1012 | N non all'inizio della riga | `X50 N85` | `N85 X50` |
-| 1013 | Codice non ancora supportato dal simulatore | `G71 U2 R1` | vedi [codici supportati](codici-supportati.md) |
+| 1013 | Codice non ancora supportato dal simulatore | `G71 U2 R1`, `G50 X100 Z50`, `G01 X30 Z-5 R2` | vedi [codici supportati](codici-supportati.md) |
+| 1014 | Quota assoluta e incrementale dello stesso asse nel blocco | `G00 X20 U5` | usare X oppure U (Z oppure W) |
 
 Note:
 - Le lettere minuscole sono accettate (`g01 x10` = `G01 X10`).
 - `N`, `G`, `M`, `T`, `O`, `P`, `Q` accettano solo numeri interi.
 - Nello stesso blocco si possono scrivere più codici G di gruppi diversi (`G21 G40 G99`), ma una sola funzione M.
 
-## 2000–2999 Parametri mancanti (v0.3)
+## 2000–2999 Parametri mancanti
 
-Previsti: avanzamento F assente in G01/G02/G03, movimento di lavoro con mandrino fermo, nessun utensile chiamato, G96 senza G50.
+| Codice | Messaggio | Esempio che lo provoca | Correzione |
+|---|---|---|---|
+| 2001 | Avanzamento F non programmato | `G01 Z-10` senza nessun F prima | `G01 Z-10 F0.2` |
+| 2002 | Movimento di lavoro con mandrino fermo | `G01` prima di `M03`, dopo `M05` o con `S0` | `G96 S180 M03` prima di tagliare |
+| 2003 | Nessun utensile selezionato | `G01` prima di qualsiasi `T` | `T0101` all'inizio |
+| 2004 | Utensile non presente nella torretta | `T0909` | usare T01, T02 o T03 |
 
-## 3000–3999 Geometria e limiti (v0.3)
+Previsti per la v0.3: G96 senza limite G50, programma senza M30.
 
-Previsti: fuori corsa degli assi, arco G02/G03 con raggio incoerente, passata troppo profonda, programma senza M30.
+## 3000–3999 Geometria e limiti
 
-## 4000–4999 Collisioni (v0.3)
+| Codice | Messaggio | Esempio che lo provoca | Correzione |
+|---|---|---|---|
+| 3001 | Arco impossibile: raggio troppo piccolo | da X20 Z0: `G02 X40 Z-10 R5` | il raggio deve essere almeno metà della distanza tra i due punti |
+| 3002 | Arco incoerente: centro I/K non equidistante | da X20 Z0: `G02 X30 Z-5 I10 K0` | ricontrollare I, K (I in raggio) e il punto finale |
+| 3003 | Arco senza raggio né centro | `G02 X30 Z-5` | aggiungere R oppure I e K |
 
-Previsti: rapido G00 dentro il materiale, portautensile contro il pezzo, utensile contro il mandrino.
+Previsti per la v0.3: fuori corsa degli assi, passata troppo profonda.
+
+## 4000–4999 Collisioni
+
+| Codice | Messaggio | Esempio che lo provoca | Correzione |
+|---|---|---|---|
+| 4001 | Rapido G00 dentro il materiale | `G00 Z-30` a un diametro più piccolo del pezzo | avvicinarsi in G00 a 1–2 mm, poi G01 |
+| 4002 | Utensile contro il mandrino | `G01 Z-85` con sporgenza 80 mm | restare nella sporgenza del pezzo |
+
+Previsto per la v0.3: portautensile contro il pezzo (oggi si controlla solo l'inserto).
+
+L'esempio *Esercizio — Perché si rompe l'utensile?* mostra la collisione 4001.
 
 ## Aggiungere un allarme
 

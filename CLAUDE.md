@@ -51,10 +51,12 @@ testo -> parser -> blocchi -> interpreter (stato modale) -> movimenti -> machine
 ```
 
 - `js/parser/` — `parse-program.js` trasforma ogni riga in un blocco `{ line, source, words: [{ letter, value, raw, col }], comment, blockDelete, alarm }` (sintassi pura); `validate-block.js` controlla il blocco sulla tabella codici della macchina; `check-program.js` unisce le due cose.
-- `js/ui/run-controller.js` — esecuzione blocco per blocco (avvio, pausa, blocco singolo, reset, M00/M01/M30). Dalla v0.2 riceverà i movimenti dall'interprete.
-- `js/interpreter/` — mantiene lo stato modale (G00/G01, G90/G91, unità, F, S, utensile, mandrino) e produce movimenti `{ line, type, from, to, feed, ... }`. Comune a tornio e fresa dove possibile.
-- `js/machines/lathe/`, `js/machines/mill/` — geometria del grezzo, utensili, calcolo dell'asportazione, controlli di collisione e fine corsa.
-- `js/render/` — solo disegno. Non contiene logica CNC.
+- `js/interpreter/interpret-lathe.js` — stato modale del tornio (G00–G03, G20/G21, G96/G97, G98/G99, F, S, T, mandrino) → passi `{ block, moves, alarm, stop, state, time }`. Movimenti `{ type: 'rapid' | 'line' | 'arc' | 'dwell' | 'tool', from, to, length, duration, ... }` con posizioni `{ x (diametro), z }`. Controlla F, S, T e la geometria degli archi (allarmi 1013, 1014, 2xxx, 3xxx), non il grezzo. `path.js` contiene la geometria comune dei movimenti.
+- `js/machines/lathe/` — `codes.js` codici, `machine.js` dati della macchina e del grezzo (anche la riga `(GREZZO D.. L..)`), `tools.js` forma degli utensili, `stock.js` grezzo a griglia di celle nel piano Z–r, `simulator.js` fa percorrere i movimenti all'utensile: toglie materiale in lavoro, allarmi 4xxx in rapido e contro il mandrino. `runAll()` esegue tutto senza animazione (per i test).
+- `js/ui/run-controller.js` — anima l'esecuzione: tempo simulato = tempo reale × fattore di velocità (`CONFIG.speedFactors`); avvio, pausa, blocco singolo, reset, M00/M01/M30.
+- `js/render/lathe-2d.js` — solo disegno su canvas (sezione del pezzo, mandrino, utensile, percorsi, zoom). Non contiene logica CNC; i colori vengono dalle variabili CSS `--sim-*`.
+- Punto programmato degli utensili: punta teorica con orientamento 3 (troncatore: spigolo destro). Senza G41/G42 coni e raggi hanno l'errore reale del raggio di punta: è voluto, non correggerlo.
+- I dati del tornio in `machine.js` sono valori tipici, non quelli del laboratorio: vanno sostituiti quando i docenti li forniscono.
 - `js/alarms/` — catalogo degli allarmi. Ogni allarme: `{ code, category, message, hint }`.
 - Ogni movimento porta con sé il numero di riga di origine: serve per evidenziare la riga nell'editor e per gli allarmi.
 - Parser e interpreter devono essere **funzioni pure** (niente DOM), così sono testabili.

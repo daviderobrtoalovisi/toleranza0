@@ -18,10 +18,12 @@ Così si provano i programmi **senza occupare la macchina e senza rischiare uten
 ## Utilizzo (studenti)
 
 1. Aprire la pagina del simulatore (pubblicata su GitHub Pages: `https://daviderobrtoalovisi.github.io/toleranza0/`)
-2. Scegliere la macchina (tornio / fresa), le dimensioni del grezzo e gli utensili
-3. Scrivere il programma o caricarne uno dalla cartella `examples/`
-4. Premere **Avvia** oppure **Blocco singolo**
+2. Scrivere il programma o caricarne uno da **Esempi…**; gli errori di sintassi compaiono già mentre si scrive
+3. Impostare il grezzo (Ø, sporgenza dal mandrino, sovrametallo sulla faccia) sopra la simulazione, oppure scrivere nel programma un commento come `(GREZZO D50 L80)`
+4. Premere **Avvia** oppure **Blocco singolo**; con **Velocità** si sceglie quante volte più veloce della macchina vera (da ×1 a ×500)
 5. Se compare un allarme: leggere il messaggio, correggere la riga indicata e premere **Reset**
+
+Nella simulazione il tratteggio rosso è il rapido G00, il blu la lavorazione. L'**anteprima percorso** mostra in chiaro tutto il percorso prima di eseguirlo. Rotella del mouse = zoom, trascinamento = spostamento, doppio clic = adatta la vista. In alto a destra si leggono le quote X (in diametro) e Z, l'utensile, i giri, l'avanzamento e il tempo ciclo. Il menu **Utensili** elenca gli utensili in torretta (T01 sgrossatore, T02 troncatore, T03 finitore).
 
 ## Linguaggio supportato: ISO / Fanuc
 
@@ -47,8 +49,8 @@ Ogni allarme ha un codice numerico, la riga incriminata e un messaggio in italia
 |---|---|---|
 | 1000–1999 | Sintassi | codice G/M sconosciuto, indirizzo senza valore, numero non valido |
 | 2000–2999 | Parametri mancanti | G01 senza F, movimento di lavoro con mandrino fermo, nessun utensile chiamato |
-| 3000–3999 | Geometria e limiti | fuori corsa assi, arco G02/G03 con raggio incoerente, passata troppo profonda |
-| 4000–4999 | Collisioni | G00 dentro il materiale, portautensile o mandrino contro il pezzo |
+| 3000–3999 | Geometria e limiti | arco G02/G03 impossibile o incoerente; fuori corsa e passata troppo profonda nella v0.3 |
+| 4000–4999 | Collisioni | G00 dentro il materiale, utensile contro il mandrino; portautensile nella v0.3 |
 
 ## Struttura del progetto
 
@@ -59,9 +61,9 @@ js/
   main.js               collega interfaccia, interprete e grafica
   version.js            numero di versione
   parser/               lettura del testo ISO -> blocchi
-  interpreter/          stato modale della macchina -> lista di movimenti
+  interpreter/          stato modale della macchina -> lista di movimenti con tempi
   alarms/               catalogo e gestione degli allarmi
-  machines/lathe/       modello del tornio e asportazione 2D
+  machines/lathe/       dati del tornio, utensili, grezzo, asportazione e collisioni
   machines/mill/        modello della fresa e asportazione 3D (fase successiva)
   render/               disegno su canvas (2D) e Three.js (3D)
   ui/                   editor, pulsanti, pannelli
@@ -136,8 +138,8 @@ Usiamo il [Semantic Versioning](https://semver.org/lang/it/): `MAGGIORE.MINORE.C
 ## Tabella di marcia
 
 - [x] **v0.1** — Editor, parser ISO, evidenziazione riga, allarmi di sintassi
-- [ ] **v0.2** — Tornio: grezzo, utensili, simulazione 2D dell'asportazione (G00/G01/G02/G03)
-- [ ] **v0.3** — Tornio: tutti gli allarmi (parametri, limiti, collisioni), blocco singolo, velocità
+- [x] **v0.2** — Tornio: grezzo, utensili, simulazione 2D dell'asportazione (G00/G01/G02/G03), tempo ciclo, prime collisioni
+- [ ] **v0.3** — Tornio: allarmi mancanti (fine corsa, profondità di passata, portautensile), correttori utensile, dati del tornio del laboratorio
 - [ ] **v0.4** — Tornio: cicli G70/G71, compensazione raggio G41/G42
 - [ ] **v0.5** — Fresa 3 assi: simulazione 3D
 - [ ] **v1.0** — Versione stabile usata in classe, con esercitazioni in `examples/`
