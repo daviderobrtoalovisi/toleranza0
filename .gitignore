@@ -1,0 +1,8 @@
+# File personali: non vanno nel repository condiviso
+.claude/settings.local.json
+__pycache__/
+*.pyc
+.vscode/
+Thumbs.db
+desktop.ini
+.DS_Store

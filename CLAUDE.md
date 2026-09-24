@@ -18,11 +18,12 @@ Toleranza0 è un simulatore CNC didattico per studenti. Programma ISO/Fanuc in u
 
 ## Stack e vincoli
 
-- **HTML + CSS + JavaScript puro, moduli ES**. Nessun Node, npm, bundler o TypeScript.
+- **HTML + CSS + JavaScript puro, moduli ES**. Nessun Node, npm, bundler o TypeScript. Unico strumento di sviluppo: Python 3 per `tools/serve.py` (solo libreria standard).
 - Unica libreria esterna prevista: **Three.js da CDN** (jsdelivr/cdnjs), solo per la fresa 3D. Non aggiungere altre dipendenze senza chiedere.
 - Deve funzionare sui browser recenti (Chrome, Edge, Firefox) e servito come file statici (GitHub Pages).
 - Test in `tests/` eseguiti nel browser (`tests/index.html`), con un piccolo runner fatto in casa (`tests/runner.js`): nessun framework. Il risultato è anche in `window.testResults` e nel titolo della pagina (`OK` / `FALLITI`). Ogni programma in `examples/` viene controllato automaticamente: gli esempi devono essere senza errori, tranne gli esercizi `esercizio-*` che hanno errori voluti ed elencati nel test.
-- Per provare in locale: `python -m http.server 8000` o Live Server di VS Code.
+- Per provare in locale usa **sempre** `python tools/serve.py` (porta 8000, sito su `http://localhost:8000/toleranza0/`, test su `/toleranza0/tests/`). Imita GitHub Pages: sottocartella `/toleranza0/` e nomi dei file che distinguono maiuscole e minuscole. Non usare `python -m http.server`, Live Server o server in PowerShell: nascondono gli errori di percorso che poi rompono il sito online. Per Claude Code desktop la configurazione di anteprima è in `.claude/launch.json`.
+- Python serve solo come server di sviluppo: il sito pubblicato non deve mai dipendere da Python.
 
 ## Pubblicazione su GitHub Pages
 

@@ -67,6 +67,7 @@ js/
   ui/                   editor, pulsanti, pannelli
 examples/               programmi di esempio (.nc) per le esercitazioni
 tests/                  test nel browser (aprire tests/index.html)
+tools/serve.py          server locale in Python che imita GitHub Pages
 docs/                   codici supportati, allarmi, note didattiche
 ```
 
@@ -74,18 +75,20 @@ docs/                   codici supportati, allarmi, note didattiche
 
 Nessuno strumento di build: HTML, CSS e JavaScript puro con moduli ES. Three.js viene caricato da CDN.
 
-Poiché i moduli ES non funzionano aprendo il file con doppio clic, per provare in locale serve un piccolo server:
-
-- **VS Code**: estensione *Live Server* → tasto destro su `index.html` → *Open with Live Server*
-- **oppure**, se Python è installato, dalla cartella del progetto:
+I moduli ES non funzionano aprendo il file con doppio clic, quindi per provare in locale serve un piccolo server. Usiamo **Python 3** (da [python.org](https://www.python.org/downloads/) o dal Microsoft Store). Dalla cartella del progetto:
 
 ```bash
-python -m http.server 8000
+python tools/serve.py
 ```
 
-  e poi aprire `http://localhost:8000`.
+Poi aprire:
 
-I test si eseguono aprendo `http://localhost:8000/tests/` nel browser.
+- simulatore: `http://localhost:8000/toleranza0/`
+- test: `http://localhost:8000/toleranza0/tests/`
+
+`tools/serve.py` imita GitHub Pages: il sito sta in `/toleranza0/` e i nomi dei file distinguono maiuscole e minuscole. Se una cosa funziona qui, funzionerà anche online; un percorso assoluto o un nome con la maiuscola sbagliata dà errore 404 già in locale. Per fermare il server: `Ctrl+C`. Per usare un'altra porta: `python tools/serve.py 8080`.
+
+Evitate `python -m http.server`: serve il sito dalla radice e non distingue le maiuscole, quindi nasconde proprio gli errori che poi rompono il sito su GitHub Pages.
 
 ## Pubblicazione su GitHub Pages
 
