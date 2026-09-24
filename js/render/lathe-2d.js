@@ -33,7 +33,9 @@ export function createLatheView(canvas, { getScene, tools, params }) {
   }
 
   function fit() {
-    const b = sceneBounds(getScene());
+    const scene = getScene();
+    if (!scene) return;
+    const b = sceneBounds(scene);
     const w = Math.max(1, cssWidth - 2 * PAD);
     const h = Math.max(1, cssHeight - 2 * PAD);
     const scale = Math.min(w / (b.maxZ - b.minZ), h / (b.maxR - b.minR));
@@ -62,6 +64,7 @@ export function createLatheView(canvas, { getScene, tools, params }) {
 
   function draw() {
     const scene = getScene();
+    if (!scene) return;
     const dpr = canvas.width / Math.max(1, cssWidth);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = colors.bg;

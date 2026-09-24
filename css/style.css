@@ -98,6 +98,7 @@ button:disabled, select:disabled { opacity: 0.45; cursor: not-allowed; }
 button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .file-name { width: 9em; cursor: text; }
+#examples, #machine { max-width: min(22em, 100%); text-overflow: ellipsis; }
 
 .btn-start:not(:disabled) { background: var(--start); border-color: var(--start); color: #fff; font-weight: 600; }
 .btn-reset:not(:disabled) { color: var(--reset); border-color: var(--reset); font-weight: 600; }
@@ -132,7 +133,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
 }
-.toolbar-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.toolbar-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; max-width: 100%; }
 
 /* Disposizione */
 .layout {
@@ -255,7 +256,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
   overflow: hidden;
   background: var(--sim-bg);
 }
-#sim-canvas {
+.sim-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -264,7 +265,14 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
   cursor: grab;
   touch-action: none;
 }
-#sim-canvas:active { cursor: grabbing; }
+.sim-canvas:active { cursor: grabbing; }
+.sim-canvas[hidden] { display: none; }
+.setup-fields { display: contents; }
+.setup select {
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 13px;
+}
 
 .dro {
   position: absolute;

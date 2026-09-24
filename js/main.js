@@ -1,24 +1,25 @@
 import { VERSION } from './version.js';
 import { CONFIG } from './config.js';
-import { LATHE } from './machines/lathe/codes.js';
-import {
-  LATHE_PARAMS, DEFAULT_SETUP, DEFAULT_OFFSETS, normalizeSetup, normalizeOffsets, setupFromProgram
-} from './machines/lathe/machine.js';
-import { LATHE_TOOLS } from './machines/lathe/tools.js';
-import { createLatheSimulator } from './machines/lathe/simulator.js';
+import { latheAdapter } from './machines/lathe/adapter.js';
+import { millAdapter } from './machines/mill/adapter.js';
 import { checkProgram } from './parser/check-program.js';
-import { interpretLathe, spindleRpm } from './interpreter/interpret-lathe.js';
-import { createLatheView } from './render/lathe-2d.js';
 import { createEditor } from './ui/editor.js';
-import { createAlarmPanel } from './ui/alarm-panel.js';
+import { createAlarmPanel, escapeHtml } from './ui/alarm-panel.js';
 import { createBlockPanel } from './ui/block-panel.js';
 import { createSetupPanel } from './ui/setup-panel.js';
 import { createToolPanel } from './ui/tool-panel.js';
 import { createRunController, formatTime } from './ui/run-controller.js';
 
-const DRAFT_KEY = 'toleranza0.bozza';
-const SETUP_KEY = 'toleranza0.grezzo';
+// Collega interfaccia, interprete, simulatore e vista della macchina scelta (tornio o fresa).
+// Tutto ciò che cambia tra le macchine sta negli adattatori (js/machines/*/adapter.js).
+
+const MACHINES = { lathe: latheAdapter, mill: millAdapter };
+const MACHINE_KEY = 'toleranza0.macchina';
 const OFFSETS_KEY = 'toleranza0.correttori';
+// Le chiavi senza macchina sono quelle delle versioni fino alla 0.4, che avevano solo il tornio
+const draftKey = (id) => `toleranza0.bozza.${id}`;
+const setupKey = (id) => `toleranza0.grezzo.${id}`;
+const LEGACY = { draft: 'toleranza0.bozza', setup: 'toleranza0.grezzo' };
 const STATE_LABELS = {
   ready: 'Pronto',
   running: 'In esecuzione',
@@ -28,44 +29,37 @@ const STATE_LABELS = {
 };
 
 const $ = (selector) => document.querySelector(selector);
-const machine = LATHE;
-const params = LATHE_PARAMS;
-const tools = LATHE_TOOLS;
+const canvases = { lathe: $('#sim-canvas-lathe'), mill: $('#sim-canvas-mill') };
+const views = {};
 
+let adapter = null;      // macchina attiva
+let simulator = null;
+let view = null;
+let setup = null;
+let offsets = null;
 let program = null;      // programma interpretato: anteprima del percorso e tempo ciclo
-let liveAlarms = [];
+let examples = [];
 let collision = false;
 let checkTimer = null;
-let setup = normalizeSetup(loadJson(SETUP_KEY) ?? DEFAULT_SETUP);
-let offsets = normalizeOffsets(loadJson(OFFSETS_KEY) ?? DEFAULT_OFFSETS);
 
 $('#version').textContent = `v${VERSION}`;
-if (!CONFIG.machines.mill) $('#machine option[value="mill"]').disabled = true;
+for (const [id, enabled] of Object.entries(CONFIG.machines)) {
+  const option = $(`#machine option[value="${id}"]`);
+  if (option) option.disabled = !enabled;
+}
 
-const simulator = createLatheSimulator({ params, tools });
-simulator.reset(setup);
-
-const view = createLatheView($('#sim-canvas'), {
-  tools,
-  params,
-  getScene: () => ({ sim: simulator, program, collision, showPreview: $('#opt-preview').checked })
-});
+// Ogni vista riceve la scena solo quando la sua macchina è attiva (le altre restano ferme, anche se ridimensionate)
+const sceneFor = (id) => () => (adapter?.id === id && simulator
+  ? { sim: simulator, program, collision, showPreview: $('#opt-preview').checked }
+  : null);
 
 const alarmPanel = createAlarmPanel($('#alarms'), {
   onSelectLine: (line) => editor.goToLine(line)
 });
 const blockPanel = createBlockPanel($('#block'));
-
-const setupPanel = createSetupPanel({
-  inputs: { diameter: $('#stock-d'), length: $('#stock-l'), faceAllowance: $('#stock-f') },
-  onChange: applySetup
-});
-setupPanel.write(setup);
-
+const setupPanel = createSetupPanel($('#setup-fields'), { onChange: applySetup });
 const toolPanel = createToolPanel($('#tool-panel'), {
-  tools,
-  offsets,
-  onChange(next) {
+  onOffsetsChange(next) {
     offsets = next;
     saveText(OFFSETS_KEY, JSON.stringify(offsets));
     analyze(editor.getValue());
@@ -76,23 +70,24 @@ const editor = createEditor($('#editor'), {
   onChange(text) {
     clearTimeout(checkTimer);
     checkTimer = setTimeout(() => analyze(text), 250);
-    saveText(DRAFT_KEY, text);
+    if (adapter) saveText(draftKey(adapter.id), text);
   }
 });
 
 const controller = createRunController({
-  simulator,
+  // Il simulatore cambia con la macchina: il controller passa sempre da qui
+  simulator: { follow: (move, t0, t1) => simulator.follow(move, t0, t1) },
   getOptions: () => ({
     speedFactor: CONFIG.speedFactors[Number($('#speed').value)],
     optionalStop: $('#opt-optional-stop').checked
   }),
   onBlock(step) {
     editor.setCurrentLine(step.block.line, { alarm: Boolean(step.alarm) });
-    blockPanel.show(step.block, machine);
+    blockPanel.show(step.block, adapter.codes);
     $('#status-line').textContent = `Riga ${step.block.line}`;
   },
   onFrame() {
-    view.draw();
+    view?.draw();
     updateDro();
   },
   onStateChange(state, info) {
@@ -114,17 +109,18 @@ const controller = createRunController({
   }
 });
 
-// Controllo del programma: sintassi + interprete (archi, F, S, T). Le collisioni si vedono solo eseguendo.
+// Controllo del programma: sintassi + interprete. Collisioni e profondità di passata si vedono solo eseguendo.
 function analyze(text) {
-  const syntax = checkProgram(text, machine);
-  program = interpretLathe(syntax.blocks, { params, tools, offsets, blockDelete: $('#opt-block-delete').checked });
+  if (!adapter) return;
+  const syntax = checkProgram(text, adapter.codes);
+  program = adapter.interpret(syntax.blocks, { offsets, blockDelete: $('#opt-block-delete').checked });
   const last = program.steps[program.steps.length - 1];
   const interpreterAlarm = last && last.alarm && !last.block.alarm ? last.alarm : null;
-  liveAlarms = interpreterAlarm ? [...syntax.alarms, interpreterAlarm].sort((a, b) => a.line - b.line) : syntax.alarms;
-  editor.setErrorLines(liveAlarms.map((a) => a.line));
+  const alarms = interpreterAlarm ? [...syntax.alarms, interpreterAlarm].sort((a, b) => a.line - b.line) : syntax.alarms;
+  editor.setErrorLines(alarms.map((a) => a.line));
   if (controller.state === 'ready') {
-    alarmPanel.show(liveAlarms);
-    view.refit();
+    alarmPanel.show(alarms);
+    view?.refit();
     updateDro();
   }
 }
@@ -132,15 +128,15 @@ function analyze(text) {
 function applySetup(next) {
   if (controller.state !== 'ready') return;
   setup = next;
-  saveText(SETUP_KEY, JSON.stringify(setup));
+  saveText(setupKey(adapter.id), JSON.stringify(setup));
   simulator.reset(setup);
-  view.refit();
+  view?.refit();
   updateDro();
 }
 
-// Programma caricato da esempio o file: se contiene (GREZZO D.. L..) il grezzo si imposta da solo
+// Programma caricato da esempio o file: la riga (GREZZO ...) imposta il grezzo da sola
 function loadProgram(text) {
-  const fromProgram = setupFromProgram(text);
+  const fromProgram = adapter.setupFromProgram(text);
   if (fromProgram) {
     setupPanel.write(fromProgram);
     applySetup(fromProgram);
@@ -148,33 +144,72 @@ function loadProgram(text) {
   editor.setValue(text);
 }
 
+// Cambio macchina: nuovo simulatore, campi del grezzo, utensili, esempi e bozza della macchina scelta
+async function selectMachine(id, { initial = false } = {}) {
+  const next = MACHINES[id] && CONFIG.machines[id] ? MACHINES[id] : latheAdapter;
+  if (adapter && next === adapter) return;
+  if (!initial && controller.state !== 'ready') {
+    $('#machine').value = adapter.id;
+    return;
+  }
+  const previous = { adapter, simulator, setup, offsets, program };
+  if (adapter) saveText(draftKey(adapter.id), editor.getValue());
+
+  adapter = next;
+  simulator = next.createSimulator();
+  setup = next.normalizeSetup(loadJson(setupKey(next.id)) ?? (next.id === 'lathe' ? loadJson(LEGACY.setup) : null) ?? next.defaultSetup);
+  simulator.reset(setup);
+  offsets = next.offsets ? next.offsets.normalize(loadJson(OFFSETS_KEY) ?? next.offsets.defaults) : null;
+  program = null;
+  for (const [key, canvas] of Object.entries(canvases)) canvas.hidden = key !== next.id;
+
+  try {
+    views[next.id] ??= await next.loadView(canvases[next.id], sceneFor(next.id));
+  } catch (error) {
+    console.warn(error);
+    ({ adapter, simulator, setup, offsets, program } = previous);
+    for (const [key, canvas] of Object.entries(canvases)) canvas.hidden = key !== (adapter?.id ?? 'lathe');
+    $('#machine').value = adapter?.id ?? 'lathe';
+    $('#status-message').textContent = 'Impossibile caricare la vista 3D della fresa: serve la connessione a Internet (Three.js).';
+    if (!adapter) await selectMachine('lathe', { initial: true });
+    return;
+  }
+  view = views[next.id];
+  $('#machine').value = next.id;
+  saveText(MACHINE_KEY, next.id);
+
+  setupPanel.build(next.setupFields, next.normalizeSetup, setup);
+  toolPanel.build(next, offsets);
+  $('#tools-title').textContent = next.offsets ? 'Utensili e correttori' : 'Utensili';
+  fillExamples();
+
+  controller.reset();
+  collision = false;
+  blockPanel.show(null);
+  editor.setCurrentLine(null);
+  $('#file-name').value = 'programma';
+  const draft = loadText(draftKey(next.id)) ?? (next.id === 'lathe' ? loadText(LEGACY.draft) : null);
+  const first = examples.find((e) => e.machine === next.id);
+  if (draft && draft.trim()) editor.setValue(draft);
+  else if (first) await loadExample(first.file);
+  else editor.setValue(next.newProgram);
+  analyze(editor.getValue());
+  view.fit();
+}
+
 function updateButtons(state) {
   $('#btn-start').disabled = state === 'running' || state === 'alarm' || state === 'finished';
   $('#btn-pause').disabled = state !== 'running';
   $('#btn-step').disabled = state === 'running' || state === 'alarm' || state === 'finished';
   $('#btn-reset').disabled = state === 'ready';
-  for (const id of ['#btn-new', '#btn-open', '#examples', '#opt-block-delete']) $(id).disabled = state !== 'ready';
+  for (const id of ['#btn-new', '#btn-open', '#examples', '#opt-block-delete', '#machine']) $(id).disabled = state !== 'ready';
 }
 
 function updateDro() {
-  const step = controller.currentStep;
-  const s = step?.state;
-  const pos = simulator.pos;
-  const rpm = s ? spindleRpm(s, pos.x, params) : 0;
-  const feed = s?.feed ? `${fmt(s.feed, s.feedMode === 99 ? 3 : 0)} ${s.feedMode === 99 ? 'mm/giro' : 'mm/min'}` : '—';
-  const tool = simulator.tool ? `T${String(simulator.tool).padStart(2, '0')}` : '—';
-  const total = program ? formatTime(program.totalTime) : '—';
-  $('#dro').innerHTML = `
-    <div><span>X</span><b>${fmt(pos.x, 3)}</b></div>
-    <div><span>Z</span><b>${fmt(pos.z, 3)}</b></div>
-    <div><span>T</span><b>${tool}</b></div>
-    <div><span>S</span><b>${rpm ? `${Math.round(rpm)} giri/min` : 'fermo'}</b></div>
-    <div><span>F</span><b>${feed}</b></div>
-    <div><span>Tempo</span><b>${formatTime(controller.elapsed)} / ${total}</b></div>`;
-}
-
-function fmt(value, digits) {
-  return Number(value).toFixed(digits);
+  if (!adapter || !simulator) return;
+  const rows = adapter.dro(simulator, controller.currentStep?.state);
+  rows.push(['Tempo', `${formatTime(controller.elapsed)} / ${program ? formatTime(program.totalTime) : '—'}`]);
+  $('#dro').innerHTML = rows.map(([label, value]) => `<div><span>${label}</span><b>${escapeHtml(value)}</b></div>`).join('');
 }
 
 function prepareRun() {
@@ -203,11 +238,12 @@ $('#btn-reset').addEventListener('click', () => {
   blockPanel.show(null);
   $('#status-line').textContent = '';
   analyze(editor.getValue());
-  view.draw();
+  view?.draw();
 });
-$('#btn-fit').addEventListener('click', () => view.fit());
-$('#opt-preview').addEventListener('change', () => view.draw());
+$('#btn-fit').addEventListener('click', () => view?.fit());
+$('#opt-preview').addEventListener('change', () => view?.draw());
 $('#opt-block-delete').addEventListener('change', () => analyze(editor.getValue()));
+$('#machine').addEventListener('change', (event) => selectMachine(event.target.value));
 
 function showSpeed() {
   $('#speed-value').textContent = `×${CONFIG.speedFactors[Number($('#speed').value)]}`;
@@ -220,7 +256,7 @@ showSpeed();
 // File: nuovo, apri, salva
 $('#btn-new').addEventListener('click', () => {
   if (editor.getValue().trim() && !confirm('Cancellare il programma attuale?')) return;
-  editor.setValue('%\nO0001 (NUOVO PROGRAMMA)\n(GREZZO D50 L80)\n\nM30\n%\n');
+  loadProgram(adapter.newProgram);
 });
 $('#btn-open').addEventListener('click', () => $('#file-input').click());
 $('#file-input').addEventListener('change', async (event) => {
@@ -240,20 +276,23 @@ $('#btn-save').addEventListener('click', () => {
   URL.revokeObjectURL(link.href);
 });
 
-// Esempi (percorsi relativi: il sito è pubblicato in /toleranza0/)
+// Esempi (percorsi relativi: il sito è pubblicato in /toleranza0/), solo quelli della macchina attiva
 async function loadExamples() {
   try {
-    const list = await (await fetch('examples/index.json')).json();
-    const select = $('#examples');
-    for (const example of list) {
-      const option = document.createElement('option');
-      option.value = example.file;
-      option.textContent = example.title;
-      select.append(option);
-    }
-    return list;
+    examples = await (await fetch('examples/index.json')).json();
   } catch {
-    return [];
+    examples = [];
+  }
+}
+
+function fillExamples() {
+  const select = $('#examples');
+  select.innerHTML = '<option value="">Esempi…</option>';
+  for (const example of examples.filter((e) => (e.machine ?? 'lathe') === adapter.id)) {
+    const option = document.createElement('option');
+    option.value = example.file;
+    option.textContent = example.title;
+    select.append(option);
   }
 }
 
@@ -276,7 +315,7 @@ async function loadExample(file) {
   }
 }
 
-// Bozza e grezzo nel browser sono solo una comodità: il sito funziona anche se non sono disponibili
+// Bozze, grezzo e macchina nel browser sono solo una comodità: il sito funziona anche senza
 function saveText(key, text) {
   try { localStorage.setItem(key, text); } catch { /* ignorato */ }
 }
@@ -288,13 +327,8 @@ function loadJson(key) {
 }
 
 async function init() {
-  const examples = await loadExamples();
-  const draft = loadText(DRAFT_KEY);
-  if (draft && draft.trim()) editor.setValue(draft);
-  else if (examples.length) await loadExample(examples[0].file);
-  else editor.setValue('');
-  blockPanel.show(null);
-  controller.reset();
+  await loadExamples();
+  await selectMachine(loadText(MACHINE_KEY) ?? 'lathe', { initial: true });
 }
 
 init();

@@ -6,6 +6,15 @@
   <title>Toleranza0 — Simulatore CNC</title>
   <meta name="description" content="Simulatore CNC didattico: scrivi un programma ISO e provalo senza occupare la macchina.">
   <link rel="stylesheet" href="css/style.css">
+  <!-- Three.js per la vista 3D della fresa: versione fissa, caricata solo quando si sceglie la fresa -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
 </head>
 <body data-state="ready">
   <header class="app-header">
@@ -18,7 +27,7 @@
       <span>Macchina</span>
       <select id="machine">
         <option value="lathe" selected>Tornio 2 assi (Fanuc)</option>
-        <option value="mill">Fresa 3 assi (in arrivo)</option>
+        <option value="mill">Fresa 3 assi (Fanuc)</option>
       </select>
     </label>
   </header>
@@ -60,18 +69,16 @@
       <div class="panel-head">
         <h2 class="panel-title">Simulazione</h2>
         <div class="setup" role="group" aria-label="Grezzo">
-          <label>Grezzo Ø <input type="number" id="stock-d" min="5" max="200" step="1"></label>
-          <label>Sporgenza <input type="number" id="stock-l" min="5" max="300" step="1"></label>
-          <label>Sovrametallo faccia <input type="number" id="stock-f" min="0" max="10" step="0.5"></label>
-          <span class="unit">mm</span>
+          <span id="setup-fields" class="setup-fields"></span>
           <button type="button" id="btn-fit" class="btn-small">Adatta vista</button>
         </div>
       </div>
       <div class="sim-body">
-        <canvas id="sim-canvas" aria-label="Vista del tornio: Z verso destra, X verso l'alto"></canvas>
+        <canvas id="sim-canvas-lathe" class="sim-canvas" aria-label="Vista del tornio: Z verso destra, X verso l'alto"></canvas>
+        <canvas id="sim-canvas-mill" class="sim-canvas" hidden aria-label="Vista 3D della fresa: trascina per ruotare, rotella per lo zoom"></canvas>
         <div id="dro" class="dro" aria-live="off"></div>
         <details class="tools">
-          <summary>Utensili e correttori</summary>
+          <summary id="tools-title">Utensili</summary>
           <div id="tool-panel"></div>
         </details>
       </div>
