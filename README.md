@@ -23,7 +23,7 @@ Così si provano i programmi **senza occupare la macchina e senza rischiare uten
 4. Premere **Avvia** oppure **Blocco singolo**; con **Velocità** si sceglie quante volte più veloce della macchina vera (da ×1 a ×500)
 5. Se compare un allarme: leggere il messaggio, correggere la riga indicata e premere **Reset**
 
-Nella simulazione il tratteggio rosso è il rapido G00, il blu la lavorazione. L'**anteprima percorso** mostra in chiaro tutto il percorso prima di eseguirlo. Rotella del mouse = zoom, trascinamento = spostamento, doppio clic = adatta la vista. In alto a destra si leggono le quote X (in diametro) e Z, l'utensile, i giri, l'avanzamento e il tempo ciclo. Il menu **Utensili** elenca gli utensili in torretta (T01 sgrossatore, T02 troncatore, T03 finitore).
+Nella simulazione il tratteggio rosso è il rapido G00, il blu la lavorazione. L'**anteprima percorso** mostra in chiaro tutto il percorso prima di eseguirlo. Rotella del mouse = zoom, trascinamento = spostamento, doppio clic = adatta la vista. In alto a destra si leggono le quote X (in diametro) e Z, l'utensile, i giri, l'avanzamento e il tempo ciclo. Il menu **Utensili e correttori** elenca gli utensili in torretta (T01 sgrossatore, T02 troncatore, T03 finitore) con la passata massima di ciascuno. Lì si imposta anche l'usura dei correttori: se il pezzo esce Ø42,10 invece di 42,00, si mette usura X −0.1 e si riesegue, come sulla macchina.
 
 ## Linguaggio supportato: ISO / Fanuc
 
@@ -49,8 +49,8 @@ Ogni allarme ha un codice numerico, la riga incriminata e un messaggio in italia
 |---|---|---|
 | 1000–1999 | Sintassi | codice G/M sconosciuto, indirizzo senza valore, numero non valido |
 | 2000–2999 | Parametri mancanti | G01 senza F, movimento di lavoro con mandrino fermo, nessun utensile chiamato |
-| 3000–3999 | Geometria e limiti | arco G02/G03 impossibile o incoerente; fuori corsa e passata troppo profonda nella v0.3 |
-| 4000–4999 | Collisioni | G00 dentro il materiale, utensile contro il mandrino; portautensile nella v0.3 |
+| 3000–3999 | Geometria e limiti | arco G02/G03 impossibile o incoerente, fuori corsa, passata troppo profonda |
+| 4000–4999 | Collisioni | G00 dentro il materiale, utensile o portautensile contro il mandrino o il pezzo |
 
 ## Struttura del progetto
 
@@ -139,7 +139,8 @@ Usiamo il [Semantic Versioning](https://semver.org/lang/it/): `MAGGIORE.MINORE.C
 
 - [x] **v0.1** — Editor, parser ISO, evidenziazione riga, allarmi di sintassi
 - [x] **v0.2** — Tornio: grezzo, utensili, simulazione 2D dell'asportazione (G00/G01/G02/G03), tempo ciclo, prime collisioni
-- [ ] **v0.3** — Tornio: allarmi mancanti (fine corsa, profondità di passata, portautensile), correttori utensile, dati del tornio del laboratorio
+- [x] **v0.3** — Tornio: fine corsa, profondità di passata, portautensile contro il pezzo, G96 senza G50, correttori utensile
+- [ ] Dati del tornio del laboratorio (corse, giri, rapido, utensili reali) al posto dei valori tipici
 - [ ] **v0.4** — Tornio: cicli G70/G71, compensazione raggio G41/G42
 - [ ] **v0.5** — Fresa 3 assi: simulazione 3D
 - [ ] **v1.0** — Versione stabile usata in classe, con esercitazioni in `examples/`

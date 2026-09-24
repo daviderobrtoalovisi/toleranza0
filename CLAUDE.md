@@ -56,6 +56,10 @@ testo -> parser -> blocchi -> interpreter (stato modale) -> movimenti -> machine
 - `js/ui/run-controller.js` — anima l'esecuzione: tempo simulato = tempo reale × fattore di velocità (`CONFIG.speedFactors`); avvio, pausa, blocco singolo, reset, M00/M01/M30.
 - `js/render/lathe-2d.js` — solo disegno su canvas (sezione del pezzo, mandrino, utensile, percorsi, zoom). Non contiene logica CNC; i colori vengono dalle variabili CSS `--sim-*`.
 - Punto programmato degli utensili: punta teorica con orientamento 3 (troncatore: spigolo destro). Senza G41/G42 coni e raggi hanno l'errore reale del raggio di punta: è voluto, non correggerlo.
+- Correttori: l'interprete mette in ogni movimento `offset: { x, z }` (usura del correttore attivo); il simulatore tiene `sim.pos` = quota programmata (mostrata nelle quote) e muove l'utensile in `sim.toolPos` = pos + offset.
+- Profondità di passata (3005): distanza massima, perpendicolare alla direzione del movimento, tra il punto programmato e le celle tolte in quel passo; confrontata con `tool.maxDepth`. Il portautensile (`toolHolder`) è appoggiato sul retro dell'inserto e non deve mai coprire la zona che taglia, altrimenti scatta 4003 in passate normali (c'è un test).
+- `simulator.follow()` restituisce `null` oppure `{ code, params }`; l'allarme lo crea chi chiama, con la riga del blocco.
+- Ogni esempio in `examples/` viene eseguito per intero dai test: se si cambia la fisica del simulatore, gli esempi devono restare senza allarmi (o con quelli attesi in `tests/examples.test.js`).
 - I dati del tornio in `machine.js` sono valori tipici, non quelli del laboratorio: vanno sostituiti quando i docenti li forniscono.
 - `js/alarms/` — catalogo degli allarmi. Ogni allarme: `{ code, category, message, hint }`.
 - Ogni movimento porta con sé il numero di riga di origine: serve per evidenziare la riga nell'editor e per gli allarmi.

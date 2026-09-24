@@ -7,11 +7,11 @@ I testi mostrati agli studenti sono in [`js/alarms/catalog.js`](../js/alarms/cat
 | Codici | Categoria | Stato |
 |---|---|---|
 | 1000–1999 | Sintassi | attivi dalla v0.1 |
-| 2000–2999 | Parametri mancanti | primi allarmi dalla v0.2, altri nella v0.3 |
-| 3000–3999 | Geometria e limiti | archi dalla v0.2, limiti nella v0.3 |
-| 4000–4999 | Collisioni | rapido nel materiale e mandrino dalla v0.2, portautensile nella v0.3 |
+| 2000–2999 | Parametri mancanti | dalla v0.2 (G96 e correttori dalla v0.3) |
+| 3000–3999 | Geometria e limiti | archi dalla v0.2, fine corsa e profondità di passata dalla v0.3 |
+| 4000–4999 | Collisioni | rapido e mandrino dalla v0.2, portautensile dalla v0.3 |
 
-**Quando scattano:** gli allarmi di sintassi, parametri e geometria compaiono già mentre si scrive, nel pannello *Allarmi*; per quelli di parametri e geometria viene mostrato solo il primo. Le collisioni si scoprono solo eseguendo il programma, come sulla macchina vera: l'esecuzione si ferma nel punto dell'urto, cerchiato in rosso nella simulazione.
+**Quando scattano:** gli allarmi di sintassi, parametri, archi e fine corsa compaiono già mentre si scrive, nel pannello *Allarmi*; di quelli che non sono di sintassi viene mostrato solo il primo. Le collisioni e la profondità di passata (3005) dipendono dal materiale, quindi si scoprono solo eseguendo il programma, come sulla macchina vera: l'esecuzione si ferma nel punto esatto, cerchiato in rosso nella simulazione se è un urto.
 
 ## 1000–1999 Sintassi
 
@@ -45,8 +45,10 @@ Note:
 | 2002 | Movimento di lavoro con mandrino fermo | `G01` prima di `M03`, dopo `M05` o con `S0` | `G96 S180 M03` prima di tagliare |
 | 2003 | Nessun utensile selezionato | `G01` prima di qualsiasi `T` | `T0101` all'inizio |
 | 2004 | Utensile non presente nella torretta | `T0909` | usare T01, T02 o T03 |
+| 2005 | G96 senza limite di giri G50 | `G96 S180 M03` senza un `G50 S..` prima | `G50 S2000` prima di G96 |
+| 2006 | Correttore non presente | `T0109` | correttori 01, 02, 03: `T0101` |
 
-Previsti per la v0.3: G96 senza limite G50, programma senza M30.
+Un programma senza M30 non dà allarme: alla fine compare il messaggio «Programma terminato senza M30».
 
 ## 3000–3999 Geometria e limiti
 
@@ -55,17 +57,20 @@ Previsti per la v0.3: G96 senza limite G50, programma senza M30.
 | 3001 | Arco impossibile: raggio troppo piccolo | da X20 Z0: `G02 X40 Z-10 R5` | il raggio deve essere almeno metà della distanza tra i due punti |
 | 3002 | Arco incoerente: centro I/K non equidistante | da X20 Z0: `G02 X30 Z-5 I10 K0` | ricontrollare I, K (I in raggio) e il punto finale |
 | 3003 | Arco senza raggio né centro | `G02 X30 Z-5` | aggiungere R oppure I e K |
+| 3004 | Fuori corsa | `G00 X400` (limite X300) | controllare valore e segno |
+| 3005 | Passata troppo profonda | T01 da Ø50 direttamente a X30 | dividere in più passate |
 
-Previsti per la v0.3: fuori corsa degli assi, passata troppo profonda.
+Fine corsa (quote pezzo, X in diametro): X da -10 a 300, Z da -300 a 200. Si cambiano in `js/machines/lathe/machine.js`.
+
+Profondità massima di passata, misurata perpendicolarmente al movimento: T01 4 mm, T02 3 mm (la sua larghezza), T03 2 mm. Si cambia in `js/machines/lathe/tools.js`. Attenzione: anche entrare in Z nella faccia con tutto il tagliente conta come passata profonda; la faccia si finisce muovendosi in X.
 
 ## 4000–4999 Collisioni
 
 | Codice | Messaggio | Esempio che lo provoca | Correzione |
 |---|---|---|---|
 | 4001 | Rapido G00 dentro il materiale | `G00 Z-30` a un diametro più piccolo del pezzo | avvicinarsi in G00 a 1–2 mm, poi G01 |
-| 4002 | Utensile contro il mandrino | `G01 Z-85` con sporgenza 80 mm | restare nella sporgenza del pezzo |
-
-Previsto per la v0.3: portautensile contro il pezzo (oggi si controlla solo l'inserto).
+| 4002 | Utensile o portautensile contro il mandrino | `G01 Z-85` con sporgenza 80 mm | restare nella sporgenza del pezzo |
+| 4003 | Portautensile contro il pezzo | gola di 20 mm con il troncatore profondo 18 | usare un utensile adatto o cambiare percorso |
 
 L'esempio *Esercizio — Perché si rompe l'utensile?* mostra la collisione 4001.
 

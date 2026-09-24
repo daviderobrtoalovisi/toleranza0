@@ -88,19 +88,20 @@ Convenzioni:
 - **G04**: sosta con `P` in millesimi di secondo (`P1500` = 1,5 s) oppure con `X`/`U` in secondi.
 - **G96**: i giri si ricalcolano con il diametro, fino al limite di G50 e della macchina.
 - **G20**: le quote vengono convertite in millimetri; S in G96 resta in m/min.
-- **Correttori utensile** (le ultime due cifre di T): non ancora gestiti, gli utensili sono considerati già misurati.
+- **Correttori utensile** (le ultime due cifre di T, per esempio T0101): registri 01, 02 e 03 con l'usura in X (diametro) e Z, da impostare in *Utensili e correttori* sopra la simulazione. L'utensile si trova nella quota programmata più l'usura; le quote X/Z mostrate restano quelle programmate, come sulla macchina. `T0100` annulla il correttore. La geometria degli utensili si considera già misurata.
+- **Fine corsa**: X da -10 a 300 (diametro), Z da -300 a 200, in quote pezzo.
 
 ### Utensili in torretta
 
 Punto programmato: la punta teorica dell'utensile (orientamento 3). Senza G41/G42 cilindri e facce vengono esatti, mentre coni e raggi hanno il piccolo errore dovuto al raggio di punta, come sulla macchina vera.
 
-| T | Utensile | Raggio di punta |
-|---|---|---|
-| T01 | Sgrossatore esterno 80° (CNMG), tagliente principale a 95° | 0,8 mm |
-| T02 | Troncatore larghezza 3 mm, riferimento sullo spigolo destro (lato Z+) | — |
-| T03 | Finitore esterno 35° (VBMT), tagliente principale a 93° | 0,4 mm |
+| T | Utensile | Raggio di punta | Passata massima |
+|---|---|---|---|
+| T01 | Sgrossatore esterno 80° (CNMG), tagliente principale a 95° | 0,8 mm | 4 mm |
+| T02 | Troncatore larghezza 3 mm, profondità 18 mm, riferimento sullo spigolo destro (lato Z+) | — | 3 mm |
+| T03 | Finitore esterno 35° (VBMT), tagliente principale a 93° | 0,4 mm | 2 mm |
 
-La tabella è in `js/machines/lathe/tools.js`.
+Anche il portautensile ha una forma e può urtare il pezzo (4003) o il mandrino (4002). La tabella è in `js/machines/lathe/tools.js`.
 
 ## Fresa 3 assi
 
