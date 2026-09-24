@@ -239,8 +239,9 @@ export function createLatheView(canvas, { getScene, tools, params }) {
     for (const step of program.steps) {
       for (const move of step.moves) {
         if (move.length === 0) continue;
-        ctx.strokeStyle = move.type === 'rapid' ? colors.rapid : colors.feed;
-        ctx.setLineDash(move.type === 'rapid' ? [4, 4] : [2, 3]);
+        const rapid = move.type === 'rapid' || move.rapidMotion;
+        ctx.strokeStyle = rapid ? colors.rapid : colors.feed;
+        ctx.setLineDash(rapid ? [4, 4] : [2, 3]);
         strokePath(pathOf(move));
       }
     }

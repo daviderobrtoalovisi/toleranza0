@@ -55,7 +55,7 @@ export function createLatheSimulator({ params, tools }) {
       }
       sim.offset = move.offset ?? NO_OFFSET;
       if (move.type === 'dwell' || move.length === 0) return null;
-      const cutting = move.type !== 'rapid';
+      const cutting = move.type !== 'rapid' && !move.rapidMotion;
       const trail = trailFor(move, t0);
       const steps = Math.max(1, Math.ceil((move.length * (t1 - t0)) / sim.stock.c));
       for (let k = 1; k <= steps; k++) {
@@ -78,7 +78,7 @@ export function createLatheSimulator({ params, tools }) {
     const offset = move.offset ?? NO_OFFSET;
     const entry = {
       move,
-      type: move.type === 'rapid' ? 'rapid' : 'feed',
+      type: move.type === 'rapid' || move.rapidMotion ? 'rapid' : 'feed',
       points: [{ x: start.x + offset.x, z: start.z + offset.z }]
     };
     sim.trail.push(entry);
