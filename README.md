@@ -35,11 +35,11 @@ Il tornio segue il **Fanuc sistema A**, il più diffuso nelle scuole: X in diame
 
 | Gruppo | Tornio (Fanuc sistema A) | Fresa (Fanuc serie M) |
 |---|---|---|
-| Movimenti | G00, G01, G02, G03, G04 | G00–G04, archi nel piano G17 anche elicoidali (G18/G19 più avanti) |
+| Movimenti | G00, G01, G02, G03, G04 | G00–G04, archi nei piani G17/G18/G19 anche elicoidali |
 | Quote | X/Z assolute, U/W incrementali, G20/G21 | G90/G91, G20/G21 |
 | Avanzamento / velocità | G98/G99, G96/G97, G50 (limite giri) | G94 (mm/min), S, F |
 | Origini | G54–G59, G28 | G54–G59, G28 |
-| Utensile | T0101 con correttori, G40/G41/G42 | T1 M06, G43 H / G49 (G41/G42 nella v0.6) |
+| Utensile | T0101 con correttori, G40/G41/G42 | T1 M06, G43 H / G49, G41/G42 D / G40 |
 | Cicli | G71 sgrossatura, G70 finitura; G72, G76, G90, G94 più avanti | G81, G82, G83, G80, G98/G99 |
 | Funzioni M | M00, M01, M02, M03, M04, M05, M08, M09, M30 | come il tornio + M06 |
 
@@ -145,7 +145,7 @@ Usiamo il [Semantic Versioning](https://semver.org/lang/it/): `MAGGIORE.MINORE.C
 - [ ] Dati del tornio del laboratorio (corse, giri, rapido, utensili reali) al posto dei valori tipici
 - [x] **v0.4** — Tornio: cicli G71/G70, compensazione del raggio di punta G41/G42
 - [x] **v0.5** — Fresa 3 assi: vista 3D, G90/G91, archi anche elicoidali, T/M06/G43, cicli G81/G82/G83, morsa
-- [ ] **v0.6** — Fresa: compensazione raggio G41/G42, piani G18/G19
+- [x] **v0.6** — Fresa: compensazione raggio G41/G42 con D, piani G18/G19
 - [ ] **v1.0** — Versione stabile usata in classe, con esercitazioni in `examples/`
 
 ## Licenza

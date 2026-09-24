@@ -148,13 +148,13 @@ Convenzioni:
 | Lettera | Significato |
 |---|---|
 | X, Y, Z | Quote |
-| I, J | Centro dell'arco (incrementale dal punto iniziale) |
+| I, J, K | Centro dell'arco (incrementale dal punto iniziale): I in X, J in Y, K in Z |
 | R | Raggio dell'arco o piano R dei cicli |
 | F | Avanzamento in mm/min |
 | S | Giri del mandrino |
 | T | Utensile da preparare |
 | H | Correttore di lunghezza (G43) |
-| D | Correttore di raggio (G41/G42, non ancora simulati) |
+| D | Correttore di raggio fresa (G41/G42) |
 | P | Sosta in ms (G04, G82) |
 | Q | Profondità di beccata (G83) |
 
@@ -163,14 +163,14 @@ Convenzioni:
 | Codice | Significato | Stato |
 |---|---|---|
 | G00 / G01 | Rapido / lineare | ✅ |
-| G02 / G03 | Arco orario / antiorario nel piano XY, anche elicoidale (con Z) | ✅ |
+| G02 / G03 | Arco orario / antiorario nel piano attivo, anche elicoidale | ✅ |
 | G04 | Sosta | ✅ |
 | G17 | Piano XY | ✅ |
-| G18 / G19 | Piani ZX / YZ | 🕓 |
+| G18 / G19 | Piani ZX (archi con I, K) / YZ (archi con J, K) | ✅ |
 | G20 / G21 | Pollici / millimetri | ✅ |
 | G28 | Ritorno al punto di riferimento (di solito `G91 G28 Z0`) | ✅ |
 | G40 | Annulla compensazione raggio | ✅ |
-| G41 / G42 | Compensazione raggio fresa | 🕓 v0.6 |
+| G41 / G42 | Compensazione raggio fresa (con D), nel piano G17 | ✅ |
 | G43 / G49 | Correzione lunghezza utensile / annulla | ✅ |
 | G54–G59 | Origini pezzo | ✅ |
 | G80 | Annulla ciclo | ✅ |
@@ -203,6 +203,33 @@ G83 X50 Y40 Z-25 R2 Q5 F100     (foro profondo a beccate di 5 mm)
 ```
 
 In G91 R si misura dal piano iniziale e Z dal piano R. Anche un G00–G03 annulla il ciclo.
+
+### Piani degli archi G17, G18, G19
+
+Il verso (G02 orario, G03 antiorario) si guarda dal lato positivo dell'asse perpendicolare al piano, come Fanuc:
+
+| Piano | Archi in | Centro | Guardando da |
+|---|---|---|---|
+| G17 | X e Y | I, J | +Z (dall'alto) |
+| G18 | Z e X | K, I | +Y |
+| G19 | Y e Z | J, K | +X |
+
+Esempio: da X20 Z0, `G18 G02 X40 Z0 R10` scende fino a Z-10 a metà arco; con G03 salirebbe. Anche negli altri piani l'arco può essere un'elica lungo l'asse perpendicolare.
+
+### Compensazione del raggio fresa G41 / G42
+
+```
+G01 Z-3 F200                  (si scende fuori dal pezzo, senza compensazione)
+G41 D1 X10 Y40 F400           (attivazione: D = numero dell'utensile montato)
+...                           (il profilo del pezzo, come sul disegno)
+G40 X-10                      (annullamento, lontano dal pezzo)
+```
+
+- **G41**: fresa a sinistra del percorso, guardando dall'alto; girando in senso orario attorno a un contorno esterno la fresa resta fuori dal pezzo (fresatura concorde). **G42**: a destra. **G40**: annulla.
+- Si scrive il profilo del pezzo e la macchina sposta il centro della fresa del raggio: agli spigoli esterni la fresa gira attorno allo spigolo, a quelli interni si ferma dove i due tratti si incontrano.
+- **D** deve essere il numero dell'utensile montato (allarme 2010), come H per G43.
+- Vale solo nel piano G17; i movimenti solo in Z durante la compensazione restano nel punto compensato. Con G41/G42 attiva non si usano i cicli di foratura (allarme 1013).
+- L'esempio *Fresa 4* fa un contorno 80×60 con raggi R8.
 
 ### Come la simula la fresa
 

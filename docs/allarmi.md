@@ -49,6 +49,7 @@ Note:
 | 2006 | Correttore non presente | `T0109` | correttori 01, 02, 03: `T0101` |
 | 2008 | Fresa: movimento in Z senza G43 | `T1 M06` e poi `G00 Z5` | `G43 H1 Z50` dopo ogni cambio utensile |
 | 2009 | Fresa: H diverso dall'utensile montato | `T1 M06` e poi `G43 H2` | H uguale al numero dell'utensile |
+| 2010 | Fresa: D diverso dall'utensile montato, o mancante | `T1 M06` e poi `G41 D2` | D uguale al numero dell'utensile |
 | 2007 | Ciclo incompleto | `G71 P100 Q180 ...` senza il blocco `G71 U2 R0.5` prima; `G70 P100` senza Q | scrivere il ciclo completo (il suggerimento mostra la sintassi) |
 
 Un programma senza M30 non dà allarme: alla fine compare il messaggio «Programma terminato senza M30».
