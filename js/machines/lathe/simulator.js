@@ -31,7 +31,8 @@ export function createLatheSimulator({ params, tools }) {
       const R = setup.diameter / 2;
       const z0 = -setup.length;
       // Griffe e corpo del mandrino (quote in raggio)
-      sim.chuck = { jawZ: z0, jawR: R + 12, bodyZ: z0 - 25, bodyR: R + 45 };
+      const { jawHeight, jawLength, bodyHeight } = params.chuck;
+      sim.chuck = { jawZ: z0, jawR: R + jawHeight, bodyZ: z0 - jawLength, bodyR: R + bodyHeight };
       sim.pos = { ...params.home };
       sim.offset = NO_OFFSET;
       sim.tool = null;

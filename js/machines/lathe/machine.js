@@ -5,7 +5,9 @@ export const LATHE_PARAMS = {
   maxRpm: 4000,               // giri massimi del mandrino
   toolChangeTime: 2,          // secondi per il cambio utensile
   // Fine corsa (quote pezzo, X in diametro): oltre questi valori allarme 3004
-  limits: { x: { min: -10, max: 300 }, z: { min: -300, max: 200 } }
+  limits: { x: { min: -10, max: 300 }, z: { min: -300, max: 200 } },
+  // Mandrino (mm): griffe alte jawHeight sopra il grezzo e lunghe jawLength, corpo alto bodyHeight sopra il grezzo
+  chuck: { jawHeight: 12, jawLength: 25, bodyHeight: 45 }
 };
 
 // Correttori utensile: usura in X (diametro) e Z, in mm. Registro 01, 02, 03 (uno per utensile).

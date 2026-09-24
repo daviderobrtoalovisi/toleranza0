@@ -5,7 +5,10 @@ export const MILL_PARAMS = {
   maxRpm: 8000,                   // giri massimi del mandrino
   toolChangeTime: 5,              // secondi per il cambio utensile M06
   // Fine corsa (quote pezzo): oltre questi valori allarme 3004
-  limits: { x: { min: -250, max: 250 }, y: { min: -200, max: 200 }, z: { min: -100, max: 200 } }
+  limits: { x: { min: -250, max: 250 }, y: { min: -200, max: 200 }, z: { min: -100, max: 200 } },
+  // Morsa (mm): il grezzo sporge sopra le ganasce al massimo maxProtrusion (e mai più del 40% della sua altezza);
+  // ganasce spesse jawThickness in Y e più lunghe del grezzo di margin per lato; base alta baseHeight
+  vise: { maxProtrusion: 10, jawThickness: 20, margin: 15, baseHeight: 30 }
 };
 
 // Grezzo: parallelepipedo in morsa. Z0 = faccia superiore finita; il grezzo sporge sopra di topAllowance.

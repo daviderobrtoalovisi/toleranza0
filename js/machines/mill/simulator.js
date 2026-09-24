@@ -22,7 +22,7 @@ export function createMillSimulator({ params, tools }) {
     reset(setup) {
       sim.setup = setup;
       sim.stock = createMillStock(setup);
-      sim.vise = viseBoxes(sim.stock);
+      sim.vise = viseBoxes(sim.stock, params.vise);
       sim.pos = { ...params.home };
       sim.tool = null;
       sim.trail = [];
@@ -148,16 +148,17 @@ export function createMillSimulator({ params, tools }) {
 }
 
 // Morsa: due ganasce sui lati Y del grezzo, che ne lasciano sporgere la parte alta, e la base sotto
-export function viseBoxes(stock) {
+export function viseBoxes(stock, { maxProtrusion, jawThickness, margin, baseHeight }) {
   const height = stock.zTop - stock.zBottom;
-  const protrusion = Math.min(10, height * 0.4);
+  const protrusion = Math.min(maxProtrusion, height * 0.4);
   const jawTop = stock.zTop - protrusion;
-  const x0 = stock.xMin - 15;
-  const x1 = stock.xMax + 15;
+  const x0 = stock.xMin - margin;
+  const x1 = stock.xMax + margin;
+  const z0 = stock.zBottom - baseHeight;
   return [
-    { name: 'ganascia', xMin: x0, xMax: x1, yMin: stock.yMin - 20, yMax: stock.yMin, zMin: stock.zBottom - 30, zMax: jawTop },
-    { name: 'ganascia', xMin: x0, xMax: x1, yMin: stock.yMax, yMax: stock.yMax + 20, zMin: stock.zBottom - 30, zMax: jawTop },
-    { name: 'base', xMin: x0, xMax: x1, yMin: stock.yMin - 20, yMax: stock.yMax + 20, zMin: stock.zBottom - 30, zMax: stock.zBottom }
+    { name: 'ganascia', xMin: x0, xMax: x1, yMin: stock.yMin - jawThickness, yMax: stock.yMin, zMin: z0, zMax: jawTop },
+    { name: 'ganascia', xMin: x0, xMax: x1, yMin: stock.yMax, yMax: stock.yMax + jawThickness, zMin: z0, zMax: jawTop },
+    { name: 'base', xMin: x0, xMax: x1, yMin: stock.yMin - jawThickness, yMax: stock.yMax + jawThickness, zMin: z0, zMax: stock.zBottom }
   ];
 }
 
