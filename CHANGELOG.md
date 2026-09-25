@@ -2,6 +2,10 @@
 
 Ogni versione ha un tag git (`vX.Y.Z`). Il numero è in `js/version.js` e si vede in alto nella pagina.
 
+## 1.7.3 — Colori sfumati
+
+- Intestazione, pulsanti e titoli dei pannelli con sfumature morbide dal verde acqua al viola; pulsanti arrotondati con ombre leggere e passaggio animato; sfondo della pagina sfumato. Il testo bianco resta a contrasto alto
+
 ## 1.7.2 — Nuovi colori
 
 - Menu, pulsanti e pannelli con una paletta "armocromia autunno" (petrolio, oliva, senape, ruggine, melanzana, bordeaux, cammello), sempre con testo bianco a contrasto alto; sfondi color crema
