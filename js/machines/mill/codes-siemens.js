@@ -33,12 +33,12 @@ export const MILL_SIEMENS = {
     CYCLE81: 'Foratura: CYCLE81(RTP, RFP, SDIS, DP, DPR) = piano di ritorno, piano di riferimento, distanza di sicurezza, fondo assoluto, profondità',
     CYCLE82: 'Foratura con sosta: CYCLE82(RTP, RFP, SDIS, DP, DPR, DTB) con DTB = sosta sul fondo in secondi',
     CYCLE83: 'Foratura profonda: CYCLE83(RTP, RFP, SDIS, DP, DPR, FDEP, FDPR, …) con FDEP/FDPR = prima foratura assoluta/relativa',
-    MCALL: 'Richiamo modale: MCALL CYCLE81(...) fora in ogni posizione successiva; MCALL da solo annulla'
+    MCALL: 'Richiamo modale: MCALL CYCLE81(...) fora in ogni posizione successiva; MCALL da solo annulla',
+    POCKET3: 'Tasca rettangolare: POCKET3(RTP, RFP, SDIS, DP, LENG, WID, CRAD, PA, PO, STA, MID, FAL, FALD, FFP1, FFD, CDIR, VARI, MIDA, AP1, AP2, AD, RAD1, DP1) = piani, fondo, lunghezza e larghezza, raggio degli spigoli, centro, angolo, passata in Z, sovrametalli, avanzamenti, verso, tipo (1 sgrossatura, 2 finitura; +10 entrata a elica), passata laterale, elica',
+    POCKET4: 'Tasca circolare: POCKET4(RTP, RFP, SDIS, DP, PRAD, PA, PO, MID, FAL, FALD, FFP1, FFD, CDIR, VARI, MIDA, AP1, AD, RAD1, DP1) = piani, fondo, raggio, centro, passata in Z, sovrametalli, avanzamenti, verso, tipo (1 sgrossatura, 2 finitura; +10 entrata a elica), passata laterale, elica'
   },
   keywords: ['MCALL'],
   planned: {
-    POCKET3: 'ciclo di tasca rettangolare',
-    POCKET4: 'ciclo di tasca circolare',
     CYCLE71: 'ciclo di spianatura',
     CYCLE72: 'ciclo di contornatura'
   },

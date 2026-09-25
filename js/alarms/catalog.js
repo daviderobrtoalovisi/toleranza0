@@ -130,6 +130,11 @@ export const ALARMS = {
     message: 'Il ciclo {cycle} richiede un troncatore: l\'utensile T{tool} non è adatto',
     hint: 'La gola si fa con un utensile per gole, che ha una larghezza nota. Monta il troncatore prima del ciclo, per esempio T2 D1.'
   },
+  2012: {
+    category: 'parametri',
+    message: 'Il ciclo {cycle} richiede una fresa: l\'utensile T{tool} non è adatto',
+    hint: 'Le tasche si fanno con una fresa, che taglia anche di lato; la punta da foratura taglia solo scendendo. Monta la fresa prima del ciclo, per esempio T1 M6.'
+  },
 
   // 3000–3999 Geometria e limiti
   3001: {
@@ -176,6 +181,11 @@ export const ALARMS = {
     category: 'geometria',
     message: 'Gola più stretta dell\'utensile: {width} mm contro un troncatore largo {tool} mm',
     hint: 'La larghezza da sgrossare (larghezza della gola meno i sovrametalli sui fianchi) deve essere almeno quella del troncatore. Usa un troncatore più stretto, allarga la gola o riduci il sovrametallo sui fianchi.'
+  },
+  3010: {
+    category: 'geometria',
+    message: 'Tasca troppo piccola per la fresa T{tool} (Ø{d}) del ciclo {cycle}',
+    hint: 'La fresa, più il sovrametallo sui fianchi FAL, deve entrare nella tasca; con l\'entrata a elica anche il raggio RAD1 deve starci. Usa una fresa più piccola, riduci FAL o RAD1, oppure allarga la tasca.'
   },
 
   // 4000–4999 Collisioni

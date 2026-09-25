@@ -1,5 +1,6 @@
 import { createAlarm } from '../alarms/alarm.js';
 import { isExecutable } from '../parser/check-program.js';
+import { pocketBlocks } from './siemens-pockets.js';
 
 // Traduce un programma Siemens SINUMERIK (già letto e controllato) nei blocchi Fanuc equivalenti,
 // così interpreti, simulatori, allarmi e grafica restano gli stessi per i due linguaggi.
@@ -173,6 +174,15 @@ function millBlock(block, state) {
     return { blocks: words.length ? [words] : [] };
   }
 
+  // Tasche: movimenti G0/G1/G2/G3 calcolati dal ciclo (js/interpreter/siemens-pockets.js)
+  const pocket = ['POCKET3', 'POCKET4'].find((name) => w[name]);
+  if (pocket) {
+    const extra = block.words.find((item) => item.letter !== 'N' && item.letter !== pocket);
+    if (extra) return unsupported(block, `${extra.letter} nello stesso blocco del ciclo: scrivere il ciclo in un blocco a parte`);
+    if (state.comp) return unsupported(block, `${pocket} con la compensazione G41/G42 attiva: scrivere G40 prima del ciclo`);
+    return pocketBlocks(pocket, w[pocket].raw, block, state, words);
+  }
+
   for (const g of gs) {
     if (g === 90) {
       state.absolute = true;
@@ -186,8 +196,12 @@ function millBlock(block, state) {
     else if (g === 74) continue; // tradotto sotto
     else if (g === 41 || g === 42) {
       if (state.tool === null) return unsupported(block, `G${g} senza un utensile montato`);
+      state.comp = true;
       words.push(word('G', g), word('D', state.tool));
-    } else words.push(word('G', g));
+    } else {
+      if (g === 40) state.comp = false;
+      words.push(word('G', g));
+    }
   }
 
   for (const axis of ['X', 'Y', 'Z']) {

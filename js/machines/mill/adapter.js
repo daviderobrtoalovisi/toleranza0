@@ -59,7 +59,7 @@ export function createMillAdapter(model = GENERIC.mill, dialect = 'fanuc') {
       return { blocks: result.blocks, alarms: result.alarms.map(localize) };
     },
     interpret(blocks, { blockDelete }) {
-      const input = siemens ? translateSiemens(blocks, 'mill') : blocks;
+      const input = siemens ? translateSiemens(blocks, 'mill', { tools: MILL_TOOLS }) : blocks;
       const program = interpretMill(input, { params, tools: MILL_TOOLS, blockDelete });
       for (const step of program.steps) step.alarm = localize(step.alarm);
       return program;
