@@ -2,6 +2,12 @@
 
 Ogni versione ha un tag git (`vX.Y.Z`). Il numero è in `js/version.js` e si vede in alto nella pagina.
 
+## 1.6.0 — Siemens: tasche POCKET3 e POCKET4
+
+- Fresa in Siemens: tasca rettangolare `POCKET3` (con raggio degli spigoli e rotazione `STA`) e circolare `POCKET4`. Sgrossatura (`VARI=1`) con i sovrametalli `FAL`/`FALD` e finitura (`VARI=2`) di fondo e fianchi, a piani di `MID` e con passo laterale `MIDA`; entrata verticale oppure a elica (`VARI=11`/`12`, `RAD1`, `DP1`); verso concorde o discorde (`CDIR`). Il ciclo calcola il percorso del centro fresa con il diametro dell'utensile montato
+- Nuovi allarmi 2012 (tasca senza fresa) e 3010 (tasca troppo piccola per la fresa)
+- Nuovo esempio Siemens *Fresa 5* con una tasca rettangolare e una circolare; i test controllano che il fondo sia alla quota giusta e che fuori dalle tasche non si tolga materiale
+
 ## 1.5.0 — Siemens: ciclo di gola CYCLE93
 
 - Tornio in Siemens: `CYCLE93` per le gole rettangolari esterne (`VARI=1` o `5`): affondamenti affiancati con il troncatore, a beccate di `IDEP`, sosta `DTB` sul fondo e finitura di fianchi e fondo con i sovrametalli `FAL1`/`FAL2`. La larghezza del troncatore viene dalla tabella utensili

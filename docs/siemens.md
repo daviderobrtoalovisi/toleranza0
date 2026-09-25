@@ -83,6 +83,7 @@ Attenzione: in Siemens `G70`/`G71` sono le unità di misura, non i cicli di fini
 | `CYCLE83(RTP, RFP, SDIS, DP, DPR, FDEP, FDPR, …)` | foratura profonda a beccate | `G99 G83 … Q` |
 | `MCALL CYCLE81(...)` | da qui ogni blocco con X/Y fora nella nuova posizione | un ciclo Fanuc per ogni foro |
 | `MCALL` da solo | annulla il richiamo modale | `G80` |
+| `POCKET3(...)` / `POCKET4(...)` | tasca rettangolare / circolare | percorso `G0`/`G1`/`G2`/`G3` del centro fresa |
 
 ### Parametri dei cicli di foratura
 
@@ -95,14 +96,33 @@ Attenzione: in Siemens `G70`/`G71` sono le unità di misura, non i cicli di fini
 - I parametri vuoti si lasciano tra due virgole; RTP, RFP e il fondo sono obbligatori (altrimenti allarme 2007)
 - Il ciclo va scritto in un blocco a parte (solo con il numero N); nei blocchi di posizionamento con `MCALL` attivo non si scrive Z
 
+### Tasche POCKET3 e POCKET4
+
+`POCKET3(RTP, RFP, SDIS, DP, LENG, WID, CRAD, PA, PO, STA, MID, FAL, FALD, FFP1, FFD, CDIR, VARI, MIDA, AP1, AP2, AD, RAD1, DP1)` — tasca rettangolare
+
+`POCKET4(RTP, RFP, SDIS, DP, PRAD, PA, PO, MID, FAL, FALD, FFP1, FFD, CDIR, VARI, MIDA, AP1, AD, RAD1, DP1)` — tasca circolare
+
+- **RTP** piano di ritorno, **RFP** faccia del pezzo, **SDIS** distanza di sicurezza sopra RFP (vuoto: 0), **DP** quota del fondo
+- **LENG**, **WID** lunghezza (lungo X) e larghezza della tasca, **CRAD** raggio degli spigoli; **PRAD** raggio della tasca circolare
+- **PA**, **PO** centro della tasca in X e Y; **STA** angolo della tasca rispetto all'asse X (solo POCKET3)
+- **MID** passata massima in Z (vuoto o 0: tutta la profondità in una volta); **MIDA** passata laterale massima (vuoto: 80% del diametro della fresa)
+- **FAL** sovrametallo sui fianchi, **FALD** sul fondo, lasciati dalla sgrossatura
+- **FFP1** avanzamento nel piano, **FFD** avanzamento in discesa (vuoto: FFP1)
+- **CDIR** verso: `0` concorde (in una tasca è antiorario, G3), `1` discorde (G2), `2` = G2, `3` = G3
+- **VARI** `1` sgrossatura, `2` finitura (fondo se c'è FALD, poi i fianchi a piani di MID); `11` e `12` come 1 e 2 ma con **entrata a elica** di raggio **RAD1** e discesa **DP1** per giro attorno al centro, invece della discesa verticale
+- Il percorso è quello del **centro della fresa**, calcolato dal ciclo con il diametro dell'utensile montato: anelli concentrici dal centro verso l'esterno. Serve una fresa (allarme 2012 con la punta) e la tasca, meno il sovrametallo FAL, deve essere più grande della fresa (allarme 3010; anche RAD1 deve starci)
+- Prima del ciclo: fresa montata, mandrino avviato e compensazione `G40` (con `G41`/`G42` attivo: allarme 1013). Il ciclo lavora nel piano `G17` e alla fine risale al piano RTP
+- Come sulla macchina, se MID è più grande della passata massima della fresa scatta l'allarme 3005
+- Non ancora simulati (allarme 1013): tasca misurata da uno spigolo (LENG o WID negativi), entrata a pendolo (`VARI` 21, 22), tasca già sgrossata (AP1, AP2, AD)
+
 ## Non ancora simulato (allarme 1013)
 
-- Cicli: `CYCLE97` (filettatura), `POCKET3`/`POCKET4` (tasche), `CYCLE71`/`72`
+- Cicli: `CYCLE97` (filettatura), `CYCLE71` (spianatura), `CYCLE72` (contornatura)
 - Filettatura `G33`, sottoprogrammi (`M17`), variabili e parametri R, istruzioni come `MSG`, `IF`, `GOTO`
 - Utensili con il nome (`T="FRESA10"`) e taglienti oltre il primo (`D2`…)
 - Sulla fresa: `X=IC(..)` e `X=AC(..)` nei singoli blocchi (usare `G90`/`G91` per tutto il blocco) e `G95`
 
-I prossimi candidati sono le tasche della fresa (`POCKET3`, `POCKET4`).
+I prossimi candidati sono la spianatura `CYCLE71` e la filettatura `CYCLE97`.
 
 ## Esempi
 
@@ -116,3 +136,4 @@ I prossimi candidati sono le tasche della fresa (`POCKET3`, `POCKET4`).
 | *Esercizio — Perché la macchina non parte?* (`esercizio-tornio-siemens-lims.nc`) | `G96` senza `LIMS`: allarme 2005 alla riga 5 |
 | *Fresa 3* (`fresa-siemens-03-foratura.nc`) | gli stessi fori dell'esempio Fanuc: `MCALL CYCLE81`, poi `CYCLE83` a beccate |
 | *Fresa 4* (`fresa-siemens-04-contorno-g41.nc`) | lo stesso contorno dell'esempio Fanuc: `T1 M6` senza `G43`, `G41`, `CR=`, `G74` |
+| *Fresa 5* (`fresa-siemens-05-tasche.nc`) | tasca rettangolare `POCKET3` e circolare `POCKET4` (con entrata a elica): sgrossatura `VARI=1`/`11` e finitura `VARI=2` |
