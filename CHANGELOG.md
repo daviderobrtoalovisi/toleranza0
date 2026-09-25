@@ -2,6 +2,13 @@
 
 Ogni versione ha un tag git (`vX.Y.Z`). Il numero è in `js/version.js` e si vede in alto nella pagina.
 
+## 1.7.1 — Colori e scritte più leggibili
+
+- Menu, pulsanti e pannelli colorati, a colori pieni con testo bianco e contrasto alto, leggibili anche al proiettore e sul tablet
+- Scritte dell'interfaccia in stampatello maiuscolo (il testo del programma resta com'è scritto)
+- La Guida sta in fondo a destra nell'intestazione; le etichette Macchina, Linguaggio e Modello sono colorate
+- Ripristinata la documentazione di `CYCLE71` in `docs/siemens.md` e `docs/allarmi.md`
+
 ## 1.7.0 — Siemens: spianatura CYCLE71
 
 - Fresa in Siemens: spianatura `CYCLE71` di una superficie rettangolare (anche ruotata con `STA`, con `LENG`/`WID` negativi per scegliere il verso). Passate lungo X o Y, in un solo verso o a zig-zag, a piani di `MID` e con passo laterale `MIDA`; sgrossatura (`VARI` x1) con il sovrametallo `FALD` e finitura (`VARI` x2); uscita oltre i bordi con `FDP` e `FDP1`
