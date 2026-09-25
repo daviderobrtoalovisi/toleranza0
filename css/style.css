@@ -783,6 +783,20 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   color: #86d24a;
 }
 
+/* Nell'intestazione lo zero respira piano: si fa notare senza distrarre
+   chi sta leggendo il programma. Nella schermata di apertura resta fermo. */
+.brand-name .mark-zero { animation: respiro-zero 2.8s ease-in-out infinite; }
+
+@keyframes respiro-zero {
+  0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(134, 210, 74, 0); }
+  50% { opacity: 0.8; text-shadow: 0 0 16px rgba(134, 210, 74, 0.8); }
+}
+
+/* Chi ha chiesto meno animazioni al sistema non la vede */
+@media (prefers-reduced-motion: reduce) {
+  .brand-name .mark-zero { animation: none; }
+}
+
 .intro-claim {
   margin: 14px 0 0;
   font-size: 13px;
