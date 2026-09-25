@@ -23,7 +23,7 @@ Così si provano i programmi **senza occupare la macchina e senza rischiare uten
 4. Premere **Avvia** oppure **Blocco singolo**; con **Velocità** si sceglie quante volte più veloce della macchina vera (da ×1 a ×500)
 5. Se compare un allarme: leggere il messaggio, correggere la riga indicata e premere **Reset**
 
-Il menu **Modello**, accanto a **Macchina**, permette di scegliere una macchina reale (DMG MORI, Haas, Mazak, Okuma, DN Solutions, EMCO): il simulatore usa i suoi giri, rapidi e corse, e la scheda **Macchina** sotto la simulazione mostra i dati con la fonte e dice se il suo controllo accetta la programmazione ISO. Nel menu **Linguaggio** si sceglie **Fanuc ISO** oppure **Siemens SINUMERIK** (movimenti, utensili, avanzamenti, archi, compensazione cicli di foratura `CYCLE81`/`82`/`83` con `MCALL` sgrossatura `CYCLE95`, gole `CYCLE93` e tasche `POCKET3`/`POCKET4`; filettature e spianature non ancora): vedi [`docs/siemens.md`](docs/siemens.md).
+Il menu **Modello**, accanto a **Macchina**, permette di scegliere una macchina reale (DMG MORI, Haas, Mazak, Okuma, DN Solutions, EMCO): il simulatore usa i suoi giri, rapidi e corse, e la scheda **Macchina** sotto la simulazione mostra i dati con la fonte e dice se il suo controllo accetta la programmazione ISO. Nel menu **Linguaggio** si sceglie **Fanuc ISO** oppure **Siemens SINUMERIK** (movimenti, utensili, avanzamenti, archi, compensazione cicli di foratura `CYCLE81`/`82`/`83` con `MCALL` sgrossatura `CYCLE95`, gole `CYCLE93`, tasche `POCKET3`/`POCKET4` e spianatura `CYCLE71`; filettature e contornature non ancora): vedi [`docs/siemens.md`](docs/siemens.md).
 
 Il pulsante **Guida** (o F1) spiega come si usa il simulatore ed elenca codici G/M e allarmi della macchina scelta. Scorciatoie: **Ctrl+Invio** avvia, **Esc** mette in pausa, **Ctrl+S** salva.
 
@@ -163,7 +163,8 @@ Usiamo il [Semantic Versioning](https://semver.org/lang/it/): `MAGGIORE.MINORE.C
 - [x] **v1.4** — Siemens: sgrossatura e finitura `CYCLE95`
 - [x] **v1.5** — Siemens: gole `CYCLE93`
 - [x] **v1.6** — Siemens: tasche `POCKET3` e `POCKET4`
-- [ ] Siemens: spianatura `CYCLE71`, filettatura `CYCLE97`
+- [x] **v1.7** — Siemens: spianatura `CYCLE71`
+- [ ] Siemens: contornatura `CYCLE72`, filettatura `CYCLE97`
 - [ ] Dati reali delle macchine del laboratorio (vedi [`docs/configurare-le-macchine.md`](docs/configurare-le-macchine.md))
 
 Le novità di ogni versione sono in [`CHANGELOG.md`](CHANGELOG.md).

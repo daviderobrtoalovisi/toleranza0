@@ -2,6 +2,11 @@
 
 Ogni versione ha un tag git (`vX.Y.Z`). Il numero è in `js/version.js` e si vede in alto nella pagina.
 
+## 1.7.0 — Siemens: spianatura CYCLE71
+
+- Fresa in Siemens: spianatura `CYCLE71` di una superficie rettangolare (anche ruotata con `STA`, con `LENG`/`WID` negativi per scegliere il verso). Passate lungo X o Y, in un solo verso o a zig-zag, a piani di `MID` e con passo laterale `MIDA`; sgrossatura (`VARI` x1) con il sovrametallo `FALD` e finitura (`VARI` x2); uscita oltre i bordi con `FDP` e `FDP1`
+- Nuovo esempio Siemens *Fresa 1* con la stessa faccia dell'esempio Fanuc della spianatura (controllato da un test)
+
 ## 1.6.0 — Siemens: tasche POCKET3 e POCKET4
 
 - Fresa in Siemens: tasca rettangolare `POCKET3` (con raggio degli spigoli e rotazione `STA`) e circolare `POCKET4`. Sgrossatura (`VARI=1`) con i sovrametalli `FAL`/`FALD` e finitura (`VARI=2`) di fondo e fianchi, a piani di `MID` e con passo laterale `MIDA`; entrata verticale oppure a elica (`VARI=11`/`12`, `RAD1`, `DP1`); verso concorde o discorde (`CDIR`). Il ciclo calcola il percorso del centro fresa con il diametro dell'utensile montato

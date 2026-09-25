@@ -84,6 +84,7 @@ Attenzione: in Siemens `G70`/`G71` sono le unità di misura, non i cicli di fini
 | `MCALL CYCLE81(...)` | da qui ogni blocco con X/Y fora nella nuova posizione | un ciclo Fanuc per ogni foro |
 | `MCALL` da solo | annulla il richiamo modale | `G80` |
 | `POCKET3(...)` / `POCKET4(...)` | tasca rettangolare / circolare | percorso `G0`/`G1`/`G2`/`G3` del centro fresa |
+| `CYCLE71(...)` | spianatura di una superficie rettangolare | passate `G1` del centro fresa |
 
 ### Parametri dei cicli di foratura
 
@@ -115,14 +116,28 @@ Attenzione: in Siemens `G70`/`G71` sono le unità di misura, non i cicli di fini
 - Come sulla macchina, se MID è più grande della passata massima della fresa scatta l'allarme 3005
 - Non ancora simulati (allarme 1013): tasca misurata da uno spigolo (LENG o WID negativi), entrata a pendolo (`VARI` 21, 22), tasca già sgrossata (AP1, AP2, AD)
 
+### Spianatura CYCLE71
+
+`CYCLE71(RTP, RFP, SDIS, DP, PA, PO, LENG, WID, STA, MID, MIDA, FDP, FALD, FFP1, VARI, FDP1)`
+
+- **RTP** piano di ritorno, **RFP** faccia da spianare (la superficie del grezzo), **SDIS** distanza di sicurezza (vuoto: 0), **DP** quota finale
+- **PA**, **PO** spigolo di partenza della superficie; **LENG** lunghezza lungo X e **WID** larghezza lungo Y: il segno dice da che parte dello spigolo si trova la superficie; **STA** angolo di rotazione attorno allo spigolo
+- **MID** passata massima in Z (vuoto o 0: tutto in una volta), **MIDA** passata laterale massima (vuoto: 80% del diametro della fresa)
+- **FDP** uscita oltre il bordo alla fine di ogni passata: le passate iniziano e finiscono fuori dalla superficie di un raggio della fresa più FDP (vuoto: 0)
+- **FDP1** sporgenza della prima e dell'ultima passata oltre i bordi, nella direzione in cui avanzano le passate (vuoto: fresa a filo dei bordi)
+- **FALD** sovrametallo lasciato dalla sgrossatura, **FFP1** avanzamento
+- **VARI**: unità `1` sgrossatura (fino a DP + FALD), `2` finitura (un piano a DP); decine `1` passate lungo X in un solo verso, `2` lungo Y in un solo verso, `3` lungo X a zig-zag, `4` lungo Y a zig-zag. Per esempio `31` = sgrossatura a zig-zag lungo X
+- Nelle passate in un solo verso la fresa risale e torna all'inizio in rapido; a zig-zag si sposta di lato in lavoro, fuori dalla superficie
+- La discesa in Z si fa fuori dalla superficie, con l'avanzamento FFP1. Serve una fresa (allarme 2012 con la punta) e la compensazione `G40` (con `G41`/`G42` attivo: allarme 1013). Il ciclo lavora nel piano `G17` e alla fine risale al piano RTP
+
 ## Non ancora simulato (allarme 1013)
 
-- Cicli: `CYCLE97` (filettatura), `CYCLE71` (spianatura), `CYCLE72` (contornatura)
+- Cicli: `CYCLE97` (filettatura), `CYCLE72` (contornatura)
 - Filettatura `G33`, sottoprogrammi (`M17`), variabili e parametri R, istruzioni come `MSG`, `IF`, `GOTO`
 - Utensili con il nome (`T="FRESA10"`) e taglienti oltre il primo (`D2`…)
 - Sulla fresa: `X=IC(..)` e `X=AC(..)` nei singoli blocchi (usare `G90`/`G91` per tutto il blocco) e `G95`
 
-I prossimi candidati sono la spianatura `CYCLE71` e la filettatura `CYCLE97`.
+I prossimi candidati sono la contornatura `CYCLE72` e la filettatura `CYCLE97`.
 
 ## Esempi
 
@@ -134,6 +149,7 @@ I prossimi candidati sono la spianatura `CYCLE71` e la filettatura `CYCLE97`.
 | *Tornio 4* (`tornio-siemens-04-cycle93.nc`) | la stessa gola dell'esempio Fanuc: `CYCLE93` con `VARI=5`, il ciclo calcola le due passate del troncatore |
 | *Esercizio — Perché il ciclo di gola non parte?* (`esercizio-tornio-siemens-gola.nc`) | `CYCLE93` con lo sgrossatore `T1`: allarme 2011 alla riga 9 |
 | *Esercizio — Perché la macchina non parte?* (`esercizio-tornio-siemens-lims.nc`) | `G96` senza `LIMS`: allarme 2005 alla riga 5 |
+| *Fresa 1* (`fresa-siemens-01-spianatura.nc`) | la stessa faccia dell'esempio Fanuc: `CYCLE71` a zig-zag lungo X, sgrossatura `VARI=31` e finitura `VARI=32` |
 | *Fresa 3* (`fresa-siemens-03-foratura.nc`) | gli stessi fori dell'esempio Fanuc: `MCALL CYCLE81`, poi `CYCLE83` a beccate |
 | *Fresa 4* (`fresa-siemens-04-contorno-g41.nc`) | lo stesso contorno dell'esempio Fanuc: `T1 M6` senza `G43`, `G41`, `CR=`, `G74` |
 | *Fresa 5* (`fresa-siemens-05-tasche.nc`) | tasca rettangolare `POCKET3` e circolare `POCKET4` (con entrata a elica): sgrossatura `VARI=1`/`11` e finitura `VARI=2` |
