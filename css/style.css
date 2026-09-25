@@ -783,18 +783,18 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   color: #86d24a;
 }
 
-/* Nell'intestazione lo zero respira piano: si fa notare senza distrarre
-   chi sta leggendo il programma. Nella schermata di apertura resta fermo. */
-.brand-name .mark-zero { animation: respiro-zero 2.8s ease-in-out infinite; }
+/* Nella schermata di apertura lo zero respira piano. Nell'intestazione
+   resta fermo: accanto c'e' il programma da leggere. */
+.intro-title .mark-zero { animation: respiro-zero 2.8s ease-in-out infinite; }
 
 @keyframes respiro-zero {
   0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(134, 210, 74, 0); }
-  50% { opacity: 0.8; text-shadow: 0 0 16px rgba(134, 210, 74, 0.8); }
+  50% { opacity: 0.82; text-shadow: 0 0 28px rgba(134, 210, 74, 0.85); }
 }
 
 /* Chi ha chiesto meno animazioni al sistema non la vede */
 @media (prefers-reduced-motion: reduce) {
-  .brand-name .mark-zero { animation: none; }
+  .intro-title .mark-zero { animation: none; }
 }
 
 .intro-claim {
@@ -844,15 +844,21 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   padding: 14px 34px;
   border: 0;
   border-radius: 999px;
-  background: #86d24a;
-  color: #10241a;
+  /* giallo caldo: e' l'unico invito ad agire della schermata, il verde
+     resta ai comandi della macchina */
+  background: #f5c451;
+  color: #26190a;
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  box-shadow: 0 0 34px rgba(134, 210, 74, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 0 34px rgba(245, 196, 81, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
-.intro-enter:hover { transform: translateY(-1px); box-shadow: 0 0 44px rgba(134, 210, 74, 0.5); }
+.intro-enter:hover {
+  transform: translateY(-1px);
+  background: #ffd36b;
+  box-shadow: 0 0 46px rgba(245, 196, 81, 0.55);
+}
 
 .intro-skip { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #8b97b2; }
 .intro-skip input { accent-color: #86d24a; }
