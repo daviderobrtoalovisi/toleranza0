@@ -223,8 +223,17 @@ export function createMillView(canvas, { getScene, tools }) {
 
   function segments(points, out) {
     for (let i = 0; i + 1 < points.length; i++) {
-      out.push(points[i].x, points[i].y, points[i].z, points[i + 1].x, points[i + 1].y, points[i + 1].z);
+      const a = points[i];
+      const b = points[i + 1];
+      // Un punto senza quote valide (programma strano, dati incompleti) renderebbe
+      // NaN tutta la geometria della linea: quel tratto si salta.
+      if (!finite3(a) || !finite3(b)) continue;
+      out.push(a.x, a.y, a.z, b.x, b.y, b.z);
     }
+  }
+
+  function finite3(p) {
+    return Boolean(p) && Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.z);
   }
 
   function lines(data, color, opacity) {
