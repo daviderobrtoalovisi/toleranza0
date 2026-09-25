@@ -444,32 +444,46 @@ body[data-state="alarm"] .status-message { color: var(--error); font-weight: 600
 .header-actions .field select { min-width: 0; max-width: 100%; }
 
 /* Colori dei menu: ogni gruppo di comandi e ogni pannello ha il suo colore (--mc, --pc).
-   Colori pieni con testo bianco (contrasto almeno 4.5:1), leggibili anche al proiettore;
-   sono gli stessi col tema chiaro e con lo scuro. */
+   Paletta "armocromia autunno" (toni caldi e profondi), con testo bianco e contrasto
+   almeno 4.5:1, leggibile anche al proiettore; uguale col tema chiaro e con lo scuro. */
 :root {
-  --menu-file: #1558c7;
-  --menu-examples: #6b3fc2;
-  --menu-pause: #7d5f00;
-  --menu-step: #0b6e7a;
-  --menu-help: #b0266f;
-  --menu-reset: #a64a00;
-  --menu-machine: #1558c7;
-  --menu-dialect: #6b3fc2;
-  --menu-model: #16692e;
-  --panel-editor: #1558c7;
-  --panel-sim: #16692e;
-  --panel-block: #6b3fc2;
-  --panel-alarms: #b71c1c;
-  --header-bg: #0d3b73;
-  --muted: #45505b;
+  --autumn-petrol: #1f5f5b;
+  --autumn-olive: #4f5d1f;
+  --autumn-mustard: #8a6212;
+  --autumn-rust: #a0441c;
+  --autumn-aubergine: #6a3b4f;
+  --autumn-bordeaux: #7b2d35;
+  --autumn-chocolate: #6b4226;
+  --autumn-camel: #7a5230;
+  --autumn-brick: #9c2f1f;
+
+  --menu-file: var(--autumn-petrol);
+  --menu-examples: var(--autumn-aubergine);
+  --menu-start: var(--autumn-olive);
+  --menu-pause: var(--autumn-mustard);
+  --menu-step: var(--autumn-chocolate);
+  --menu-reset: var(--autumn-rust);
+  --menu-help: var(--autumn-bordeaux);
+  --menu-machine: var(--autumn-petrol);
+  --menu-dialect: var(--autumn-aubergine);
+  --menu-model: var(--autumn-olive);
+  --panel-editor: var(--autumn-petrol);
+  --panel-sim: var(--autumn-olive);
+  --panel-block: var(--autumn-camel);
+  --panel-alarms: var(--autumn-brick);
+  --header-bg: #3b2a1e;
+  --bg: #f3ede4;
+  --surface-2: #faf6ef;
+  --border: #d9cdbd;
+  --muted: #4d4238;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --muted: #b3bec9; --header-bg: #0a2a52; }
+  :root { --muted: #c9bba9; --header-bg: #2a1d14; --bg: #15110d; --surface: #201912; --surface-2: #1a1510; --border: #3d3228; }
 }
 
 #btn-new, #btn-open, #btn-save { --mc: var(--menu-file); }
 #examples { --mc: var(--menu-examples); }
-#btn-start { --mc: #16692e; }
+#btn-start { --mc: var(--menu-start); }
 #btn-pause { --mc: var(--menu-pause); }
 #btn-step { --mc: var(--menu-step); }
 #btn-reset { --mc: var(--menu-reset); }
@@ -496,13 +510,13 @@ select option { background: var(--surface); color: var(--text); }
 /* Intestazione scura: i menu subito dopo il nome, la Guida in fondo a destra sulla stessa riga */
 .app-header { background: var(--header-bg); border-bottom: 0; color: #fff; }
 .brand-name { color: #fff; }
-.brand-sub, .version { color: #d6e4f5; }
+.brand-sub, .version { color: #efe2d0; }
 .app-header > .header-actions { flex: 1 1 auto; }
 #btn-help { margin-left: auto; border-color: #fff; }
 
 .toolbar { border-bottom: 2px solid var(--border); }
 .field, .check { color: var(--text); font-weight: 600; }
-.check input { accent-color: var(--menu-file); }
+.check input, #speed { accent-color: var(--menu-file); }
 
 .panel-editor { --pc: var(--panel-editor); }
 .panel-sim { --pc: var(--panel-sim); }
