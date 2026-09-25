@@ -38,7 +38,7 @@ test('Siemens: CR senza = manca il valore (1002)', () => assertEqual(syntaxOf(la
 test('Siemens: indirizzo ripetuto (1008)', () => assertEqual(syntaxOf(lathe, 'G1 X10 X20'), 1008));
 test('Siemens: parentesi fuori posto (1001)', () => assertEqual(syntaxOf(lathe, '(COMMENTO FANUC)'), 1001));
 test('Siemens: i cicli non ancora simulati danno 1013', () => {
-  assertEqual(syntaxOf(mill, 'POCKET3(10,0,2,-5)'), 1013);
+  assertEqual(syntaxOf(mill, 'CYCLE71(10,0,2,-5)'), 1013);
   assertEqual(syntaxOf(lathe, 'CYCLE97(1.5, , 0, -30, 20, 20, 3, 3, 0.9, 0.05, 30, 0, 8, 1, 3, 1)'), 1013);
 });
 test('Siemens: utensile con il nome dà 1013', () => assertEqual(syntaxOf(mill, 'T="FRESA10"'), 1013));
@@ -198,6 +198,75 @@ test('tornio Siemens: CYCLE93 incompleto (2007) o non ancora simulato (1013)', (
   assertEqual(lastAlarm(lathe, GOLA + 'CYCLE93(40, A, 6, 4)')?.code, 1003);
 });
 
+// Tasche della fresa POCKET3 e POCKET4
+const FRESA = 'T1 M6\n';
+const FRESA_RUN = '; (GREZZO X100 Y80 Z30)\nG17 G90 G94\nT1 M6\nG0 X50 Y40 Z50\nS3000 M3\n';
+const fromG17 = (list) => list.slice(list.indexOf('G17'));
+test('fresa Siemens: POCKET4 grande come la fresa è solo una discesa', () => {
+  assertEqual(fromG17(fanucOf(mill, FRESA + 'POCKET4(10, 0, 2, -3, 5, 50, 40, , , , 400, 100, 0, 1)')),
+    ['G17', 'G0 Z10', 'G0 X50 Y40', 'G0 Z2', 'G1 Z-3 F100', 'G0 Z2', 'G0 Z10']);
+});
+test('fresa Siemens: POCKET4 anelli concordi (G3) o discordi (G2)', () => {
+  const ccw = fromG17(fanucOf(mill, FRESA + 'POCKET4(10, 0, 2, -3, 8, 50, 40, , , , 400, 100, 0, 1)'));
+  assertEqual(ccw.slice(4, 8), ['G1 Z-3 F100', 'G1 X53 Y40 F400', 'G3 X47 Y40 I-3 J0 F400', 'G3 X53 Y40 I3 J0 F400']);
+  const cw = fromG17(fanucOf(mill, FRESA + 'POCKET4(10, 0, 2, -3, 8, 50, 40, , , , 400, 100, 1, 1)'));
+  assertEqual(cw.slice(6, 8), ['G2 X47 Y40 I-3 J0 F400', 'G2 X53 Y40 I3 J0 F400']);
+});
+test('fresa Siemens: POCKET3 ruotato di STA e POCKET4 con entrata a elica', () => {
+  const rotated = fromG17(fanucOf(mill, FRESA + 'POCKET3(10, 0, 2, -3, 30, 20, 0, 50, 40, 90, , , , 400, 100, 0, 1)'));
+  assertEqual(rotated[2], 'G0 X50 Y45');
+  const helix = fromG17(fanucOf(mill, FRESA + 'POCKET4(10, 0, 2, -3, 12, 50, 40, 3, , , 400, 100, 0, 11, , , , 2, 2)'));
+  assertEqual(helix.slice(2, 6), ['G0 X52 Y40', 'G0 Z2', 'G3 X48 Y40 Z1 I-2 J0 F100', 'G3 X52 Y40 Z0 I2 J0 F100']);
+});
+test('fresa Siemens: POCKET3 in sgrossatura lascia il sovrametallo sul fondo', () => {
+  const { alarm, sim } = runExample({ text: FRESA_RUN + 'POCKET3(10, 0, 2, -6, 40, 30, 6, 50, 40, 0, 3, 0.3, 0.2, 400, 150, 0, 1, 6)', machine: 'mill', dialect: 'siemens' });
+  assertEqual(alarm, null);
+  const cells = pocketCells(sim.stock, roundedRect(50, 40, 19.7, 14.7, 5.7));
+  assert(cells.inside.length > 100 && cells.inside.every((h) => Math.abs(h + 5.8) < 0.01), 'fondo di sgrossatura non a Z-5.8');
+  assert(pocketCells(sim.stock, roundedRect(50, 40, 20, 15, 6)).outside.every((h) => Math.abs(h - sim.stock.zTop) < 1e-9), 'materiale tolto fuori dalla tasca');
+});
+test('fresa Siemens: tasche con utensile sbagliato (2012), troppo piccole (3010) o incomplete (2007)', () => {
+  assertEqual(lastAlarm(mill, 'T3 M6\nPOCKET4(10, 0, 2, -3, 12, 50, 40, , , , 400, 100, 0, 1)')?.code, 2012);
+  assertEqual(lastAlarm(mill, FRESA + 'POCKET4(10, 0, 2, -3, 4, 50, 40, , , , 400, 100, 0, 1)')?.code, 3010);
+  assertEqual(lastAlarm(mill, FRESA + 'POCKET3(10, 0, 2, -3, 30, 20, 0, 50, 40, 0, , 6, , 400, 100, 0, 1)')?.code, 3010);
+  assertEqual(lastAlarm(mill, FRESA + 'POCKET4(10, 0, 2, -3, 12, 50, 40, 3, , , 400, 100, 0, 11, , , , 9, 2)')?.code, 3010);
+  assertEqual(lastAlarm(mill, FRESA + 'POCKET4(10, 0, 2, -3, 12, 50, 40)')?.code, 2007);
+  assertEqual(lastAlarm(mill, FRESA + 'POCKET3(10, 0, 2, -3, 30)')?.code, 2007);
+  assertEqual(lastAlarm(mill, FRESA + 'POCKET4(10, 0, 2, 5, 12, 50, 40, , , , 400, 100, 0, 1)')?.code, 2007);
+  assertEqual(lastAlarm(mill, FRESA + 'POCKET4(10, 0, 2, -3, 12, 50, 40, 3, , , 400, 100, 0, 11)')?.code, 2007);
+});
+test('fresa Siemens: tasche non ancora simulate (1013) e parametri non numerici (1003)', () => {
+  assertEqual(lastAlarm(mill, FRESA + 'POCKET4(10, 0, 2, -3, 12, 50, 40, , , , 400, 100, 0, 21)')?.code, 1013);
+  assertEqual(lastAlarm(mill, FRESA + 'POCKET3(10, 0, 2, -3, -30, 20, 0, 50, 40, 0, , , , 400, 100, 0, 1)')?.code, 1013);
+  assertEqual(lastAlarm(mill, FRESA + 'POCKET4(10, 0, 2, -3, 12, 50, 40, , , , 400, 100, 0, 1, , 20)')?.code, 1013);
+  assertEqual(lastAlarm(mill, FRESA + 'G41 X10 Y10\nPOCKET4(10, 0, 2, -3, 12, 50, 40, , , , 400, 100, 0, 1)')?.code, 1013);
+  assertEqual(lastAlarm(mill, FRESA + 'POCKET4(10, 0, 2, -3, R, 50, 40)')?.code, 1003);
+});
+
+// Celle della mappa delle altezze dentro (distanza < -margine) o fuori (> margine) da una tasca
+function pocketCells(stock, distance, margin = 0.5) {
+  const inside = [];
+  const outside = [];
+  for (let j = 0; j < stock.ny; j++) {
+    for (let i = 0; i < stock.nx; i++) {
+      const d = distance(stock.xMin + (i + 0.5) * stock.cx, stock.yMin + (j + 0.5) * stock.cy);
+      if (d < -margin) inside.push(stock.height[j * stock.nx + i]);
+      else if (d > margin) outside.push(stock.height[j * stock.nx + i]);
+    }
+  }
+  return { inside, outside };
+}
+function roundedRect(cx, cy, a, b, rc) {
+  return (x, y) => {
+    const qx = Math.abs(x - cx) - (a - rc);
+    const qy = Math.abs(y - cy) - (b - rc);
+    return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - rc;
+  };
+}
+function circle(cx, cy, r) {
+  return (x, y) => Math.hypot(x - cx, y - cy) - r;
+}
+
 test('allarme 2005 in Siemens: si parla di LIMS', () => {
   const alarm = lastAlarm(lathe, 'T1 D1\nG96 S180 M3');
   assertEqual(alarm?.code, 2005);
@@ -260,4 +329,17 @@ test('tornio: CYCLE93 e la gola Fanuc producono lo stesso pezzo e lo stesso temp
   assertEqual([a.alarm, b.alarm], [null, null]);
   assert(a.sim.stock.data.every((v, i) => v === b.sim.stock.data[i]), 'grezzo diverso');
   assert(near(a.program.totalTime, b.program.totalTime, 0.01), `${a.program.totalTime} contro ${b.program.totalTime}`);
+});
+const siemensPockets = await example('fresa-siemens-05-tasche.nc');
+test('fresa Siemens: POCKET3 e POCKET4 svuotano le tasche fino al fondo e non toccano il resto', () => {
+  const { alarm, sim } = runExample({ text: siemensPockets, machine: 'mill', dialect: 'siemens' });
+  assertEqual(alarm, null);
+  const rect = roundedRect(32, 40, 20, 15, 6);
+  const round = circle(75, 40, 12);
+  for (const [name, shape] of [['rettangolare', rect], ['circolare', round]]) {
+    const { inside } = pocketCells(sim.stock, shape);
+    assert(inside.length > 100 && inside.every((h) => Math.abs(h + 6) < 0.01), `tasca ${name}: fondo non a Z-6`);
+  }
+  const { outside } = pocketCells(sim.stock, (x, y) => Math.min(rect(x, y), round(x, y)));
+  assert(outside.every((h) => Math.abs(h - sim.stock.zTop) < 1e-9), 'materiale tolto fuori dalle tasche');
 });

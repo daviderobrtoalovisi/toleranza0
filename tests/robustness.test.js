@@ -137,6 +137,9 @@ test('i programmi casuali arrivano davvero a muovere l\'utensile', () => {
 const SIEMENS_STRANGE = [
   'CR=', 'CR', 'CR5', 'X=', 'X=IC(', 'X=IC()', 'X=IC(5', 'X=AC(-)', 'X==5', 'LIMS=-1', 'DIAMON=5',
   'T="', 'T=""', 'CYCLE81(', 'CYCLE81()', 'CYCLE95("P",2)', 'CYCLE95("A:B",2)', 'CYCLE95("A:B", 2, , , , 0.2, , 0.1, 9)\nM30\nA: G1 X10 Z0\nB: X20', 'AA: G0 X10', 'CYCLE93()', 'CYCLE93(40, -12, 6, 4)', 'T2 D1\nF0.05\nCYCLE93(40, -12, 0.1, 50, 0, 0, 0, 0, 0, 0, 0, -1, -1, -3, -1, 15)', 'T2 D1\nCYCLE93(0, 0, 100, 0.01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.001, 0, 1)', 'N5 AA: BB: X1', 'X: G0', 'G74', 'G74 X1=0', 'G74 Z1=5',
+  'POCKET3()', 'POCKET4(,,,,,,)', 'T1 M6\nPOCKET4(10, 0, 2, -3, 1000, 0, 0, 0.001, , , 400, , 0, 1, 0.01)',
+  'T2 M6\nPOCKET3(10, 0, 2, -8, 20, 12, 30, 50, 40, 45, 0, 0, 0, 400, 100, 3, 12, , , , , 0.5, 0.1)',
+  'T1 M6\nG91\nPOCKET4(10, 0, 0, -1, 7, 0, 0, , , , 100, , , 1)', 'T1 M6\nPOCKET3(10, 0, 2, -2, 10, 10, 5, 0, 0, 0, , , , 100, , , 2)',
   'D0', 'D1', 'T1 D0\nG0 X10', 'T1 D2', 'G91 X=AC(5)', 'G90 X=IC(5)', 'DIAMOF\nG0 X10\nDIAMON',
   'G4 F2', 'G4 S10', 'G4', 'M3 M8 M5 M9', 'M6 M6', 'T2 M6\nG41 X0 Y0\nG40', 'G41 X0 Y0',
   'G96 S100 LIMS=0 M3', 'G70\nG0 X1 Z1', ';;;', 'N10 ; solo commento', '((((', ';(GREZZO D50 L80)'
