@@ -811,19 +811,29 @@ body, button, select, select option, input, textarea { text-transform: uppercase
    (come gia' si fa per l'editor e i collegamenti) */
 .intro-text, .intro-credits, .intro-credits-title, .intro-qr-url, .intro-skip { text-transform: none; }
 
+/* La prima frase e' il gradino fra il titolo e i nomi: piu' grande e piu'
+   chiara, con aria attorno. La seconda resta una postilla. */
 .intro-text {
-  max-width: 48ch;
-  margin: 22px 0 0;
-  font-size: 16px;
-  line-height: 1.65;
-  color: #c3cde0;
+  max-width: 46ch;
+  margin: 26px 0 0;
+  font-size: 19px;
+  line-height: 1.55;
+  color: #e4ebfa;
 }
 
-/* la seconda frase sta vicino alla prima: sono un blocco solo */
-.intro-text + .intro-text { margin-top: 10px; }
+/* la seconda frase e' la postilla che rassicura: piu' piccola e attenuata */
+.intro-text + .intro-text {
+  margin-top: 12px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #9dabc6;
+}
+
+/* l'ultima parola richiama il giallo del pulsante che sta subito sotto */
+.intro-try { color: #f5c451; font-weight: 700; }
 
 .intro-credits-title {
-  margin: 22px 0 6px;
+  margin: 26px 0 6px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -945,7 +955,8 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   .intro { padding: 20px 18px 22px; gap: 16px; }
   .intro-logo { width: 52px; height: 52px; }
   .intro-school { margin-bottom: 14px; font-size: 12px; }
-  .intro-text { margin-top: 16px; font-size: 15px; line-height: 1.5; }
+  .intro-text { margin-top: 16px; font-size: 16.5px; line-height: 1.5; }
+  .intro-text + .intro-text { margin-top: 8px; font-size: 14px; }
   .intro-credits-title { margin-top: 16px; }
   .intro-credits { font-size: 13px; line-height: 1.45; }
   .intro-actions { margin-top: 20px; gap: 12px; }

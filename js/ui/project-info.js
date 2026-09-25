@@ -36,7 +36,8 @@ export function createProjectInfo(dialog, { version = '' } = {}) {
           sotto i tuoi occhi, passata dopo passata.
         </p>
         <p class="intro-text">
-          Se qualcosa non torna, te lo dice in parole chiare. Sbagliare qui è gratis — prova.
+          Se qualcosa non torna, te lo dice in parole chiare.
+          Sbagliare qui è gratis — <b class="intro-try">prova</b>.
         </p>
         <p class="intro-credits-title">Created by</p>
         <ul class="intro-credits">${creditsList(CREDITS)}</ul>
