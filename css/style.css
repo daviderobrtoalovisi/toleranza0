@@ -481,22 +481,27 @@ body[data-state="alarm"] .status-message { color: var(--error); font-weight: 600
 #btn-pause { --mc: var(--menu-pause); }
 #btn-step { --mc: var(--menu-step); }
 #btn-help { --mc: var(--menu-help); }
-#machine { --mc: var(--menu-machine); }
-#dialect { --mc: var(--menu-dialect); }
-#model { --mc: var(--menu-model); }
+.field-machine { --mc: var(--menu-machine); }
+.field-dialect { --mc: var(--menu-dialect); }
+.field-model { --mc: var(--menu-model); }
 #btn-fit { --mc: var(--panel-sim); }
 
-:is(#btn-new, #btn-open, #btn-save, #examples, #btn-pause, #btn-step, #btn-help, #machine, #dialect, #model, #btn-fit) {
+:is(#btn-new, #btn-open, #btn-save, #examples, #btn-pause, #btn-step, #btn-help, .header-actions .field > span, #btn-fit) {
   background: color-mix(in srgb, var(--mc) 14%, var(--surface));
   border-color: var(--mc);
   color: color-mix(in srgb, var(--mc) 75%, var(--text));
   font-weight: 600;
 }
-:is(#btn-new, #btn-open, #btn-save, #examples, #btn-pause, #btn-step, #btn-help, #machine, #dialect, #model, #btn-fit):hover:not(:disabled) {
+:is(#btn-new, #btn-open, #btn-save, #examples, #btn-pause, #btn-step, #btn-help, #btn-fit):hover:not(:disabled) {
   background: color-mix(in srgb, var(--mc) 26%, var(--surface));
   border-color: var(--mc);
 }
 select option { background: var(--surface); color: var(--text); }
+.header-actions .field > span { padding: 6px 12px; border: 1px solid var(--mc); border-radius: 6px; }
+
+/* Intestazione: i menu subito dopo il nome, la Guida in fondo a destra sulla stessa riga */
+.app-header > .header-actions { flex: 1 1 auto; }
+#btn-help { margin-left: auto; }
 .btn-reset:not(:disabled) { background: color-mix(in srgb, var(--reset) 14%, var(--surface)); }
 
 .app-header {
