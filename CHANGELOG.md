@@ -5,7 +5,7 @@ Ogni versione ha un tag git (`vX.Y.Z`). Il numero è in `js/version.js` e si ved
 ## 1.8.0 — Interfaccia rinnovata e QR per gli studenti
 
 - Sugli schermi piccoli l'interfaccia mostra un pannello alla volta, scelto con quattro schede (Programma, Simulazione, Blocco, Allarmi); i comandi Avvia, Pausa, Blocco singolo e Reset stanno in una barra in basso, sempre raggiungibile. Intestazione su una riga sola: prima menu e comandi occupavano i due terzi dello schermo del telefono
-- Schermata di apertura con il logo dell'IIS Giulio Natta, gli autori e un codice QR che apre il simulatore sul proprio telefono; si richiude con "Entra nel simulatore" e si riapre con il pulsante Progetto. Chi non la vuole all'avvio puo' spuntare "non mostrare all'avvio"
+- Schermata di apertura con il logo dell'IIS Giulio Natta in bianco su fondo trasparente, il titolo TOL(2)ERANZA0 sempre su una riga sola, i realizzatori con il loro ruolo e un codice QR che apre il simulatore sul proprio telefono; si richiude con "Entra nel simulatore" e si riapre con il pulsante Progetto. Chi non la vuole all'avvio puo' spuntare "non mostrare all'avvio"
 - Il codice QR resta visibile in un angolo dell'intestazione, comodo quando si proietta in aula; si nasconde con la sua ×
 - Colori: fondo scuro e un solo colore d'accento, il verde del logo della scuola. Comandi sobri, pannelli riconoscibili da una barra colorata, testo dei messaggi lunghi in minuscolo perche' si legge meglio anche al proiettore
 - Vista 3D della fresa: i tratti di percorso con quote non valide vengono saltati invece di rendere non disegnabile tutta la linea

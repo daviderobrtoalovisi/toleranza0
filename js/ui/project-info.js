@@ -2,18 +2,18 @@
 // codice QR per aprire il simulatore sul proprio telefono, piu' il riquadro
 // con il QR sempre visibile in basso a destra (utile quando si proietta).
 
-// Da aggiornare quando cambiano gli autori del lavoro
-const AUTHORS = [
-  'Davide Roberto Alovisi',
-  'Carmen Bonafede',
-  'Vito Ginosa',
-  'Antonio Vivenzio',
-  'Giovanni Zingarello'
+// Da aggiornare quando cambiano gli autori del lavoro:
+// per ogni ruolo, le persone che lo ricoprono
+const CREDITS = [
+  { role: 'Mechanical Technicians', names: ['Davide Roberto Alovisi', 'Vito Ginosa'] },
+  { role: 'Administrative Assistant', names: ['Carmen Bonafede'] },
+  { role: 'IT Technician', names: ['Antonio Vivenzio'] },
+  { role: 'Systems Administrator & Graphic Designer', names: ['Giovanni Zingarello'] }
 ];
 
 const SITE_URL = 'https://daviderobrtoalovisi.github.io/toleranza0/';
 const SITE_LABEL = SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
-const SCHOOL = 'IIS Giulio Natta — Rivoli';
+const SCHOOL = 'IIS Giulio Natta';
 
 // L'utente puo' chiedere di non rivedere la schermata all'avvio
 const SKIP_KEY = 'toleranza0.skipIntro';
@@ -26,17 +26,18 @@ export function createProjectInfo(dialog, { version = '' } = {}) {
     <div class="intro">
       <div class="intro-main">
         <p class="intro-school">
-          <img class="intro-logo" src="assets/logo-natta.jpg" alt="Logo dell'IIS Giulio Natta">
+          <img class="intro-logo" src="assets/logo-natta.png" alt="Logo dell'IIS Giulio Natta">
           <span>${SCHOOL}</span>
         </p>
-        <h2 class="intro-title">Toleranza<span class="intro-zero">0</span></h2>
+        <h2 class="intro-title" aria-label="Toleranza0">TOL<span class="intro-exp">2</span>ERANZA<span class="intro-zero">0</span></h2>
         <p class="intro-claim">Simulatore CNC per tornio e fresa</p>
         <p class="intro-text">
           Scrivi un programma ISO e guardalo lavorare il pezzo: la riga in esecuzione
           resta evidenziata e gli allarmi spiegano in italiano che cosa non va.
           Nessuna macchina occupata, nessun pezzo sprecato.
         </p>
-        <p class="intro-authors">A cura di ${formatAuthors(AUTHORS)}</p>
+        <p class="intro-credits-title">Created by</p>
+        <ul class="intro-credits">${creditsList(CREDITS)}</ul>
         <div class="intro-actions">
           <button type="button" id="intro-enter" class="intro-enter">Entra nel simulatore</button>
           <label class="intro-skip">
@@ -110,10 +111,14 @@ export function createQrBadge(onOpen) {
   };
 }
 
-// "Tizio, Caio & Sempronio": l'ultimo nome unito con la e commerciale
-function formatAuthors(names) {
-  if (names.length < 2) return names.join('');
-  return `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`;
+// Una riga per ruolo, con i nomi delle persone in evidenza
+function creditsList(credits) {
+  return credits
+    .map(({ role, names }) => {
+      const people = names.map((name) => `<b>${name}</b>`).join(' and ');
+      return `<li><span class="intro-role">${role}</span> ${people}</li>`;
+    })
+    .join('');
 }
 
 // localStorage puo' essere pieno o bloccato: il sito deve funzionare lo stesso

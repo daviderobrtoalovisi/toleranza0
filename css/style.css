@@ -751,19 +751,16 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   color: #b8c3d9;
 }
 .intro-logo {
-  width: 46px;
-  height: 46px;
-  object-fit: contain;
-  padding: 4px;
-  border-radius: 10px;
-  background: #fff;   /* il logo ha il fondo bianco: si appoggia su una piastrella */
+  width: 68px;
+  height: 68px;
+  object-fit: contain;   /* scritte bianche su fondo trasparente: nessuna piastrella */
 }
 
 .intro-title {
   margin: 0;
-  /* si restringe da sola: non deve mai finire sopra il riquadro del QR */
-  font-size: clamp(34px, 5.4vw, 76px);
-  overflow-wrap: anywhere;
+  /* resta sempre su una riga sola: si rimpicciolisce invece di andare a capo */
+  white-space: nowrap;
+  font-size: clamp(20px, 5vw, 76px);
   font-weight: 300;
   line-height: 1;
   letter-spacing: 0.14em;
@@ -771,6 +768,14 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   color: #fff;
 }
 .intro-zero { color: #86d24a; font-weight: 600; }
+/* il 2 in apice, come in una formula */
+.intro-exp {
+  font-size: 0.5em;
+  font-weight: 400;
+  vertical-align: super;
+  letter-spacing: 0;
+  color: #86d24a;
+}
 
 .intro-claim {
   margin: 14px 0 0;
@@ -783,7 +788,7 @@ body, button, select, select option, input, textarea { text-transform: uppercase
 
 /* I testi lunghi restano in minuscolo: in stampatello si leggono peggio
    (come gia' si fa per l'editor e i collegamenti) */
-.intro-text, .intro-authors, .intro-qr-url, .intro-skip { text-transform: none; }
+.intro-text, .intro-credits, .intro-credits-title, .intro-qr-url, .intro-skip { text-transform: none; }
 
 .intro-text {
   max-width: 48ch;
@@ -793,11 +798,25 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   color: #c3cde0;
 }
 
-.intro-authors {
-  margin: 20px 0 0;
-  font-size: 14px;
-  color: #93a0bd;
+.intro-credits-title {
+  margin: 22px 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #6f7d99;
 }
+
+.intro-credits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #aab6cf;
+}
+.intro-credits b { color: #f2f5fb; font-weight: 600; }
+.intro-role { color: #6f7d99; }
 
 .intro-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 30px; }
 
@@ -879,7 +898,7 @@ body, button, select, select option, input, textarea { text-transform: uppercase
 }
 .qr-badge:hover { border-color: #86d24a; }
 
-@media (max-width: 900px) {
+@media (max-width: 760px) {
   .intro { grid-template-columns: minmax(0, 1fr); gap: 26px; padding: 32px 26px 30px; }
   .intro-qr { justify-self: start; }
   .intro-qr img { width: 168px; height: 168px; }
