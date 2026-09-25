@@ -29,7 +29,7 @@ export function createProjectInfo(dialog, { version = '' } = {}) {
           <img class="intro-logo" src="assets/logo-natta.png" alt="Logo dell'IIS Giulio Natta">
           <span>${SCHOOL}</span>
         </p>
-        <h2 class="intro-title" aria-label="Toleranza0">TOL<span class="intro-exp">2</span>ERANZA<span class="intro-zero">0</span></h2>
+        <h2 class="intro-title" aria-label="Toleranza0">TOL<span class="mark-exp">2</span>ERANZA<span class="mark-zero">0</span></h2>
         <p class="intro-claim">Simulatore CNC per tornio e fresa</p>
         <p class="intro-text">
           Scrivi un programma ISO e guardalo lavorare il pezzo: la riga in esecuzione

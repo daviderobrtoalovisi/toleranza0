@@ -772,9 +772,10 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   text-transform: uppercase;
   color: #fff;
 }
-.intro-zero { color: #86d24a; font-weight: 600; }
-/* il 2 in apice, come in una formula */
-.intro-exp {
+/* Il marchio TOL(2)ERANZA0: lo zero e il 2 in apice nel verde della scuola.
+   Le stesse classi valgono nella schermata di apertura e nell'intestazione. */
+.mark-zero { color: #86d24a; font-weight: 600; }
+.mark-exp {
   font-size: 0.5em;
   font-weight: 400;
   vertical-align: super;
