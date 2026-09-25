@@ -38,7 +38,7 @@ test('Siemens: CR senza = manca il valore (1002)', () => assertEqual(syntaxOf(la
 test('Siemens: indirizzo ripetuto (1008)', () => assertEqual(syntaxOf(lathe, 'G1 X10 X20'), 1008));
 test('Siemens: parentesi fuori posto (1001)', () => assertEqual(syntaxOf(lathe, '(COMMENTO FANUC)'), 1001));
 test('Siemens: i cicli non ancora simulati danno 1013', () => {
-  assertEqual(syntaxOf(mill, 'CYCLE71(10,0,2,-5)'), 1013);
+  assertEqual(syntaxOf(mill, 'CYCLE72("CONTORNO", 10, 0, 2, -5)'), 1013);
   assertEqual(syntaxOf(lathe, 'CYCLE97(1.5, , 0, -30, 20, 20, 3, 3, 0.9, 0.05, 30, 0, 8, 1, 3, 1)'), 1013);
 });
 test('Siemens: utensile con il nome dà 1013', () => assertEqual(syntaxOf(mill, 'T="FRESA10"'), 1013));
@@ -243,6 +243,30 @@ test('fresa Siemens: tasche non ancora simulate (1013) e parametri non numerici 
   assertEqual(lastAlarm(mill, FRESA + 'POCKET4(10, 0, 2, -3, R, 50, 40)')?.code, 1003);
 });
 
+// Spianatura della fresa CYCLE71
+test('fresa Siemens: CYCLE71 con una sola passata lungo X', () => {
+  assertEqual(fromG17(fanucOf(mill, FRESA + 'CYCLE71(10, 1, 2, 0, 0, 0, 20, 10, 0, , 8, 0, 0, 500, 11)')),
+    ['G17', 'G0 Z10', 'G0 X-5 Y5', 'G0 Z3', 'G1 Z0 F500', 'G1 X25 Y5 F500', 'G0 Z3', 'G0 Z10']);
+});
+test('fresa Siemens: CYCLE71 a zig-zag lungo Y, a piani di MID', () => {
+  const fanuc = fromG17(fanucOf(mill, FRESA + 'CYCLE71(10, 3, 2, 0, 0, 0, 20, 30, 0, 1, 8, 0, 0, 500, 41)'));
+  assertEqual(fanuc.slice(2, 9), ['G0 X5 Y-5', 'G0 Z5', 'G1 Z2 F500', 'G1 X5 Y35 F500', 'G1 X10 Y35 F500', 'G1 X10 Y-5 F500', 'G1 X15 Y-5 F500']);
+  assertEqual(fanuc.filter((b) => /^G1 Z/.test(b)), ['G1 Z2 F500', 'G1 Z1 F500', 'G1 Z0 F500']);
+});
+test('fresa Siemens: CYCLE71 con LENG negativo e ruotato di STA', () => {
+  assertEqual(fromG17(fanucOf(mill, FRESA + 'CYCLE71(10, 1, 2, 0, 100, 0, -20, 10, 0, , 8, 0, 0, 500, 11)')).slice(2, 6),
+    ['G0 X105 Y5', 'G0 Z3', 'G1 Z0 F500', 'G1 X75 Y5 F500']);
+  assertEqual(fromG17(fanucOf(mill, FRESA + 'CYCLE71(10, 1, 2, 0, 50, 0, 20, 10, 90, , 8, 0, 0, 500, 11)'))[2], 'G0 X45 Y-5');
+});
+test('fresa Siemens: CYCLE71 con la punta (2012), incompleto (2007), non numerico (1003) o con G41 (1013)', () => {
+  assertEqual(lastAlarm(mill, 'T3 M6\nCYCLE71(10, 1, 2, 0, 0, 0, 20, 10, 0, , 8, 0, 0, 500, 11)')?.code, 2012);
+  assertEqual(lastAlarm(mill, FRESA + 'CYCLE71(10, 1, 2, 0, 0, 0, 20, 10)')?.code, 2007);
+  assertEqual(lastAlarm(mill, FRESA + 'CYCLE71(10, 1, 2, 5, 0, 0, 20, 10, 0, , 8, 0, 0, 500, 11)')?.code, 2007);
+  assertEqual(lastAlarm(mill, FRESA + 'CYCLE71(10, 1, 2, 0, 0, 0, 20, 10, 0, , 8, 0, 0, 500, 51)')?.code, 2007);
+  assertEqual(lastAlarm(mill, FRESA + 'CYCLE71(10, 1, 2, 0, X, 0, 20, 10)')?.code, 1003);
+  assertEqual(lastAlarm(mill, FRESA + 'G41 X10 Y10\nCYCLE71(10, 1, 2, 0, 0, 0, 20, 10, 0, , 8, 0, 0, 500, 11)')?.code, 1013);
+});
+
 // Celle della mappa delle altezze dentro (distanza < -margine) o fuori (> margine) da una tasca
 function pocketCells(stock, distance, margin = 0.5) {
   const inside = [];
@@ -342,4 +366,15 @@ test('fresa Siemens: POCKET3 e POCKET4 svuotano le tasche fino al fondo e non to
   }
   const { outside } = pocketCells(sim.stock, (x, y) => Math.min(rect(x, y), round(x, y)));
   assert(outside.every((h) => Math.abs(h - sim.stock.zTop) < 1e-9), 'materiale tolto fuori dalle tasche');
+});
+const fanucFacing = await example('fresa-01-spianatura.nc');
+const siemensFacing = await example('fresa-siemens-01-spianatura.nc');
+test('fresa: CYCLE71 e la spianatura Fanuc producono la stessa faccia', () => {
+  const a = runExample({ text: fanucFacing, machine: 'mill' });
+  const b = runExample({ text: siemensFacing, machine: 'mill', dialect: 'siemens' });
+  assertEqual([a.alarm, b.alarm], [null, null]);
+  assert(b.sim.stock.height.every((h) => Math.abs(h) < 1e-9), 'faccia non tutta a Z0');
+  let different = 0;
+  a.sim.stock.height.forEach((h, i) => { if (Math.abs(h - b.sim.stock.height[i]) > 1e-6) different++; });
+  assertEqual(different, 0);
 });

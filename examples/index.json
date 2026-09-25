@@ -21,6 +21,7 @@
   { "machine": "lathe", "dialect": "siemens", "file": "tornio-siemens-04-cycle93.nc", "title": "Tornio 4 — Gola con CYCLE93" },
   { "machine": "lathe", "dialect": "siemens", "file": "esercizio-tornio-siemens-lims.nc", "title": "Esercizio — Perché la macchina non parte?" },
   { "machine": "lathe", "dialect": "siemens", "file": "esercizio-tornio-siemens-gola.nc", "title": "Esercizio — Perché il ciclo di gola non parte?" },
+  { "machine": "mill", "dialect": "siemens", "file": "fresa-siemens-01-spianatura.nc", "title": "Fresa 1 — Spianatura con CYCLE71" },
   { "machine": "mill", "dialect": "siemens", "file": "fresa-siemens-03-foratura.nc", "title": "Fresa 3 — Foratura con CYCLE81, CYCLE83 e MCALL" },
   { "machine": "mill", "dialect": "siemens", "file": "fresa-siemens-04-contorno-g41.nc", "title": "Fresa 4 — Contorno con compensazione G41" },
   { "machine": "mill", "dialect": "siemens", "file": "fresa-siemens-05-tasche.nc", "title": "Fresa 5 — Tasche con POCKET3 e POCKET4" }
