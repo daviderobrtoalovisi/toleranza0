@@ -442,3 +442,80 @@ body[data-state="alarm"] .status-message { color: var(--error); font-weight: 600
 .header-actions { min-width: 0; max-width: 100%; }
 .header-actions .field { min-width: 0; max-width: 100%; }
 .header-actions .field select { min-width: 0; max-width: 100%; }
+
+/* Colori dei menu: ogni gruppo di comandi e ogni pannello ha il suo colore (--mc).
+   Sfondo e testo sono ricavati dal colore, così vanno bene sia col tema chiaro sia con lo scuro. */
+:root {
+  --menu-file: #1f6feb;
+  --menu-examples: #8250df;
+  --menu-pause: #a37c00;
+  --menu-step: #0f8a9a;
+  --menu-help: #c2378a;
+  --menu-machine: #1f6feb;
+  --menu-dialect: #8250df;
+  --menu-model: #1a7f37;
+  --panel-editor: #1f6feb;
+  --panel-sim: #1a7f37;
+  --panel-block: #8250df;
+  --panel-alarms: #c62828;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --menu-file: #58a6ff;
+    --menu-examples: #b392f0;
+    --menu-pause: #e3b341;
+    --menu-step: #39c5cf;
+    --menu-help: #f778ba;
+    --menu-machine: #58a6ff;
+    --menu-dialect: #b392f0;
+    --menu-model: #3fb950;
+    --panel-editor: #58a6ff;
+    --panel-sim: #3fb950;
+    --panel-block: #b392f0;
+    --panel-alarms: #ff7b72;
+  }
+}
+
+#btn-new, #btn-open, #btn-save { --mc: var(--menu-file); }
+#examples { --mc: var(--menu-examples); }
+#btn-pause { --mc: var(--menu-pause); }
+#btn-step { --mc: var(--menu-step); }
+#btn-help { --mc: var(--menu-help); }
+#machine { --mc: var(--menu-machine); }
+#dialect { --mc: var(--menu-dialect); }
+#model { --mc: var(--menu-model); }
+#btn-fit { --mc: var(--panel-sim); }
+
+:is(#btn-new, #btn-open, #btn-save, #examples, #btn-pause, #btn-step, #btn-help, #machine, #dialect, #model, #btn-fit) {
+  background: color-mix(in srgb, var(--mc) 14%, var(--surface));
+  border-color: var(--mc);
+  color: color-mix(in srgb, var(--mc) 75%, var(--text));
+  font-weight: 600;
+}
+:is(#btn-new, #btn-open, #btn-save, #examples, #btn-pause, #btn-step, #btn-help, #machine, #dialect, #model, #btn-fit):hover:not(:disabled) {
+  background: color-mix(in srgb, var(--mc) 26%, var(--surface));
+  border-color: var(--mc);
+}
+select option { background: var(--surface); color: var(--text); }
+.btn-reset:not(:disabled) { background: color-mix(in srgb, var(--reset) 14%, var(--surface)); }
+
+.app-header {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border-bottom: 3px solid var(--accent);
+}
+.brand-name { color: var(--accent); }
+.toolbar { background: color-mix(in srgb, var(--accent) 5%, var(--surface-2)); }
+.check input { accent-color: var(--accent); }
+
+.panel-editor { --pc: var(--panel-editor); }
+.panel-sim { --pc: var(--panel-sim); }
+.panel-block { --pc: var(--panel-block); }
+.panel-alarms { --pc: var(--panel-alarms); }
+.panel { border-top: 3px solid var(--pc, var(--border)); }
+.panel-title { color: var(--pc, var(--muted)); }
+.panel > .panel-title, .panel-head { background: color-mix(in srgb, var(--pc, var(--border)) 12%, var(--surface)); }
+
+/* Scritte in stampatello maiuscolo. Restano come sono solo il testo del programma,
+   il nome del file e gli indirizzi dei siti, dove le minuscole contano. */
+body, button, select, select option, input, textarea { text-transform: uppercase; }
+.editor-textarea, .file-name, .machine-info a { text-transform: none; }
