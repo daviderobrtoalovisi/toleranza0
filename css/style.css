@@ -443,89 +443,99 @@ body[data-state="alarm"] .status-message { color: var(--error); font-weight: 600
 .header-actions .field { min-width: 0; max-width: 100%; }
 .header-actions .field select { min-width: 0; max-width: 100%; }
 
-/* Colori dei menu: ogni gruppo di comandi e ogni pannello ha il suo colore (--mc, --pc).
-   Paletta "armocromia autunno" (toni caldi e profondi), con testo bianco e contrasto
-   almeno 4.5:1, leggibile anche al proiettore; uguale col tema chiaro e con lo scuro. */
+/* Colori dei menu: sfumature morbide dal verde acqua al viola, pulsanti arrotondati e ombre leggere.
+   Ogni gruppo di comandi e ogni pannello ha la sua sfumatura (da --mc a --mc2, da --pc a --pc2).
+   Tutti i colori reggono il testo bianco con contrasto almeno 4.5:1, anche al proiettore. */
 :root {
-  --autumn-petrol: #1f5f5b;
-  --autumn-olive: #4f5d1f;
-  --autumn-mustard: #8a6212;
-  --autumn-rust: #a0441c;
-  --autumn-aubergine: #6a3b4f;
-  --autumn-bordeaux: #7b2d35;
-  --autumn-chocolate: #6b4226;
-  --autumn-camel: #7a5230;
-  --autumn-brick: #9c2f1f;
+  --fluid-teal: #0b7a86;
+  --fluid-blue: #1565c0;
+  --fluid-purple: #6a1fd1;
+  --fluid-magenta: #a4219c;
+  --fluid-green: #0d7d4d;
+  --fluid-amber: #8a5a00;
+  --fluid-orange: #a8480f;
+  --fluid-raspberry: #b5175b;
 
-  --menu-file: var(--autumn-petrol);
-  --menu-examples: var(--autumn-aubergine);
-  --menu-start: var(--autumn-olive);
-  --menu-pause: var(--autumn-mustard);
-  --menu-step: var(--autumn-chocolate);
-  --menu-reset: var(--autumn-rust);
-  --menu-help: var(--autumn-bordeaux);
-  --menu-machine: var(--autumn-petrol);
-  --menu-dialect: var(--autumn-aubergine);
-  --menu-model: var(--autumn-olive);
-  --panel-editor: var(--autumn-petrol);
-  --panel-sim: var(--autumn-olive);
-  --panel-block: var(--autumn-camel);
-  --panel-alarms: var(--autumn-brick);
-  --header-bg: #3b2a1e;
-  --bg: #f3ede4;
-  --surface-2: #faf6ef;
-  --border: #d9cdbd;
-  --muted: #4d4238;
+  --header-bg: linear-gradient(100deg, var(--fluid-teal), var(--fluid-blue) 45%, var(--fluid-purple));
+  --page-bg: linear-gradient(135deg, #f3effd 0%, #eef6fb 50%, #ecfaf8 100%);
+  --soft-shadow: 0 2px 10px rgba(60, 40, 120, 0.12);
+  --lift-shadow: 0 6px 18px rgba(60, 40, 120, 0.22);
+  --bg: #f3f1fb;
+  --surface-2: #f8f7fd;
+  --border: #dcd7ee;
+  --muted: #474257;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --muted: #c9bba9; --header-bg: #2a1d14; --bg: #15110d; --surface: #201912; --surface-2: #1a1510; --border: #3d3228; }
+  :root {
+    --page-bg: linear-gradient(135deg, #16122a 0%, #111a26 50%, #0e1d1f 100%);
+    --soft-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+    --lift-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+    --bg: #14121f;
+    --surface: #1d1a2b;
+    --surface-2: #181625;
+    --border: #353049;
+    --muted: #c4bfd8;
+  }
 }
 
-#btn-new, #btn-open, #btn-save { --mc: var(--menu-file); }
-#examples { --mc: var(--menu-examples); }
-#btn-start { --mc: var(--menu-start); }
-#btn-pause { --mc: var(--menu-pause); }
-#btn-step { --mc: var(--menu-step); }
-#btn-reset { --mc: var(--menu-reset); }
-#btn-help { --mc: var(--menu-help); }
-.field-machine { --mc: var(--menu-machine); }
-.field-dialect { --mc: var(--menu-dialect); }
-.field-model { --mc: var(--menu-model); }
-#btn-fit { --mc: var(--panel-sim); }
+body { background: var(--page-bg); background-attachment: fixed; }
+
+#btn-new, #btn-open, #btn-save { --mc: var(--fluid-teal); --mc2: var(--fluid-blue); }
+#examples { --mc: var(--fluid-purple); --mc2: var(--fluid-magenta); }
+#btn-start { --mc: var(--fluid-green); --mc2: var(--fluid-teal); }
+#btn-pause { --mc: var(--fluid-amber); --mc2: var(--fluid-orange); }
+#btn-step { --mc: var(--fluid-blue); --mc2: var(--fluid-purple); }
+#btn-reset { --mc: var(--fluid-orange); --mc2: var(--fluid-raspberry); }
+#btn-help { --mc: var(--fluid-magenta); --mc2: var(--fluid-raspberry); }
+.field-machine { --mc: var(--fluid-teal); --mc2: var(--fluid-blue); }
+.field-dialect { --mc: var(--fluid-purple); --mc2: var(--fluid-magenta); }
+.field-model { --mc: var(--fluid-green); --mc2: var(--fluid-teal); }
+#btn-fit { --mc: var(--fluid-green); --mc2: var(--fluid-teal); }
 
 :is(#btn-new, #btn-open, #btn-save, #examples, #btn-start, #btn-pause, #btn-step, #btn-reset, #btn-help, .header-actions .field > span, #btn-fit) {
-  background: var(--mc);
-  border: 1px solid var(--mc);
+  background: linear-gradient(120deg, var(--mc), var(--mc2));
+  border: 0;
+  border-radius: 999px;
   color: #fff;
   font-weight: 700;
+  box-shadow: var(--soft-shadow);
+}
+:is(#btn-new, #btn-open, #btn-save, #btn-start, #btn-pause, #btn-step, #btn-reset, #btn-help, #btn-fit, #examples) {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 :is(#btn-new, #btn-open, #btn-save, #examples, #btn-start, #btn-pause, #btn-step, #btn-reset, #btn-help, #btn-fit):hover:not(:disabled) {
-  background: color-mix(in srgb, var(--mc) 80%, #000);
-  border-color: color-mix(in srgb, var(--mc) 80%, #000);
+  transform: translateY(-1px);
+  box-shadow: var(--lift-shadow);
+  filter: brightness(1.08);
 }
+:is(#btn-new, #btn-open, #btn-save, #btn-start, #btn-pause, #btn-step, #btn-reset, #btn-help, #btn-fit):active:not(:disabled) { transform: translateY(0); }
 select option { background: var(--surface); color: var(--text); }
-.header-actions .field > span { padding: 6px 12px; border-radius: 6px; }
-.header-actions select { border: 2px solid #fff; font-weight: 600; }
+.header-actions .field > span { padding: 6px 14px; box-shadow: none; }
+.header-actions select, .file-name { border-radius: 999px; }
+.header-actions select { border: 0; font-weight: 600; box-shadow: var(--soft-shadow); }
+.header-actions .field > span { border: 1px solid rgba(255, 255, 255, 0.7); }
 
-/* Intestazione scura: i menu subito dopo il nome, la Guida in fondo a destra sulla stessa riga */
-.app-header { background: var(--header-bg); border-bottom: 0; color: #fff; }
+/* Intestazione sfumata: i menu subito dopo il nome, la Guida in fondo a destra sulla stessa riga */
+.app-header { background: var(--header-bg); border-bottom: 0; color: #fff; box-shadow: var(--soft-shadow); }
 .brand-name { color: #fff; }
-.brand-sub, .version { color: #efe2d0; }
+.brand-sub, .version { color: #eee8ff; }
 .app-header > .header-actions { flex: 1 1 auto; }
-#btn-help { margin-left: auto; border-color: #fff; }
+#btn-help { margin-left: auto; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8); }
 
-.toolbar { border-bottom: 2px solid var(--border); }
+.toolbar { background: color-mix(in srgb, var(--surface) 70%, transparent); border-bottom: 1px solid var(--border); }
 .field, .check { color: var(--text); font-weight: 600; }
-.check input, #speed { accent-color: var(--menu-file); }
+.check input, #speed { accent-color: var(--fluid-purple); }
 
-.panel-editor { --pc: var(--panel-editor); }
-.panel-sim { --pc: var(--panel-sim); }
-.panel-block { --pc: var(--panel-block); }
-.panel-alarms { --pc: var(--panel-alarms); }
-.panel { border: 2px solid var(--pc, var(--border)); }
-.panel-title { background: var(--pc, var(--muted)); color: #fff; font-weight: 700; font-size: 14px; }
-.panel-head { background: color-mix(in srgb, var(--pc) 12%, var(--surface)); border-bottom: 2px solid var(--pc); }
+.panel-editor { --pc: var(--fluid-teal); --pc2: var(--fluid-blue); }
+.panel-sim { --pc: var(--fluid-green); --pc2: var(--fluid-teal); }
+.panel-block { --pc: var(--fluid-blue); --pc2: var(--fluid-purple); }
+.panel-alarms { --pc: var(--fluid-raspberry); --pc2: var(--fluid-magenta); }
+.panel { border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--soft-shadow); }
+.panel-title { background: linear-gradient(100deg, var(--pc, var(--muted)), var(--pc2, var(--muted))); color: #fff; font-weight: 700; font-size: 14px; border-bottom: 0; }
+.panel-head { background: linear-gradient(100deg, color-mix(in srgb, var(--pc) 12%, var(--surface)), color-mix(in srgb, var(--pc2) 12%, var(--surface))); border-bottom: 0; }
+.panel-head .panel-title { border-radius: 0 0 14px 0; }
 .panel-head .setup { color: var(--text); }
+.status-bar { background: color-mix(in srgb, var(--surface) 80%, transparent); }
 
 /* Scritte in stampatello maiuscolo. Restano come sono solo il testo del programma,
    il nome del file e gli indirizzi dei siti, dove le minuscole contano. */
