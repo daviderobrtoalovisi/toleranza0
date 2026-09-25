@@ -3,7 +3,13 @@
 // con il QR sempre visibile in basso a destra (utile quando si proietta).
 
 // Da aggiornare quando cambiano gli autori del lavoro
-const AUTHORS = ['(nomi degli autori da inserire)'];
+const AUTHORS = [
+  'Davide Roberto Alovisi',
+  'Carmen Bonafede',
+  'Vito Ginosa',
+  'Antonio Vivenzio',
+  'Giovanni Zingarello'
+];
 
 const SITE_URL = 'https://daviderobrtoalovisi.github.io/toleranza0/';
 const SITE_LABEL = SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -30,7 +36,7 @@ export function createProjectInfo(dialog, { version = '' } = {}) {
           resta evidenziata e gli allarmi spiegano in italiano che cosa non va.
           Nessuna macchina occupata, nessun pezzo sprecato.
         </p>
-        <p class="intro-authors">${AUTHORS.join(' · ')}</p>
+        <p class="intro-authors">A cura di ${formatAuthors(AUTHORS)}</p>
         <div class="intro-actions">
           <button type="button" id="intro-enter" class="intro-enter">Entra nel simulatore</button>
           <label class="intro-skip">
@@ -102,6 +108,12 @@ export function createQrBadge(onOpen) {
       remember(HIDE_BADGE_KEY, false);
     }
   };
+}
+
+// "Tizio, Caio & Sempronio": l'ultimo nome unito con la e commerciale
+function formatAuthors(names) {
+  if (names.length < 2) return names.join('');
+  return `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`;
 }
 
 // localStorage puo' essere pieno o bloccato: il sito deve funzionare lo stesso

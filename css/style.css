@@ -731,10 +731,13 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  min-width: 0;
   align-items: center;
   gap: 40px;
   padding: 44px 48px 40px;
 }
+
+.intro-main { min-width: 0; }
 
 .intro-school {
   display: flex;
@@ -758,7 +761,9 @@ body, button, select, select option, input, textarea { text-transform: uppercase
 
 .intro-title {
   margin: 0;
-  font-size: clamp(42px, 7vw, 82px);
+  /* si restringe da sola: non deve mai finire sopra il riquadro del QR */
+  font-size: clamp(34px, 5.4vw, 76px);
+  overflow-wrap: anywhere;
   font-weight: 300;
   line-height: 1;
   letter-spacing: 0.14em;
