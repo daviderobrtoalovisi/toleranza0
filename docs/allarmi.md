@@ -51,7 +51,7 @@ Note:
 | 2009 | Fresa: H diverso dall'utensile montato | `T1 M06` e poi `G43 H2` | H uguale al numero dell'utensile |
 | 2010 | Fresa: D diverso dall'utensile montato, o mancante | `T1 M06` e poi `G41 D2` | D uguale al numero dell'utensile |
 | 2011 | Tornio Siemens: ciclo di gola `CYCLE93` senza troncatore | `T1 D1` (sgrossatore) e poi `CYCLE93(...)` | montare il troncatore prima del ciclo, per esempio `T2 D1` |
-| 2012 | Fresa Siemens: tasca `POCKET3`/`POCKET4` o spianatura `CYCLE71` senza fresa | `T3 M6` (punta) e poi `POCKET4(...)` | montare una fresa prima del ciclo, per esempio `T1 M6` |
+| 2012 | Fresa Siemens: tasca `POCKET3`/`POCKET4` senza fresa | `T3 M6` (punta) e poi `POCKET4(...)` | montare una fresa prima del ciclo, per esempio `T1 M6` |
 | 2007 | Ciclo incompleto | `G71 P100 Q180 ...` senza il blocco `G71 U2 R0.5` prima; `G70 P100` senza Q | scrivere il ciclo completo (il suggerimento mostra la sintassi) |
 
 Un programma senza M30 non dà allarme: alla fine compare il messaggio «Programma terminato senza M30».
