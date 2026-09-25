@@ -443,82 +443,75 @@ body[data-state="alarm"] .status-message { color: var(--error); font-weight: 600
 .header-actions .field { min-width: 0; max-width: 100%; }
 .header-actions .field select { min-width: 0; max-width: 100%; }
 
-/* Colori dei menu: ogni gruppo di comandi e ogni pannello ha il suo colore (--mc).
-   Sfondo e testo sono ricavati dal colore, così vanno bene sia col tema chiaro sia con lo scuro. */
+/* Colori dei menu: ogni gruppo di comandi e ogni pannello ha il suo colore (--mc, --pc).
+   Colori pieni con testo bianco (contrasto almeno 4.5:1), leggibili anche al proiettore;
+   sono gli stessi col tema chiaro e con lo scuro. */
 :root {
-  --menu-file: #1f6feb;
-  --menu-examples: #8250df;
-  --menu-pause: #a37c00;
-  --menu-step: #0f8a9a;
-  --menu-help: #c2378a;
-  --menu-machine: #1f6feb;
-  --menu-dialect: #8250df;
-  --menu-model: #1a7f37;
-  --panel-editor: #1f6feb;
-  --panel-sim: #1a7f37;
-  --panel-block: #8250df;
-  --panel-alarms: #c62828;
+  --menu-file: #1558c7;
+  --menu-examples: #6b3fc2;
+  --menu-pause: #7d5f00;
+  --menu-step: #0b6e7a;
+  --menu-help: #b0266f;
+  --menu-reset: #a64a00;
+  --menu-machine: #1558c7;
+  --menu-dialect: #6b3fc2;
+  --menu-model: #16692e;
+  --panel-editor: #1558c7;
+  --panel-sim: #16692e;
+  --panel-block: #6b3fc2;
+  --panel-alarms: #b71c1c;
+  --header-bg: #0d3b73;
+  --muted: #45505b;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
-    --menu-file: #58a6ff;
-    --menu-examples: #b392f0;
-    --menu-pause: #e3b341;
-    --menu-step: #39c5cf;
-    --menu-help: #f778ba;
-    --menu-machine: #58a6ff;
-    --menu-dialect: #b392f0;
-    --menu-model: #3fb950;
-    --panel-editor: #58a6ff;
-    --panel-sim: #3fb950;
-    --panel-block: #b392f0;
-    --panel-alarms: #ff7b72;
-  }
+  :root { --muted: #b3bec9; --header-bg: #0a2a52; }
 }
 
 #btn-new, #btn-open, #btn-save { --mc: var(--menu-file); }
 #examples { --mc: var(--menu-examples); }
+#btn-start { --mc: #16692e; }
 #btn-pause { --mc: var(--menu-pause); }
 #btn-step { --mc: var(--menu-step); }
+#btn-reset { --mc: var(--menu-reset); }
 #btn-help { --mc: var(--menu-help); }
 .field-machine { --mc: var(--menu-machine); }
 .field-dialect { --mc: var(--menu-dialect); }
 .field-model { --mc: var(--menu-model); }
 #btn-fit { --mc: var(--panel-sim); }
 
-:is(#btn-new, #btn-open, #btn-save, #examples, #btn-pause, #btn-step, #btn-help, .header-actions .field > span, #btn-fit) {
-  background: color-mix(in srgb, var(--mc) 14%, var(--surface));
-  border-color: var(--mc);
-  color: color-mix(in srgb, var(--mc) 75%, var(--text));
-  font-weight: 600;
+:is(#btn-new, #btn-open, #btn-save, #examples, #btn-start, #btn-pause, #btn-step, #btn-reset, #btn-help, .header-actions .field > span, #btn-fit) {
+  background: var(--mc);
+  border: 1px solid var(--mc);
+  color: #fff;
+  font-weight: 700;
 }
-:is(#btn-new, #btn-open, #btn-save, #examples, #btn-pause, #btn-step, #btn-help, #btn-fit):hover:not(:disabled) {
-  background: color-mix(in srgb, var(--mc) 26%, var(--surface));
-  border-color: var(--mc);
+:is(#btn-new, #btn-open, #btn-save, #examples, #btn-start, #btn-pause, #btn-step, #btn-reset, #btn-help, #btn-fit):hover:not(:disabled) {
+  background: color-mix(in srgb, var(--mc) 80%, #000);
+  border-color: color-mix(in srgb, var(--mc) 80%, #000);
 }
 select option { background: var(--surface); color: var(--text); }
-.header-actions .field > span { padding: 6px 12px; border: 1px solid var(--mc); border-radius: 6px; }
+.header-actions .field > span { padding: 6px 12px; border-radius: 6px; }
+.header-actions select { border: 2px solid #fff; font-weight: 600; }
 
-/* Intestazione: i menu subito dopo il nome, la Guida in fondo a destra sulla stessa riga */
+/* Intestazione scura: i menu subito dopo il nome, la Guida in fondo a destra sulla stessa riga */
+.app-header { background: var(--header-bg); border-bottom: 0; color: #fff; }
+.brand-name { color: #fff; }
+.brand-sub, .version { color: #d6e4f5; }
 .app-header > .header-actions { flex: 1 1 auto; }
-#btn-help { margin-left: auto; }
-.btn-reset:not(:disabled) { background: color-mix(in srgb, var(--reset) 14%, var(--surface)); }
+#btn-help { margin-left: auto; border-color: #fff; }
 
-.app-header {
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-  border-bottom: 3px solid var(--accent);
-}
-.brand-name { color: var(--accent); }
-.toolbar { background: color-mix(in srgb, var(--accent) 5%, var(--surface-2)); }
-.check input { accent-color: var(--accent); }
+.toolbar { border-bottom: 2px solid var(--border); }
+.field, .check { color: var(--text); font-weight: 600; }
+.check input { accent-color: var(--menu-file); }
 
 .panel-editor { --pc: var(--panel-editor); }
 .panel-sim { --pc: var(--panel-sim); }
 .panel-block { --pc: var(--panel-block); }
 .panel-alarms { --pc: var(--panel-alarms); }
-.panel { border-top: 3px solid var(--pc, var(--border)); }
-.panel-title { color: var(--pc, var(--muted)); }
-.panel > .panel-title, .panel-head { background: color-mix(in srgb, var(--pc, var(--border)) 12%, var(--surface)); }
+.panel { border: 2px solid var(--pc, var(--border)); }
+.panel-title { background: var(--pc, var(--muted)); color: #fff; font-weight: 700; font-size: 14px; }
+.panel-head { background: color-mix(in srgb, var(--pc) 12%, var(--surface)); border-bottom: 2px solid var(--pc); }
+.panel-head .setup { color: var(--text); }
 
 /* Scritte in stampatello maiuscolo. Restano come sono solo il testo del programma,
    il nome del file e gli indirizzi dei siti, dove le minuscole contano. */
