@@ -35,11 +35,11 @@ export const MILL_SIEMENS = {
     CYCLE83: 'Foratura profonda: CYCLE83(RTP, RFP, SDIS, DP, DPR, FDEP, FDPR, …) con FDEP/FDPR = prima foratura assoluta/relativa',
     MCALL: 'Richiamo modale: MCALL CYCLE81(...) fora in ogni posizione successiva; MCALL da solo annulla',
     POCKET3: 'Tasca rettangolare: POCKET3(RTP, RFP, SDIS, DP, LENG, WID, CRAD, PA, PO, STA, MID, FAL, FALD, FFP1, FFD, CDIR, VARI, MIDA, AP1, AP2, AD, RAD1, DP1) = piani, fondo, lunghezza e larghezza, raggio degli spigoli, centro, angolo, passata in Z, sovrametalli, avanzamenti, verso, tipo (1 sgrossatura, 2 finitura; +10 entrata a elica), passata laterale, elica',
-    POCKET4: 'Tasca circolare: POCKET4(RTP, RFP, SDIS, DP, PRAD, PA, PO, MID, FAL, FALD, FFP1, FFD, CDIR, VARI, MIDA, AP1, AD, RAD1, DP1) = piani, fondo, raggio, centro, passata in Z, sovrametalli, avanzamenti, verso, tipo (1 sgrossatura, 2 finitura; +10 entrata a elica), passata laterale, elica'
+    POCKET4: 'Tasca circolare: POCKET4(RTP, RFP, SDIS, DP, PRAD, PA, PO, MID, FAL, FALD, FFP1, FFD, CDIR, VARI, MIDA, AP1, AD, RAD1, DP1) = piani, fondo, raggio, centro, passata in Z, sovrametalli, avanzamenti, verso, tipo (1 sgrossatura, 2 finitura; +10 entrata a elica), passata laterale, elica',
+    CYCLE71: 'Spianatura: CYCLE71(RTP, RFP, SDIS, DP, PA, PO, LENG, WID, STA, MID, MIDA, FDP, FALD, FFP1, VARI, FDP1) = piani, quota finale, spigolo di partenza, lunghezza e larghezza (il segno dà il verso), angolo, passata in Z e laterale, uscita oltre il bordo, sovrametallo, avanzamento, tipo (unità 1 sgrossatura, 2 finitura; decine 1-4 direzione delle passate: 1 X, 2 Y, 3 X a zig-zag, 4 Y a zig-zag), sporgenza della prima e ultima passata'
   },
   keywords: ['MCALL'],
   planned: {
-    CYCLE71: 'ciclo di spianatura',
     CYCLE72: 'ciclo di contornatura'
   },
 
