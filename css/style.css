@@ -541,3 +541,112 @@ select option { background: var(--surface); color: var(--text); }
    il nome del file e gli indirizzi dei siti, dove le minuscole contano. */
 body, button, select, select option, input, textarea { text-transform: uppercase; }
 .editor-textarea, .file-name, .machine-info a { text-transform: none; }
+
+/* ------------------------------------------------------------------
+   Telefoni: una scheda alla volta a tutto schermo
+   Sotto i 700 px l'interfaccia cambia impostazione: le schede scelgono
+   il pannello da mostrare e i comandi di esecuzione stanno in basso.
+   ------------------------------------------------------------------ */
+.tab-bar, .run-bar { display: none; }
+
+@media (max-width: 700px) {
+  html, body { height: 100%; }
+  body { overflow: hidden; }
+
+  /* Intestazione compatta: titolo su una riga, i tre menu su una riga sola
+     che scorre di lato, la Guida sempre visibile in alto a destra */
+  .app-header { position: relative; padding: 6px 10px; gap: 4px; }
+  .brand-sub, .version { display: none; }
+  .brand-name { font-size: 17px; }
+  .app-header > .header-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding-bottom: 2px;
+  }
+  .header-actions .field { flex: 0 0 auto; gap: 4px; }
+  .header-actions .field > span { padding: 4px 10px; font-size: 11px; }
+  .header-actions select { padding: 6px 10px; }
+  #btn-help { position: absolute; top: 6px; right: 10px; padding: 4px 12px; }
+
+  /* Barra comandi: una sola riga che scorre di lato.
+     I comandi non si stringono, si raggiungono scorrendo. */
+  .toolbar { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; gap: 8px; padding: 6px 10px; }
+  .toolbar > .toolbar-group { flex: 0 0 auto; flex-wrap: nowrap; }
+  .toolbar-group > * { flex: 0 0 auto; }
+  .toolbar button, .toolbar select, .file-name { white-space: nowrap; }
+  .toolbar .file-name { width: 8em; }
+
+  /* Le schede */
+  .tab-bar { display: flex; gap: 6px; padding: 8px 10px 0; }
+  .tab {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 4px;
+    border: 1px solid var(--border);
+    border-radius: 10px 10px 0 0;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tab[aria-selected="true"] {
+    background: linear-gradient(100deg, var(--pc, var(--accent)), var(--pc2, var(--accent)));
+    border-color: transparent;
+    color: #fff;
+  }
+  /* Ogni scheda prende i colori del suo pannello */
+  .tab[data-tab="editor"] { --pc: var(--fluid-teal); --pc2: var(--fluid-blue); }
+  .tab[data-tab="sim"] { --pc: var(--fluid-green); --pc2: var(--fluid-teal); }
+  .tab[data-tab="block"] { --pc: var(--fluid-blue); --pc2: var(--fluid-purple); }
+  .tab[data-tab="alarms"] { --pc: var(--fluid-raspberry); --pc2: var(--fluid-magenta); }
+
+  /* Allarme scattato mentre si guarda un'altra scheda */
+  .tab.has-alarm { color: var(--error); border-color: var(--error); }
+  .tab.has-alarm::after { content: " ●"; }
+
+  /* Un solo pannello alla volta, alto quanto lo spazio disponibile */
+  .layout { display: block; padding: 8px 10px 10px; overflow: hidden; }
+  .layout .panel { display: none; height: 100%; border-radius: 0 0 14px 14px; }
+  body[data-tab="editor"] .panel-editor,
+  body[data-tab="sim"] .panel-sim,
+  body[data-tab="block"] .panel-block,
+  body[data-tab="alarms"] .panel-alarms { display: flex; }
+
+  /* Il titolo del pannello e' gia' scritto sulla scheda attiva */
+  .layout .panel .panel-title { display: none; }
+
+  /* Simulazione: i campi del grezzo su una riga sola, per lasciare
+     piu' spazio possibile al disegno del pezzo */
+  .panel-sim .panel-head { padding: 4px 8px; }
+  .panel-sim .setup { flex-wrap: nowrap; overflow-x: auto; gap: 8px; font-size: 12px; padding: 2px 0; white-space: nowrap; }
+  .panel-sim .setup label { white-space: nowrap; }
+  .panel-sim .setup > * { flex: 0 0 auto; }
+  .panel-sim .setup input { width: 4em; }
+
+  /* Comandi di esecuzione in basso, grandi abbastanza per il pollice */
+  .run-bar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 10px;
+    background: color-mix(in srgb, var(--surface) 80%, transparent);
+    border-top: 1px solid var(--border);
+  }
+  .run-bar button { flex: 1; min-width: 0; padding: 12px 4px; font-size: 14px; font-weight: 700; line-height: 1.15; }
+
+  /* Quote della simulazione: piu' piccole e in basso a destra, cosi' non
+     coprono ne' il pezzo ne' il pulsante degli utensili */
+  .dro { top: auto; bottom: 8px; right: 8px; font-size: 12px; padding: 4px 8px; gap: 0 8px; }
+
+  /* Evita lo zoom automatico dei campi di testo su iPhone */
+  input[type="text"], input[type="number"], select { font-size: 16px; }
+
+  .status-bar { padding: 4px 10px; min-height: 28px; font-size: 13px; }
+}
