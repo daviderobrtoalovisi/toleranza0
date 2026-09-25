@@ -13,7 +13,7 @@ const syntaxOf = (adapter, text) => adapter.check(text).alarms[0]?.code ?? null;
 const run = (adapter, text) => adapter.interpret(adapter.check(text).blocks, { offsets: adapter.offsets?.defaults ?? null });
 const lastAlarm = (adapter, text) => run(adapter, text).steps.at(-1).alarm;
 // Blocchi Fanuc prodotti dalla sola traduzione, come testo (per esempio "G99 G97"); i blocchi vuoti non compaiono
-const fanucOf = (adapter, text) => translateSiemens(adapter.check(text).blocks, adapter.id)
+const fanucOf = (adapter, text) => translateSiemens(adapter.check(text).blocks, adapter.id, { tools: adapter.tools })
   .filter((b) => b.words.length || b.alarm)
   .map((b) => (b.alarm ? `allarme ${b.alarm.code}` : b.words.map((w) => w.letter + w.value).join(' ')));
 const near = (a, b, eps = 1e-6) => Math.abs(a - b) <= eps;
@@ -39,7 +39,7 @@ test('Siemens: indirizzo ripetuto (1008)', () => assertEqual(syntaxOf(lathe, 'G1
 test('Siemens: parentesi fuori posto (1001)', () => assertEqual(syntaxOf(lathe, '(COMMENTO FANUC)'), 1001));
 test('Siemens: i cicli non ancora simulati danno 1013', () => {
   assertEqual(syntaxOf(mill, 'POCKET3(10,0,2,-5)'), 1013);
-  assertEqual(syntaxOf(lathe, 'CYCLE93(35, 60, 30, 25, 5, 10, 20, 0, 0, 1, 1, 0.5, 0.5, 2, 1, 5, 1)'), 1013);
+  assertEqual(syntaxOf(lathe, 'CYCLE97(1.5, , 0, -30, 20, 20, 3, 3, 0.9, 0.05, 30, 0, 8, 1, 3, 1)'), 1013);
 });
 test('Siemens: utensile con il nome dà 1013', () => assertEqual(syntaxOf(mill, 'T="FRESA10"'), 1013));
 test('Siemens: G33 e G95 della fresa non ancora simulati', () => {
@@ -168,6 +168,36 @@ test('tornio Siemens: profilo con una gola (3007 sulla riga del profilo)', () =>
   assertEqual([alarm?.code, alarm?.line], [3007, 8]);
 });
 
+// Ciclo di gola del tornio CYCLE93
+const GOLA = 'T2 D1\n';
+const GOLA_RUN = '; (GREZZO D40 L60)\nT2 D1\nG97 S600 M3\nG0 X42 Z-12\nF0.05\n';
+test('tornio Siemens: CYCLE93 fa due passate affiancate con il troncatore da 3 mm', () => {
+  const pass = (z) => ['G0 Z' + z, 'G0 X42', 'G1 X32', 'G4 X0.5', 'G0 X42'];
+  assertEqual(fanucOf(lathe, GOLA + 'CYCLE93(40, -12, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, , 0.5, 5)'), ['T202', ...pass(-12), ...pass(-15)]);
+  assertEqual(fanucOf(lathe, GOLA + 'CYCLE93(40, -18, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, , 0.5, 1)'), ['T202', ...pass(-12), ...pass(-15)]);
+});
+test('tornio Siemens: CYCLE93 a beccate di IDEP e con i sovrametalli di finitura', () => {
+  const fanuc = fanucOf(lathe, GOLA + 'CYCLE93(40, -12, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.2, 2, , 5)');
+  assertEqual(fanuc.slice(1, 6), ['G0 Z-12.2', 'G0 X42', 'G1 X36', 'G0 X38', 'G1 X32.4']);
+  assertEqual(fanuc.slice(-7), ['G0 Z-12', 'G1 X32', 'G0 X42', 'G0 Z-15', 'G1 X32', 'G1 Z-12', 'G0 X42']);
+  const program = runExample({ text: GOLA_RUN + 'CYCLE93(40, -12, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.2, 2, 0.5, 5)', machine: 'lathe', dialect: 'siemens' });
+  assertEqual(program.alarm, null);
+});
+test('tornio Siemens: CYCLE93 senza troncatore (2011) e gola troppo stretta (3009)', () => {
+  const noGroove = lastAlarm(lathe, 'T1 D1\n' + 'CYCLE93(40, -12, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, , , 5)');
+  assertEqual([noGroove?.code, noGroove?.line], [2011, 2]);
+  assertEqual(lastAlarm(lathe, GOLA + 'CYCLE93(40, -12, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, , , 5)')?.code, 3009);
+  assertEqual(lastAlarm(lathe, GOLA + 'CYCLE93(40, -12, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1.6, , , 5)')?.code, 3009);
+});
+test('tornio Siemens: CYCLE93 incompleto (2007) o non ancora simulato (1013)', () => {
+  assertEqual(lastAlarm(lathe, GOLA + 'CYCLE93(40, -12, 6)')?.code, 2007);
+  assertEqual(lastAlarm(lathe, GOLA + 'CYCLE93(40, -12, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0)')?.code, 2007);
+  assertEqual(lastAlarm(lathe, GOLA + 'CYCLE93(40, -12, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, , , 9)')?.code, 2007);
+  assertEqual(lastAlarm(lathe, GOLA + 'CYCLE93(40, -12, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, , , 3)')?.code, 1013);
+  assertEqual(lastAlarm(lathe, GOLA + 'CYCLE93(40, -12, 6, 4, 0, 10, 0, 0, 0, 0, 0, 0, 0, , , 5)')?.code, 1013);
+  assertEqual(lastAlarm(lathe, GOLA + 'CYCLE93(40, A, 6, 4)')?.code, 1003);
+});
+
 test('allarme 2005 in Siemens: si parla di LIMS', () => {
   const alarm = lastAlarm(lathe, 'T1 D1\nG96 S180 M3');
   assertEqual(alarm?.code, 2005);
@@ -190,6 +220,8 @@ const siemensMill = await example('fresa-siemens-04-contorno-g41.nc');
 const fanucDrill = await example('fresa-03-foratura.nc');
 const fanucCycles = await example('tornio-04-cicli-g71-g70.nc');
 const siemensCycles = await example('tornio-siemens-03-cycle95.nc');
+const fanucGroove = await example('tornio-03-gola.nc');
+const siemensGroove = await example('tornio-siemens-04-cycle93.nc');
 const siemensDrill = await example('fresa-siemens-03-foratura.nc');
 
 test('tornio: Siemens e Fanuc producono lo stesso pezzo e lo stesso tempo ciclo', () => {
@@ -218,6 +250,13 @@ test('fresa: Siemens e Fanuc producono gli stessi fori', () => {
 test('tornio: CYCLE95 e G71/G70 producono lo stesso pezzo e lo stesso tempo ciclo', () => {
   const a = runExample({ text: fanucCycles, machine: 'lathe' });
   const b = runExample({ text: siemensCycles, machine: 'lathe', dialect: 'siemens' });
+  assertEqual([a.alarm, b.alarm], [null, null]);
+  assert(a.sim.stock.data.every((v, i) => v === b.sim.stock.data[i]), 'grezzo diverso');
+  assert(near(a.program.totalTime, b.program.totalTime, 0.01), `${a.program.totalTime} contro ${b.program.totalTime}`);
+});
+test('tornio: CYCLE93 e la gola Fanuc producono lo stesso pezzo e lo stesso tempo ciclo', () => {
+  const a = runExample({ text: fanucGroove, machine: 'lathe' });
+  const b = runExample({ text: siemensGroove, machine: 'lathe', dialect: 'siemens' });
   assertEqual([a.alarm, b.alarm], [null, null]);
   assert(a.sim.stock.data.every((v, i) => v === b.sim.stock.data[i]), 'grezzo diverso');
   assert(near(a.program.totalTime, b.program.totalTime, 0.01), `${a.program.totalTime} contro ${b.program.totalTime}`);

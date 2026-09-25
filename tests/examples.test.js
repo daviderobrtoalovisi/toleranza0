@@ -16,7 +16,8 @@ const EXPECTED = {
   'esercizio-fresa-passata.nc': { run: { code: 3005, line: 11 } },
   'esercizio-fresa-punta.nc': { run: { code: 3008, line: 11 } },
   'esercizio-fresa-morsa.nc': { run: { code: 4004, line: 10 } },
-  'esercizio-tornio-siemens-lims.nc': { run: { code: 2005, line: 5 } }
+  'esercizio-tornio-siemens-lims.nc': { run: { code: 2005, line: 5 } },
+  'esercizio-tornio-siemens-gola.nc': { run: { code: 2011, line: 9 } }
 };
 
 // Ogni esercizio deve avere il suo risultato atteso qui: un esercizio senza errore non insegna niente

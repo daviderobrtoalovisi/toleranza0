@@ -18,7 +18,9 @@
   { "machine": "lathe", "dialect": "siemens", "file": "tornio-siemens-01-cilindratura.nc", "title": "Tornio 1 — Sfacciatura e cilindratura" },
   { "machine": "lathe", "dialect": "siemens", "file": "tornio-siemens-02-raccordi.nc", "title": "Tornio 2 — Profilo con CR=, IC() e G42" },
   { "machine": "lathe", "dialect": "siemens", "file": "tornio-siemens-03-cycle95.nc", "title": "Tornio 3 — Sgrossatura e finitura con CYCLE95" },
+  { "machine": "lathe", "dialect": "siemens", "file": "tornio-siemens-04-cycle93.nc", "title": "Tornio 4 — Gola con CYCLE93" },
   { "machine": "lathe", "dialect": "siemens", "file": "esercizio-tornio-siemens-lims.nc", "title": "Esercizio — Perché la macchina non parte?" },
+  { "machine": "lathe", "dialect": "siemens", "file": "esercizio-tornio-siemens-gola.nc", "title": "Esercizio — Perché il ciclo di gola non parte?" },
   { "machine": "mill", "dialect": "siemens", "file": "fresa-siemens-03-foratura.nc", "title": "Fresa 3 — Foratura con CYCLE81, CYCLE83 e MCALL" },
   { "machine": "mill", "dialect": "siemens", "file": "fresa-siemens-04-contorno-g41.nc", "title": "Fresa 4 — Contorno con compensazione G41" }
 ]
