@@ -1044,3 +1044,54 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   .help-glossary { grid-template-columns: minmax(0, 1fr); gap: 2px 0; }
   .help-glossary dd { margin-bottom: 8px; }
 }
+
+/* I tre passi come cartoline numerate: il numero verde tira l'occhio */
+.help-cards {
+  counter-reset: passo;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.help-cards li {
+  counter-increment: passo;
+  position: relative;
+  padding: 10px 14px 10px 46px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  line-height: 1.5;
+}
+.help-cards li::before {
+  content: counter(passo);
+  position: absolute;
+  left: 14px;
+  top: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--lime);
+}
+
+/* I due colori del disegno, mostrati invece che descritti */
+.help-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 8px 0 0; }
+.help-chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.help-chip-rapid { background: rgba(255, 107, 125, 0.18); color: var(--sim-rapid); border: 1px dashed var(--sim-rapid); }
+.help-chip-feed { background: rgba(92, 200, 255, 0.16); color: var(--sim-feed); border: 1px solid var(--sim-feed); }
+
+.help-lead-end { margin: 20px 0 0; font-size: 14px; color: var(--muted); border-left-color: var(--border); background: none; }
+
+/* Telefono: le schede della guida su una riga sola che scorre di lato,
+   invece di tre righe di testata che mangiano il testo */
+@media (max-width: 700px) {
+  .help-head { gap: 6px 10px; padding: 8px 12px; }
+  .help-tabs { flex-wrap: nowrap; overflow-x: auto; }
+  .help-tabs button { flex: 0 0 auto; white-space: nowrap; }
+  .help-cards li { padding: 8px 12px 8px 40px; }
+  .help-cards li::before { left: 12px; font-size: 18px; }
+}
