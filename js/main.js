@@ -11,6 +11,7 @@ import { createToolPanel } from './ui/tool-panel.js';
 import { createRunController, formatTime } from './ui/run-controller.js';
 import { createHelpDialog } from './ui/help-dialog.js';
 import { createMobileLayout } from './ui/mobile-layout.js';
+import { createProjectInfo, createQrBadge } from './ui/project-info.js';
 
 // Collega interfaccia, interprete, simulatore e vista della macchina scelta (tornio o fresa).
 // Tutto ciò che cambia tra le macchine sta negli adattatori (js/machines/*/adapter.js).
@@ -64,6 +65,14 @@ const alarmPanel = createAlarmPanel($('#alarms'), {
 const blockPanel = createBlockPanel($('#block'));
 const help = createHelpDialog($('#help'), { getAdapter: () => adapter });
 createMobileLayout();
+
+const projectInfo = createProjectInfo($('#intro'), { version: VERSION });
+const qrBadge = createQrBadge(() => projectInfo.open());
+$('#btn-intro').addEventListener('click', () => {
+  qrBadge.show();            // il pulsante Progetto rimette anche il QR in vista
+  projectInfo.open();
+});
+projectInfo.openAtStart();
 const setupPanel = createSetupPanel($('#setup-fields'), { onChange: applySetup });
 const toolPanel = createToolPanel($('#tool-panel'), {
   onOffsetsChange(next) {

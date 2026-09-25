@@ -650,3 +650,209 @@ body, button, select, select option, input, textarea { text-transform: uppercase
 
   .status-bar { padding: 4px 10px; min-height: 28px; font-size: 13px; }
 }
+
+/* ------------------------------------------------------------------
+   Presentazione del progetto: schermata di apertura e riquadro QR
+   Fondo scuro e molta aria: pensata anche per essere proiettata.
+   ------------------------------------------------------------------ */
+.intro-dialog {
+  width: min(1000px, 94vw);
+  max-height: 92vh;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  color: #f2f5fb;
+  background:
+    radial-gradient(120% 90% at 12% 0%, rgba(122, 214, 160, 0.16), transparent 60%),
+    radial-gradient(100% 80% at 100% 100%, rgba(129, 90, 236, 0.22), transparent 55%),
+    linear-gradient(160deg, #10182c 0%, #0c1120 55%, #131029 100%);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+}
+.intro-dialog::backdrop { background: rgba(6, 9, 18, 0.75); backdrop-filter: blur(3px); }
+
+.intro {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 40px;
+  padding: 44px 48px 40px;
+}
+
+.intro-school {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 22px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b8c3d9;
+}
+.intro-logo {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  padding: 4px;
+  border-radius: 10px;
+  background: #fff;   /* il logo ha il fondo bianco: si appoggia su una piastrella */
+}
+
+.intro-title {
+  margin: 0;
+  font-size: clamp(42px, 7vw, 82px);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.intro-zero { color: #86d24a; font-weight: 600; }
+
+.intro-claim {
+  margin: 14px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #86d24a;
+}
+
+/* I testi lunghi restano in minuscolo: in stampatello si leggono peggio
+   (come gia' si fa per l'editor e i collegamenti) */
+.intro-text, .intro-authors, .intro-qr-url, .intro-skip { text-transform: none; }
+
+.intro-text {
+  max-width: 48ch;
+  margin: 22px 0 0;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #c3cde0;
+}
+
+.intro-authors {
+  margin: 20px 0 0;
+  font-size: 14px;
+  color: #93a0bd;
+}
+
+.intro-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 30px; }
+
+.intro-enter {
+  padding: 14px 34px;
+  border: 0;
+  border-radius: 999px;
+  background: #86d24a;
+  color: #10241a;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 0 34px rgba(134, 210, 74, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.intro-enter:hover { transform: translateY(-1px); box-shadow: 0 0 44px rgba(134, 210, 74, 0.5); }
+
+.intro-skip { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #8b97b2; }
+.intro-skip input { accent-color: #86d24a; }
+
+.intro-qr {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 18px 18px 14px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+.intro-qr img { width: 208px; height: 208px; display: block; }
+.intro-qr-title {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #10182c;
+}
+.intro-qr-url { margin: 0; font-size: 11px; color: #5f6b76; font-family: var(--code-font); }
+
+.intro-version {
+  position: absolute;
+  right: 18px;
+  bottom: 10px;
+  margin: 0;
+  font-size: 11px;
+  font-family: var(--code-font);
+  color: #5d6a86;
+}
+
+/* Riquadro con il QR sempre visibile, per chi guarda la proiezione */
+.qr-badge {
+  position: fixed;
+  right: 14px;
+  bottom: 46px;
+  z-index: 5;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 8px 8px 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+}
+.qr-badge img { width: 104px; height: 104px; display: block; }
+.qr-badge span {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #10182c;
+  text-align: center;
+}
+.qr-badge:hover { border-color: #86d24a; }
+
+@media (max-width: 900px) {
+  .intro { grid-template-columns: minmax(0, 1fr); gap: 26px; padding: 32px 26px 30px; }
+  .intro-qr { justify-self: start; }
+  .intro-qr img { width: 168px; height: 168px; }
+}
+
+/* Sul telefono il QR non serve: il sito e' gia' aperto li' */
+@media (max-width: 700px) {
+  .qr-badge { display: none; }
+  .intro { padding: 24px 20px 26px; gap: 20px; }
+  .intro-text { font-size: 15px; }
+}
+
+/* Il riquadro del QR e' un contenitore con il suo pulsante di chiusura */
+.qr-badge { padding: 0; }
+.qr-badge[hidden] { display: none; }
+.qr-badge-open {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 8px 8px 6px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+}
+.qr-badge-close {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
