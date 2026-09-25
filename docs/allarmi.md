@@ -50,6 +50,7 @@ Note:
 | 2008 | Fresa: movimento in Z senza G43 | `T1 M06` e poi `G00 Z5` | `G43 H1 Z50` dopo ogni cambio utensile |
 | 2009 | Fresa: H diverso dall'utensile montato | `T1 M06` e poi `G43 H2` | H uguale al numero dell'utensile |
 | 2010 | Fresa: D diverso dall'utensile montato, o mancante | `T1 M06` e poi `G41 D2` | D uguale al numero dell'utensile |
+| 2011 | Tornio Siemens: ciclo di gola `CYCLE93` senza troncatore | `T1 D1` (sgrossatore) e poi `CYCLE93(...)` | montare il troncatore prima del ciclo, per esempio `T2 D1` |
 | 2007 | Ciclo incompleto | `G71 P100 Q180 ...` senza il blocco `G71 U2 R0.5` prima; `G70 P100` senza Q | scrivere il ciclo completo (il suggerimento mostra la sintassi) |
 
 Un programma senza M30 non dà allarme: alla fine compare il messaggio «Programma terminato senza M30».
@@ -64,6 +65,7 @@ Un programma senza M30 non dà allarme: alla fine compare il messaggio «Program
 | 3004 | Fuori corsa | `G00 X400` (limite X300) | controllare valore e segno |
 | 3005 | Passata troppo profonda | T01 da Ø50 direttamente a X30 | dividere in più passate |
 | 3008 | Fresa: punta mossa di lato nel materiale | `G01 Z-5` con la punta e poi `X60` | risalire sopra il pezzo prima di spostarsi |
+| 3009 | Tornio Siemens: gola più stretta del troncatore | `CYCLE93` con `WIDG=2` e troncatore largo 3 mm | troncatore più stretto, gola più larga o meno sovrametallo sui fianchi `FAL2` |
 | 3006 | Blocco del profilo non trovato | `G71 P100 Q999` senza una riga N999 | P e Q devono essere numeri N presenti. In Siemens: etichetta di `CYCLE95` non trovata |
 | 3007 | Profilo non adatto a G71 | primo blocco con Z, oppure una gola nel profilo | primo blocco solo X, X sempre crescenti, Z sempre decrescenti. In Siemens anche profilo di `CYCLE95` scritto prima di `M30` |
 

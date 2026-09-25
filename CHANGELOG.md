@@ -2,6 +2,12 @@
 
 Ogni versione ha un tag git (`vX.Y.Z`). Il numero è in `js/version.js` e si vede in alto nella pagina.
 
+## 1.5.0 — Siemens: ciclo di gola CYCLE93
+
+- Tornio in Siemens: `CYCLE93` per le gole rettangolari esterne (`VARI=1` o `5`): affondamenti affiancati con il troncatore, a beccate di `IDEP`, sosta `DTB` sul fondo e finitura di fianchi e fondo con i sovrametalli `FAL1`/`FAL2`. La larghezza del troncatore viene dalla tabella utensili
+- Nuovi allarmi 2011 (ciclo di gola senza troncatore) e 3009 (gola più stretta del troncatore)
+- Nuovo esempio Siemens *Tornio 4* con lo stesso pezzo e lo stesso tempo ciclo dell'esempio Fanuc della gola, ed esercizio *Perché il ciclo di gola non parte?*
+
 ## 1.4.0 — Siemens: ciclo di sgrossatura CYCLE95
 
 - Tornio in Siemens: `CYCLE95` per la sgrossatura (`VARI=1`), la finitura (`VARI=5`) e la lavorazione completa (`VARI=9`) di profili esterni longitudinali. Il profilo si scrive dopo `M30` tra due etichette (`PROFILO_INIZIO:` … `PROFILO_FINE:`); viene simulato come i cicli Fanuc G71/G70, con le righe del profilo evidenziate durante la finitura

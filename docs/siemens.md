@@ -34,6 +34,7 @@ Tabelle dei codici: [`js/machines/lathe/codes-siemens.js`](../js/machines/lathe/
 | `G41` / `G42` / `G40` | compensazione del raggio di punta | uguale |
 
 | `CYCLE95("INIZIO:FINE", …, VARI)` | sgrossatura e finitura del profilo scritto dopo `M30` | `G71` / `G70` |
+| `CYCLE93(SPD, SPL, WIDG, DIAG, …)` | gola rettangolare con il troncatore | affondamenti `G1 X` affiancati, `G4` |
 
 ### Ciclo di sgrossatura CYCLE95
 
@@ -49,6 +50,21 @@ Tabelle dei codici: [`js/machines/lathe/codes-siemens.js`](../js/machines/lathe/
 - Il primo punto del profilo ha X e Z (`PROFILO_INIZIO: G1 X18 Z0`); poi le quote X devono salire sempre e le Z scendere sempre, senza gole (allarme 3007)
 - Per la compensazione del raggio di punta si scrive `G42` prima del ciclo e `G40` dopo, come nell'esempio
 - Non ancora simulati: `VARI` trasversali o interni (2–4, 6–8, 10–12), il sovrametallo lungo il profilo `FAL`, il profilo in un sottoprogramma (allarme 1013). `FF2`, `DT` e `DAM` si possono scrivere ma non cambiano la simulazione
+
+### Ciclo di gola CYCLE93
+
+`CYCLE93(SPD, SPL, WIDG, DIAG, STA1, ANG1, ANG2, RCO1, RCI1, RCO2, RCI2, FAL1, FAL2, IDEP, DTB, VARI, _VRT)`
+
+- **SPD** diametro su cui si apre la gola, **SPL** quota Z di riferimento
+- **VARI** `5` (o `15`): SPL è il **fianco destro** e la gola va verso il mandrino; `1` (o `11`): SPL è il fianco sinistro
+- **WIDG** larghezza e **DIAG** profondità della gola (in raggio: DIAG=4 da Ø40 porta il fondo a Ø32)
+- **STA1, ANG1, ANG2, RCO1, RCI1, RCO2, RCI2** angoli e raccordi: per ora vanno lasciati a `0` (gola rettangolare)
+- **FAL1** sovrametallo sul fondo, **FAL2** sui fianchi (in raggio): se ci sono, dopo la sgrossatura il ciclo ripassa fianco destro, fianco sinistro e fondo
+- **IDEP** profondità di ogni affondamento: dopo ogni tratto l'utensile risale di _VRT (vuoto: 1 mm) per rompere il truciolo; vuoto = tutta la profondità in una volta
+- **DTB** sosta sul fondo in secondi
+- Serve il **troncatore** (allarme 2011 con un altro utensile). Il ciclo usa la sua larghezza e il riferimento sullo spigolo destro, e affianca gli affondamenti con un passo mai più largo dell'utensile; se la gola è più stretta dell'utensile scatta l'allarme 3009
+- L'avanzamento è quello attivo (`F` prima del ciclo). Il ciclo si sposta prima in Z e poi in X, a 1 mm sopra SPD: prima del ciclo si porta l'utensile sopra il pezzo, per esempio `G0 X42 Z-12`
+- Non ancora simulati: gole frontali o interne (`VARI` 2–4, 6–8, 12–14, 16–18), fianchi obliqui e raccordi (allarme 1013)
 
 Attenzione: in Siemens `G70`/`G71` sono le unità di misura, non i cicli di finitura e sgrossatura del Fanuc.
 
@@ -81,12 +97,12 @@ Attenzione: in Siemens `G70`/`G71` sono le unità di misura, non i cicli di fini
 
 ## Non ancora simulato (allarme 1013)
 
-- Cicli: `CYCLE93` (gola), `CYCLE97` (filettatura), `POCKET3`/`POCKET4` (tasche), `CYCLE71`/`72`
+- Cicli: `CYCLE97` (filettatura), `POCKET3`/`POCKET4` (tasche), `CYCLE71`/`72`
 - Filettatura `G33`, sottoprogrammi (`M17`), variabili e parametri R, istruzioni come `MSG`, `IF`, `GOTO`
 - Utensili con il nome (`T="FRESA10"`) e taglienti oltre il primo (`D2`…)
 - Sulla fresa: `X=IC(..)` e `X=AC(..)` nei singoli blocchi (usare `G90`/`G91` per tutto il blocco) e `G95`
 
-I prossimi candidati sono `CYCLE93` (gola) e le tasche della fresa.
+I prossimi candidati sono le tasche della fresa (`POCKET3`, `POCKET4`).
 
 ## Esempi
 
@@ -95,6 +111,8 @@ I prossimi candidati sono `CYCLE93` (gola) e le tasche della fresa.
 | *Tornio 1* (`tornio-siemens-01-cilindratura.nc`) | lo stesso pezzo dell'esempio Fanuc: `T1 D1`, `G95`, `G96 … LIMS=` |
 | *Tornio 2* (`tornio-siemens-02-raccordi.nc`) | sgrossatura con `X=IC(1)`, finitura con `G42` e archi `CR=` |
 | *Tornio 3* (`tornio-siemens-03-cycle95.nc`) | lo stesso pezzo dell'esempio Fanuc con G71/G70: `CYCLE95` con `VARI=1` e poi `VARI=5` con `G42`, profilo dopo `M30` tra due etichette |
+| *Tornio 4* (`tornio-siemens-04-cycle93.nc`) | la stessa gola dell'esempio Fanuc: `CYCLE93` con `VARI=5`, il ciclo calcola le due passate del troncatore |
+| *Esercizio — Perché il ciclo di gola non parte?* (`esercizio-tornio-siemens-gola.nc`) | `CYCLE93` con lo sgrossatore `T1`: allarme 2011 alla riga 9 |
 | *Esercizio — Perché la macchina non parte?* (`esercizio-tornio-siemens-lims.nc`) | `G96` senza `LIMS`: allarme 2005 alla riga 5 |
 | *Fresa 3* (`fresa-siemens-03-foratura.nc`) | gli stessi fori dell'esempio Fanuc: `MCALL CYCLE81`, poi `CYCLE83` a beccate |
 | *Fresa 4* (`fresa-siemens-04-contorno-g41.nc`) | lo stesso contorno dell'esempio Fanuc: `T1 M6` senza `G43`, `G41`, `CR=`, `G74` |

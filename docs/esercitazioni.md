@@ -25,6 +25,7 @@ Ogni esercizio è in `examples/` e i test controllano che dia proprio l'allarme 
 | Esempio | Cosa succede | Allarme | Correzione | Cosa si impara |
 |---|---|---|---|---|
 | *Perché la macchina non parte?* (`esercizio-tornio-siemens-lims.nc`, linguaggio Siemens) | `G96` senza limite di giri | 2005 alla riga 5 | `G96 S180 LIMS=2000 M3` | con G96 i giri salgono quando il diametro cala |
+| *Perché il ciclo di gola non parte?* (`esercizio-tornio-siemens-gola.nc`, linguaggio Siemens) | `CYCLE93` con lo sgrossatore `T1 D1` | 2011 alla riga 9 | `T2 D1` (troncatore) prima del ciclo | ogni lavorazione ha il suo utensile; il ciclo di gola usa la larghezza del troncatore |
 
 ### Fresa
 
