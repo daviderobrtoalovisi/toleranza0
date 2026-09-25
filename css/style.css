@@ -714,10 +714,15 @@ body, button, select, select option, input, textarea { text-transform: uppercase
 .intro-dialog {
   width: min(1000px, 94vw);
   max-height: 92vh;
+  /* su iPhone le barre di Safari mangiano altezza: dvh tiene conto di quelle */
+  max-height: 92dvh;
   padding: 0;
   border: 0;
   border-radius: 20px;
-  overflow: hidden;
+  /* se il contenuto non ci sta (telefoni bassi) si scorre dentro il riquadro */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   color: #f2f5fb;
   background:
     radial-gradient(120% 90% at 12% 0%, rgba(122, 214, 160, 0.16), transparent 60%),
@@ -904,11 +909,18 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   .intro-qr img { width: 168px; height: 168px; }
 }
 
-/* Sul telefono il QR non serve: il sito e' gia' aperto li' */
+/* Sul telefono il QR non serve nell'intestazione: il sito e' gia' aperto li' */
 @media (max-width: 700px) {
   .qr-badge { display: none; }
-  .intro { padding: 24px 20px 26px; gap: 20px; }
-  .intro-text { font-size: 15px; }
+  .intro { padding: 20px 18px 22px; gap: 16px; }
+  .intro-logo { width: 52px; height: 52px; }
+  .intro-school { margin-bottom: 14px; font-size: 12px; }
+  .intro-text { margin-top: 16px; font-size: 15px; line-height: 1.5; }
+  .intro-credits-title { margin-top: 16px; }
+  .intro-credits { font-size: 13px; line-height: 1.45; }
+  .intro-actions { margin-top: 20px; gap: 12px; }
+  .intro-qr { padding: 14px 14px 10px; }
+  .intro-qr img { width: 150px; height: 150px; }
 }
 
 /* Il riquadro del QR e' un contenitore con il suo pulsante di chiusura */
