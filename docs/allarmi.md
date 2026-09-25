@@ -64,8 +64,8 @@ Un programma senza M30 non dà allarme: alla fine compare il messaggio «Program
 | 3004 | Fuori corsa | `G00 X400` (limite X300) | controllare valore e segno |
 | 3005 | Passata troppo profonda | T01 da Ø50 direttamente a X30 | dividere in più passate |
 | 3008 | Fresa: punta mossa di lato nel materiale | `G01 Z-5` con la punta e poi `X60` | risalire sopra il pezzo prima di spostarsi |
-| 3006 | Blocco del profilo non trovato | `G71 P100 Q999` senza una riga N999 | P e Q devono essere numeri N presenti |
-| 3007 | Profilo non adatto a G71 | primo blocco con Z, oppure una gola nel profilo | primo blocco solo X, X sempre crescenti, Z sempre decrescenti |
+| 3006 | Blocco del profilo non trovato | `G71 P100 Q999` senza una riga N999 | P e Q devono essere numeri N presenti. In Siemens: etichetta di `CYCLE95` non trovata |
+| 3007 | Profilo non adatto a G71 | primo blocco con Z, oppure una gola nel profilo | primo blocco solo X, X sempre crescenti, Z sempre decrescenti. In Siemens anche profilo di `CYCLE95` scritto prima di `M30` |
 
 Fine corsa (quote pezzo, X in diametro): X da -10 a 300, Z da -300 a 200. Si cambiano in `js/machines/lathe/machine.js`.
 

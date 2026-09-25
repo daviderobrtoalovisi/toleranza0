@@ -11,6 +11,7 @@ Tabelle dei codici: [`js/machines/lathe/codes-siemens.js`](../js/machines/lathe/
 | | Siemens | Come il Fanuc |
 |---|---|---|
 | Commenti | `; commento` fino a fine riga | `( commento )` |
+| Etichette | `INIZIO:` a inizio blocco (dopo l'eventuale N) | — |
 | Grezzo nel programma | `; (GREZZO D50 L80)` | `(GREZZO D50 L80)` |
 | Indirizzi con nome | `CR=5`, `LIMS=2000` | — |
 | Quota incrementale in un blocco | `X=IC(2)`, assoluta `X=AC(20)` | `U2` (tornio) |
@@ -31,6 +32,23 @@ Tabelle dei codici: [`js/machines/lathe/codes-siemens.js`](../js/machines/lathe/
 | `G74 X1=0 Z1=0` | ritorno al punto di riferimento | `G28 U0 W0` |
 | `G70` / `G71` | pollici / millimetri | `G20` / `G21` |
 | `G41` / `G42` / `G40` | compensazione del raggio di punta | uguale |
+
+| `CYCLE95("INIZIO:FINE", …, VARI)` | sgrossatura e finitura del profilo scritto dopo `M30` | `G71` / `G70` |
+
+### Ciclo di sgrossatura CYCLE95
+
+`CYCLE95("INIZIO:FINE", MID, FALZ, FALX, FAL, FF1, FF2, FF3, VARI, DT, DAM, _VRT)`
+
+- **"INIZIO:FINE"** le due etichette che racchiudono il profilo finito. Il profilo va scritto **dopo `M30`**: il programma finisce prima di arrivarci e il ciclo lo usa come disegno del pezzo
+- **MID** profondità di passata, in raggio (come `U` nel primo blocco `G71`)
+- **FALZ** e **FALX** sovrametallo per la finitura in Z e in X; FALX si scrive **in raggio** (in Fanuc `U` è in diametro: FALX=0.3 corrisponde a U0.6)
+- **FF1** avanzamento di sgrossatura, **FF3** avanzamento di finitura
+- **VARI** tipo di lavorazione: `1` sgrossatura, `5` finitura, `9` sgrossatura e finitura
+- **_VRT** distacco dal profilo dopo ogni passata (vuoto: 1 mm; come `R` nel primo blocco `G71`)
+- Il ciclo parte dalla posizione dell'utensile e alla fine ci ritorna: prima del ciclo si porta l'utensile fuori dal grezzo, per esempio `G0 X42 Z2`
+- Il primo punto del profilo ha X e Z (`PROFILO_INIZIO: G1 X18 Z0`); poi le quote X devono salire sempre e le Z scendere sempre, senza gole (allarme 3007)
+- Per la compensazione del raggio di punta si scrive `G42` prima del ciclo e `G40` dopo, come nell'esempio
+- Non ancora simulati: `VARI` trasversali o interni (2–4, 6–8, 10–12), il sovrametallo lungo il profilo `FAL`, il profilo in un sottoprogramma (allarme 1013). `FF2`, `DT` e `DAM` si possono scrivere ma non cambiano la simulazione
 
 Attenzione: in Siemens `G70`/`G71` sono le unità di misura, non i cicli di finitura e sgrossatura del Fanuc.
 
@@ -63,12 +81,12 @@ Attenzione: in Siemens `G70`/`G71` sono le unità di misura, non i cicli di fini
 
 ## Non ancora simulato (allarme 1013)
 
-- Cicli: `CYCLE95` (sgrossatura), `CYCLE93` (gola), `CYCLE97` (filettatura), `POCKET3`/`POCKET4` (tasche), `CYCLE71`/`72`
+- Cicli: `CYCLE93` (gola), `CYCLE97` (filettatura), `POCKET3`/`POCKET4` (tasche), `CYCLE71`/`72`
 - Filettatura `G33`, sottoprogrammi (`M17`), variabili e parametri R, istruzioni come `MSG`, `IF`, `GOTO`
 - Utensili con il nome (`T="FRESA10"`) e taglienti oltre il primo (`D2`…)
 - Sulla fresa: `X=IC(..)` e `X=AC(..)` nei singoli blocchi (usare `G90`/`G91` per tutto il blocco) e `G95`
 
-Il prossimo candidato è `CYCLE95` (sgrossatura del tornio).
+I prossimi candidati sono `CYCLE93` (gola) e le tasche della fresa.
 
 ## Esempi
 
@@ -76,6 +94,7 @@ Il prossimo candidato è `CYCLE95` (sgrossatura del tornio).
 |---|---|
 | *Tornio 1* (`tornio-siemens-01-cilindratura.nc`) | lo stesso pezzo dell'esempio Fanuc: `T1 D1`, `G95`, `G96 … LIMS=` |
 | *Tornio 2* (`tornio-siemens-02-raccordi.nc`) | sgrossatura con `X=IC(1)`, finitura con `G42` e archi `CR=` |
+| *Tornio 3* (`tornio-siemens-03-cycle95.nc`) | lo stesso pezzo dell'esempio Fanuc con G71/G70: `CYCLE95` con `VARI=1` e poi `VARI=5` con `G42`, profilo dopo `M30` tra due etichette |
 | *Esercizio — Perché la macchina non parte?* (`esercizio-tornio-siemens-lims.nc`) | `G96` senza `LIMS`: allarme 2005 alla riga 5 |
 | *Fresa 3* (`fresa-siemens-03-foratura.nc`) | gli stessi fori dell'esempio Fanuc: `MCALL CYCLE81`, poi `CYCLE83` a beccate |
 | *Fresa 4* (`fresa-siemens-04-contorno-g41.nc`) | lo stesso contorno dell'esempio Fanuc: `T1 M6` senza `G43`, `G41`, `CR=`, `G74` |

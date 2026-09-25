@@ -2,6 +2,13 @@
 
 Ogni versione ha un tag git (`vX.Y.Z`). Il numero è in `js/version.js` e si vede in alto nella pagina.
 
+## 1.4.0 — Siemens: ciclo di sgrossatura CYCLE95
+
+- Tornio in Siemens: `CYCLE95` per la sgrossatura (`VARI=1`), la finitura (`VARI=5`) e la lavorazione completa (`VARI=9`) di profili esterni longitudinali. Il profilo si scrive dopo `M30` tra due etichette (`PROFILO_INIZIO:` … `PROFILO_FINE:`); viene simulato come i cicli Fanuc G71/G70, con le righe del profilo evidenziate durante la finitura
+- Lettura delle etichette Siemens a inizio blocco (`INIZIO: G1 X18 Z0`)
+- Allarmi con testi Siemens: 2007 (parametri di `CYCLE95` mancanti), 3006 (etichetta non trovata), 3007 (profilo non adatto o scritto prima di `M30`)
+- Nuovo esempio Siemens *Tornio 3* con lo stesso pezzo e lo stesso tempo ciclo dell'esempio Fanuc con G71/G70 (controllato da un test)
+
 ## 1.3.0 — Siemens fase 2: cicli di foratura
 
 - Fresa in Siemens: cicli di foratura `CYCLE81`, `CYCLE82` (con sosta) e `CYCLE83` (a beccate), da soli nella posizione attuale oppure modali con `MCALL`; vengono simulati come i cicli Fanuc G81/G82/G83. Parametri mancanti: allarme 2007 con la scrittura Siemens del ciclo
