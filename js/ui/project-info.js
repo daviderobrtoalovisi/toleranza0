@@ -93,7 +93,8 @@ export function createQrBadge(onOpen) {
     remember(HIDE_BADGE_KEY, true);
   });
 
-  document.body.appendChild(badge);
+  // Sta nell'intestazione: in proiezione e' in alto a destra e non copre i pannelli
+  (document.querySelector('.app-header') || document.body).appendChild(badge);
 
   return {
     show() {

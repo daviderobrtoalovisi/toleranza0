@@ -443,104 +443,159 @@ body[data-state="alarm"] .status-message { color: var(--error); font-weight: 600
 .header-actions .field { min-width: 0; max-width: 100%; }
 .header-actions .field select { min-width: 0; max-width: 100%; }
 
-/* Colori dei menu: sfumature morbide dal verde acqua al viola, pulsanti arrotondati e ombre leggere.
-   Ogni gruppo di comandi e ogni pannello ha la sua sfumatura (da --mc a --mc2, da --pc a --pc2).
-   Tutti i colori reggono il testo bianco con contrasto almeno 4.5:1, anche al proiettore. */
+/* ------------------------------------------------------------------
+   Tema "notte": fondo scuro, un solo colore d'accento (il verde del logo
+   della scuola), comandi sobri. Stessa impostazione della schermata di
+   apertura, pensata per essere proiettata: contrasto alto e poco rumore.
+   Ogni pannello resta riconoscibile da una sottile barra colorata.
+   ------------------------------------------------------------------ */
 :root {
-  --fluid-teal: #0b7a86;
-  --fluid-blue: #1565c0;
-  --fluid-purple: #6a1fd1;
-  --fluid-magenta: #a4219c;
-  --fluid-green: #0d7d4d;
-  --fluid-amber: #8a5a00;
-  --fluid-orange: #a8480f;
-  --fluid-raspberry: #b5175b;
+  --lime: #86d24a;          /* accento, ripreso dal logo IIS Giulio Natta */
+  --lime-soft: #a8e276;
 
-  --header-bg: linear-gradient(100deg, var(--fluid-teal), var(--fluid-blue) 45%, var(--fluid-purple));
-  --page-bg: linear-gradient(135deg, #f3effd 0%, #eef6fb 50%, #ecfaf8 100%);
-  --soft-shadow: 0 2px 10px rgba(60, 40, 120, 0.12);
-  --lift-shadow: 0 6px 18px rgba(60, 40, 120, 0.22);
-  --bg: #f3f1fb;
-  --surface-2: #f8f7fd;
-  --border: #dcd7ee;
-  --muted: #474257;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --page-bg: linear-gradient(135deg, #16122a 0%, #111a26 50%, #0e1d1f 100%);
-    --soft-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
-    --lift-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
-    --bg: #14121f;
-    --surface: #1d1a2b;
-    --surface-2: #181625;
-    --border: #353049;
-    --muted: #c4bfd8;
-  }
+  --panel-editor: #3aa7c4;
+  --panel-sim: #4cbf7d;
+  --panel-block: #7d8cf0;
+  --panel-alarms: #f0688a;
+
+  --bg: #070b15;
+  --surface: #111828;
+  --surface-2: #0c1220;
+  --border: #1f2a42;
+  --text: #e9eefb;
+  --muted: #94a2be;
+  --accent: var(--lime);
+
+  --start: var(--lime);
+  --reset: #f0883e;
+  --error: #ff7f78;
+  --error-bg: #351b1e;
+  --current-bg: #3a3412;
+  --alarm-bg: #3d1d22;
+
+  --page-bg:
+    radial-gradient(90% 60% at 10% 0%, rgba(134, 210, 74, 0.07), transparent 60%),
+    radial-gradient(80% 60% at 100% 100%, rgba(125, 140, 240, 0.08), transparent 55%),
+    #070b15;
+  --soft-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+
+  /* Colori della simulazione: li legge anche js/render/lathe-2d.js */
+  --sim-bg: #080d18;
+  --sim-grid: #16203a;
+  --sim-text: #7787a6;
+  --sim-axis: #94a2be;
+  --sim-origin: #e9eefb;
+  --sim-material: #7d8995;
+  --sim-material-hidden: rgba(125, 137, 149, 0.35);
+  --sim-chuck: #404a59;
+  --sim-chuck-edge: #232a36;
+  --sim-jaw: #5b6675;
+  --sim-tool: #e0a526;
+  --sim-tool-edge: #6d4c00;
+  --sim-holder: #8b95a3;
+  --sim-holder-edge: #5b6675;
+  --sim-rapid: #ff6b7d;
+  --sim-feed: #5cc8ff;
+  --sim-collision: #ff4d5e;
 }
 
 body { background: var(--page-bg); background-attachment: fixed; }
 
-#btn-new, #btn-open, #btn-save { --mc: var(--fluid-teal); --mc2: var(--fluid-blue); }
-#examples { --mc: var(--fluid-purple); --mc2: var(--fluid-magenta); }
-#btn-start { --mc: var(--fluid-green); --mc2: var(--fluid-teal); }
-#btn-pause { --mc: var(--fluid-amber); --mc2: var(--fluid-orange); }
-#btn-step { --mc: var(--fluid-blue); --mc2: var(--fluid-purple); }
-#btn-reset { --mc: var(--fluid-orange); --mc2: var(--fluid-raspberry); }
-#btn-help { --mc: var(--fluid-magenta); --mc2: var(--fluid-raspberry); }
-.field-machine { --mc: var(--fluid-teal); --mc2: var(--fluid-blue); }
-.field-dialect { --mc: var(--fluid-purple); --mc2: var(--fluid-magenta); }
-.field-model { --mc: var(--fluid-green); --mc2: var(--fluid-teal); }
-#btn-fit { --mc: var(--fluid-green); --mc2: var(--fluid-teal); }
-
-:is(#btn-new, #btn-open, #btn-save, #examples, #btn-start, #btn-pause, #btn-step, #btn-reset, #btn-help, .header-actions .field > span, #btn-fit) {
-  background: linear-gradient(120deg, var(--mc), var(--mc2));
+/* Intestazione: una riga sobria, il nome spaziato, i menu senza pillole */
+.app-header {
+  background: linear-gradient(180deg, #0b1122 0%, #080d1a 100%);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.brand-name { color: #fff; font-weight: 600; letter-spacing: 0.16em; }
+.brand-sub { color: var(--muted); font-size: 13px; letter-spacing: 0.12em; }
+.version { color: #5f6d8a; }
+.app-header > .header-actions { flex: 1 1 auto; }
+.header-actions .field > span {
+  padding: 0;
   border: 0;
-  border-radius: 999px;
-  color: #fff;
+  background: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+/* Comandi: fondo scuro, bordo sottile, l'accento solo dove serve */
+button, select, .file-name {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+button { font-weight: 600; }
+button:hover:not(:disabled), select:hover:not(:disabled) { border-color: var(--lime); }
+select option { background: var(--surface); color: var(--text); }
+
+#btn-start:not(:disabled) {
+  background: var(--lime);
+  border-color: var(--lime);
+  color: #0c2010;
   font-weight: 700;
+  box-shadow: 0 0 18px rgba(134, 210, 74, 0.25);
+}
+#btn-start:not(:disabled):hover { background: var(--lime-soft); border-color: var(--lime-soft); }
+#btn-reset:not(:disabled) { color: var(--reset); border-color: color-mix(in srgb, var(--reset) 55%, var(--border)); }
+#btn-pause:not(:disabled) { color: #f2c14e; border-color: color-mix(in srgb, #f2c14e 45%, var(--border)); }
+#btn-intro, #btn-help { color: var(--muted); }
+#btn-intro:hover, #btn-help:hover { color: var(--text); }
+
+.toolbar { background: rgba(12, 18, 32, 0.75); border-bottom: 1px solid var(--border); }
+.field, .check { color: var(--muted); font-weight: 600; }
+.check input, #speed { accent-color: var(--lime); }
+
+/* Pannelli: nessun riempimento colorato, solo una barra sottile che li distingue */
+.panel-editor { --pc: var(--panel-editor); }
+.panel-sim { --pc: var(--panel-sim); }
+.panel-block { --pc: var(--panel-block); }
+.panel-alarms { --pc: var(--panel-alarms); }
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
   box-shadow: var(--soft-shadow);
 }
-:is(#btn-new, #btn-open, #btn-save, #btn-start, #btn-pause, #btn-step, #btn-reset, #btn-help, #btn-fit, #examples) {
-  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+.panel-title {
+  position: relative;
+  padding-left: 22px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  border-bottom: 1px solid var(--border);
 }
-:is(#btn-new, #btn-open, #btn-save, #examples, #btn-start, #btn-pause, #btn-step, #btn-reset, #btn-help, #btn-fit):hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--lift-shadow);
-  filter: brightness(1.08);
+.panel-title::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 3px;
+  height: 13px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: var(--pc, var(--muted));
 }
-:is(#btn-new, #btn-open, #btn-save, #btn-start, #btn-pause, #btn-step, #btn-reset, #btn-help, #btn-fit):active:not(:disabled) { transform: translateY(0); }
-select option { background: var(--surface); color: var(--text); }
-.header-actions .field > span { padding: 6px 14px; box-shadow: none; }
-.header-actions select, .file-name { border-radius: 999px; }
-.header-actions select { border: 0; font-weight: 600; box-shadow: var(--soft-shadow); }
-.header-actions .field > span { border: 1px solid rgba(255, 255, 255, 0.7); }
+.panel-head { background: transparent; border-bottom: 1px solid var(--border); }
+.panel-head .setup { color: var(--muted); }
+.status-bar { background: rgba(12, 18, 32, 0.9); border-top: 1px solid var(--border); }
 
-/* Intestazione sfumata: i menu subito dopo il nome, la Guida in fondo a destra sulla stessa riga */
-.app-header { background: var(--header-bg); border-bottom: 0; color: #fff; box-shadow: var(--soft-shadow); }
-.brand-name { color: #fff; }
-.brand-sub, .version { color: #eee8ff; }
-.app-header > .header-actions { flex: 1 1 auto; }
-#btn-help { margin-left: auto; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8); }
+/* Allarmi: il rosso resta il segnale piu' forte dell'interfaccia */
+.alarm-item { border-left-width: 3px; border-radius: 0 8px 8px 0; }
 
-.toolbar { background: color-mix(in srgb, var(--surface) 70%, transparent); border-bottom: 1px solid var(--border); }
-.field, .check { color: var(--text); font-weight: 600; }
-.check input, #speed { accent-color: var(--fluid-purple); }
-
-.panel-editor { --pc: var(--fluid-teal); --pc2: var(--fluid-blue); }
-.panel-sim { --pc: var(--fluid-green); --pc2: var(--fluid-teal); }
-.panel-block { --pc: var(--fluid-blue); --pc2: var(--fluid-purple); }
-.panel-alarms { --pc: var(--fluid-raspberry); --pc2: var(--fluid-magenta); }
-.panel { border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--soft-shadow); }
-.panel-title { background: linear-gradient(100deg, var(--pc, var(--muted)), var(--pc2, var(--muted))); color: #fff; font-weight: 700; font-size: 14px; border-bottom: 0; }
-.panel-head { background: linear-gradient(100deg, color-mix(in srgb, var(--pc) 12%, var(--surface)), color-mix(in srgb, var(--pc2) 12%, var(--surface))); border-bottom: 0; }
-.panel-head .panel-title { border-radius: 0 0 14px 0; }
-.panel-head .setup { color: var(--text); }
-.status-bar { background: color-mix(in srgb, var(--surface) 80%, transparent); }
-
-/* Scritte in stampatello maiuscolo. Restano come sono solo il testo del programma,
-   il nome del file e gli indirizzi dei siti, dove le minuscole contano. */
+/* Scritte in stampatello maiuscolo per etichette e comandi. Restano in
+   minuscolo il testo del programma e tutte le frasi lunghe da leggere:
+   in stampatello si leggono peggio, anche al proiettore. */
 body, button, select, select option, input, textarea { text-transform: uppercase; }
-.editor-textarea, .file-name, .machine-info a { text-transform: none; }
+.editor-textarea, .file-name, .machine-info a,
+.alarm-message, .alarm-hint, .word-desc, .block-comment, .muted, .tool-note,
+.help-body, .status-message { text-transform: none; }
 
 /* ------------------------------------------------------------------
    Telefoni: una scheda alla volta a tutto schermo
@@ -555,7 +610,7 @@ body, button, select, select option, input, textarea { text-transform: uppercase
 
   /* Intestazione compatta: titolo su una riga, i tre menu su una riga sola
      che scorre di lato, la Guida sempre visibile in alto a destra */
-  .app-header { position: relative; padding: 6px 10px; gap: 4px; }
+  .app-header { position: relative; padding: 6px 10px; gap: 4px; padding-right: 10px; }
   .brand-sub, .version { display: none; }
   .brand-name { font-size: 17px; }
   .app-header > .header-actions {
@@ -598,15 +653,16 @@ body, button, select, select option, input, textarea { text-transform: uppercase
     text-overflow: ellipsis;
   }
   .tab[aria-selected="true"] {
-    background: linear-gradient(100deg, var(--pc, var(--accent)), var(--pc2, var(--accent)));
-    border-color: transparent;
-    color: #fff;
+    background: color-mix(in srgb, var(--pc, var(--accent)) 22%, var(--surface));
+    border-color: var(--pc, var(--accent));
+    color: var(--text);
+    box-shadow: inset 0 -3px 0 var(--pc, var(--accent));
   }
-  /* Ogni scheda prende i colori del suo pannello */
-  .tab[data-tab="editor"] { --pc: var(--fluid-teal); --pc2: var(--fluid-blue); }
-  .tab[data-tab="sim"] { --pc: var(--fluid-green); --pc2: var(--fluid-teal); }
-  .tab[data-tab="block"] { --pc: var(--fluid-blue); --pc2: var(--fluid-purple); }
-  .tab[data-tab="alarms"] { --pc: var(--fluid-raspberry); --pc2: var(--fluid-magenta); }
+  /* Ogni scheda prende il colore del suo pannello */
+  .tab[data-tab="editor"] { --pc: var(--panel-editor); }
+  .tab[data-tab="sim"] { --pc: var(--panel-sim); }
+  .tab[data-tab="block"] { --pc: var(--panel-block); }
+  .tab[data-tab="alarms"] { --pc: var(--panel-alarms); }
 
   /* Allarme scattato mentre si guarda un'altra scheda */
   .tab.has-alarm { color: var(--error); border-color: var(--error); }
@@ -787,11 +843,14 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   color: #5d6a86;
 }
 
-/* Riquadro con il QR sempre visibile, per chi guarda la proiezione */
+/* Riquadro con il QR sempre visibile, per chi guarda la proiezione.
+   Sta nell'angolo dell'intestazione: non copre nessun pannello. */
+.app-header { position: relative; padding-right: 150px; }
 .qr-badge {
-  position: fixed;
+  position: absolute;
   right: 14px;
-  bottom: 46px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 5;
   display: grid;
   justify-items: center;
@@ -803,7 +862,7 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
   cursor: pointer;
 }
-.qr-badge img { width: 104px; height: 104px; display: block; }
+.qr-badge img { width: 84px; height: 84px; display: block; }
 .qr-badge span {
   font-size: 10px;
   font-weight: 700;
