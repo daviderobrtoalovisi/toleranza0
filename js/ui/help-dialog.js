@@ -1,5 +1,6 @@
 import { ALARMS } from '../alarms/catalog.js';
 import { escapeHtml } from './alarm-panel.js';
+import { basics } from './help-basics.js';
 
 // Guida per gli studenti, dentro la pagina. Codici e allarmi vengono dalle tabelle della macchina
 // attiva e dal catalogo: la guida è sempre allineata al simulatore, senza testi da aggiornare a mano.
@@ -18,13 +19,16 @@ export const SHORTCUTS = [
   ['F1', 'Apre questa guida']
 ];
 
+const TAB_KEY = 'toleranza0.helpTab';
+
 export function createHelpDialog(dialog, { getAdapter }) {
-  let tab = 'uso';
+  let tab = recallTab();
 
   dialog.addEventListener('click', (event) => {
     const button = event.target.closest('[data-tab]');
     if (button) {
       tab = button.dataset.tab;
+      rememberTab(tab);
       render();
     }
     if (event.target.closest('[data-close]') || event.target === dialog) dialog.close();
@@ -32,7 +36,12 @@ export function createHelpDialog(dialog, { getAdapter }) {
 
   function render() {
     const adapter = getAdapter();
-    const tabs = [['uso', 'Come si usa'], ['codici', 'Codici'], ['allarmi', 'Allarmi']];
+    const tabs = [
+      ['semplice', 'In parole semplici'],
+      ['uso', 'Come si usa'],
+      ['codici', 'Codici'],
+      ['allarmi', 'Allarmi']
+    ];
     dialog.innerHTML = `
       <div class="help">
         <header class="help-head">
@@ -42,7 +51,7 @@ export function createHelpDialog(dialog, { getAdapter }) {
           </nav>
           <button type="button" class="help-close" data-close aria-label="Chiudi">✕</button>
         </header>
-        <div class="help-body">${tab === 'codici' ? codes(adapter) : tab === 'allarmi' ? alarms() : usage(adapter)}</div>
+        <div class="help-body">${body(tab, adapter)}</div>
       </div>`;
   }
 
@@ -56,6 +65,31 @@ export function createHelpDialog(dialog, { getAdapter }) {
       return dialog.open;
     }
   };
+}
+
+function body(tab, adapter) {
+  if (tab === 'codici') return codes(adapter);
+  if (tab === 'allarmi') return alarms();
+  if (tab === 'uso') return usage(adapter);
+  return basics(adapter);
+}
+
+// La scheda aperta l'ultima volta: chi programma ritrova i codici,
+// chi sta imparando ritrova la spiegazione semplice
+function rememberTab(value) {
+  try {
+    localStorage.setItem(TAB_KEY, value);
+  } catch (error) {
+    /* pazienza: vale solo per questa visita */
+  }
+}
+
+function recallTab() {
+  try {
+    return localStorage.getItem(TAB_KEY) || 'semplice';
+  } catch (error) {
+    return 'semplice';
+  }
 }
 
 // Consigli per macchina e linguaggio
