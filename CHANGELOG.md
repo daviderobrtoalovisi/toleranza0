@@ -2,6 +2,10 @@
 
 Ogni versione ha un tag git (`vX.Y.Z`). Il numero è in `js/version.js` e si vede in alto nella pagina.
 
+## 1.7.2 — Nuovi colori
+
+- Menu, pulsanti e pannelli con una paletta "armocromia autunno" (petrolio, oliva, senape, ruggine, melanzana, bordeaux, cammello), sempre con testo bianco a contrasto alto; sfondi color crema
+
 ## 1.7.1 — Colori e scritte più leggibili
 
 - Menu, pulsanti e pannelli colorati, a colori pieni con testo bianco e contrasto alto, leggibili anche al proiettore e sul tablet
