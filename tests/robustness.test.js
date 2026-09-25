@@ -136,7 +136,7 @@ test('i programmi casuali arrivano davvero a muovere l\'utensile', () => {
 // Siemens SINUMERIK: stessi programmi strani più quelli tipici della sua sintassi
 const SIEMENS_STRANGE = [
   'CR=', 'CR', 'CR5', 'X=', 'X=IC(', 'X=IC()', 'X=IC(5', 'X=AC(-)', 'X==5', 'LIMS=-1', 'DIAMON=5',
-  'T="', 'T=""', 'CYCLE81(', 'CYCLE81()', 'CYCLE95("P",2)', 'G74', 'G74 X1=0', 'G74 Z1=5',
+  'T="', 'T=""', 'CYCLE81(', 'CYCLE81()', 'CYCLE95("P",2)', 'CYCLE95("A:B",2)', 'CYCLE95("A:B", 2, , , , 0.2, , 0.1, 9)\nM30\nA: G1 X10 Z0\nB: X20', 'AA: G0 X10', 'N5 AA: BB: X1', 'X: G0', 'G74', 'G74 X1=0', 'G74 Z1=5',
   'D0', 'D1', 'T1 D0\nG0 X10', 'T1 D2', 'G91 X=AC(5)', 'G90 X=IC(5)', 'DIAMOF\nG0 X10\nDIAMON',
   'G4 F2', 'G4 S10', 'G4', 'M3 M8 M5 M9', 'M6 M6', 'T2 M6\nG41 X0 Y0\nG40', 'G41 X0 Y0',
   'G96 S100 LIMS=0 M3', 'G70\nG0 X1 Z1', ';;;', 'N10 ; solo commento', '((((', ';(GREZZO D50 L80)'
