@@ -125,6 +125,11 @@ export const ALARMS = {
     message: 'G41/G42 D{d}: correttore di raggio sbagliato per l\'utensile T{tool}',
     hint: 'Con la compensazione del raggio serve D con il numero dell\'utensile montato: con T{tool} M06 si scrive G41 D{tool} (o G42 D{tool}). Con un D sbagliato la macchina userebbe il raggio di un\'altra fresa.'
   },
+  2011: {
+    category: 'parametri',
+    message: 'Il ciclo {cycle} richiede un troncatore: l\'utensile T{tool} non è adatto',
+    hint: 'La gola si fa con un utensile per gole, che ha una larghezza nota. Monta il troncatore prima del ciclo, per esempio T2 D1.'
+  },
 
   // 3000–3999 Geometria e limiti
   3001: {
@@ -166,6 +171,11 @@ export const ALARMS = {
     category: 'geometria',
     message: 'Punta da foratura mossa di lato nel materiale',
     hint: 'La punta taglia solo scendendo lungo il suo asse. Per spostarti in X o Y risali prima sopra il pezzo; per fresare usa una fresa.'
+  },
+  3009: {
+    category: 'geometria',
+    message: 'Gola più stretta dell\'utensile: {width} mm contro un troncatore largo {tool} mm',
+    hint: 'La larghezza da sgrossare (larghezza della gola meno i sovrametalli sui fianchi) deve essere almeno quella del troncatore. Usa un troncatore più stretto, allarga la gola o riduci il sovrametallo sui fianchi.'
   },
 
   // 4000–4999 Collisioni

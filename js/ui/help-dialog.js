@@ -70,7 +70,7 @@ function usage(adapter) {
   const siemens = adapter.dialect === 'siemens';
   const stock = adapter.id === 'mill' ? '(GREZZO X100 Y80 Z30)' : '(GREZZO D50 L80)';
   const machine = `<li><b>${adapter.id === 'mill' ? 'Fresa' : 'Tornio'}${siemens ? ' in Siemens SINUMERIK' : ''}:</b> ${MACHINE_NOTES[`${adapter.id}-${adapter.dialect}`]}</li>
-    ${siemens ? '<li>Il programma Siemens viene tradotto nei movimenti equivalenti: sulla fresa si possono usare i cicli di foratura <code>CYCLE81</code>, <code>CYCLE82</code> e <code>CYCLE83</code>, anche con <code>MCALL</code>, sul tornio la sgrossatura <code>CYCLE95</code> con il profilo scritto dopo <code>M30</code> tra due etichette; gli altri cicli e i sottoprogrammi non sono ancora simulati.</li>' : ''}
+    ${siemens ? '<li>Il programma Siemens viene tradotto nei movimenti equivalenti: sulla fresa si possono usare i cicli di foratura <code>CYCLE81</code>, <code>CYCLE82</code> e <code>CYCLE83</code>, anche con <code>MCALL</code>, sul tornio la sgrossatura <code>CYCLE95</code> con il profilo scritto dopo <code>M30</code> tra due etichette e le gole <code>CYCLE93</code> con il troncatore; gli altri cicli e i sottoprogrammi non sono ancora simulati.</li>' : ''}
     <li>${adapter.id === 'mill' ? 'Vista 3D: trascina con il tasto sinistro per ruotare, con il destro per spostare, rotella per lo zoom.' : 'Vista: rotella per lo zoom, trascina per spostare.'}</li>`;
   return `
     <ol class="help-steps">

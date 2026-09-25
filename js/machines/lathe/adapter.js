@@ -56,7 +56,7 @@ export function createLatheAdapter(model = GENERIC.lathe, dialect = 'fanuc') {
       return { blocks: result.blocks, alarms: result.alarms.map(localize) };
     },
     interpret(blocks, { offsets, blockDelete }) {
-      const input = siemens ? translateSiemens(blocks, 'lathe') : blocks;
+      const input = siemens ? translateSiemens(blocks, 'lathe', { tools: LATHE_TOOLS }) : blocks;
       const program = interpretLathe(input, { params, tools: LATHE_TOOLS, offsets, blockDelete });
       for (const step of program.steps) step.alarm = localize(step.alarm);
       return program;

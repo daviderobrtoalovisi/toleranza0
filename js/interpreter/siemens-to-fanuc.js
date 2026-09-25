@@ -14,8 +14,8 @@ import { isExecutable } from '../parser/check-program.js';
 //           G74 Z1=0 -> G91 G28 Z0, CYCLE81/82/83 (anche con MCALL) -> G81/G82/G83 con G99
 //   entrambi: CR= -> R, G4 F.. -> G04 X.. (secondi), G70/G71 -> G20/G21, G500 -> nessuna origine
 
-export function translateSiemens(blocks, machine) {
-  const state = { absolute: true, diameter: true, tool: null, nextTool: null, units: 21 };
+export function translateSiemens(blocks, machine, { tools = {} } = {}) {
+  const state = { absolute: true, diameter: true, tool: null, nextTool: null, units: 21, tools };
   state.contours = machine === 'lathe' ? findContours(blocks) : new Map();
   const starts = new Map([...state.contours.values()].filter((c) => !c.alarm).map((c) => [c.from, c]));
   const out = [];
@@ -83,10 +83,11 @@ function latheBlock(block, state) {
   const words = [];
   if (w.N) words.push(word('N', w.N.value));
 
-  if (w.CYCLE95) {
-    const extra = block.words.find((item) => item.letter !== 'N' && item.letter !== 'CYCLE95');
+  const cycle = ['CYCLE95', 'CYCLE93'].find((name) => w[name]);
+  if (cycle) {
+    const extra = block.words.find((item) => item.letter !== 'N' && item.letter !== cycle);
     if (extra) return unsupported(block, `${extra.letter} nello stesso blocco del ciclo: scrivere il ciclo in un blocco a parte`);
-    return cycle95(block, w.CYCLE95.raw, state, words);
+    return (cycle === 'CYCLE95' ? cycle95 : cycle93)(block, w[cycle].raw, state, words);
   }
 
   for (const g of gs) {
@@ -388,4 +389,91 @@ function cycle95(block, raw, state, words) {
     blocks.push([...(rough ? [] : words), word('G', 70), word('P', contour.p), word('Q', contour.q), word('F', ff3)]);
   }
   return { blocks };
+}
+
+// ---------- Ciclo di gola del tornio CYCLE93 ----------
+//
+// CYCLE93(SPD, SPL, WIDG, DIAG, STA1, ANG1, ANG2, RCO1, RCI1, RCO2, RCI2, FAL1, FAL2, IDEP, DTB, VARI, _VRT)
+// Gola rettangolare esterna longitudinale (VARI=1 o 11: SPL è il fianco sinistro; 5 o 15: il fianco destro).
+// Si traduce in movimenti G0/G1/G4 con la riga del ciclo: affondamenti a beccate di IDEP affiancati
+// (passo non più largo del troncatore), sosta DTB sul fondo, poi finitura dei fianchi e del fondo
+// se ci sono sovrametalli. Il troncatore ha il riferimento sullo spigolo destro (larghezza da tools.js).
+// Ipotesi: DIAG, IDEP, FAL1 e FAL2 in raggio; distacco e scarico delle beccate = _VRT (vuoto: 1 mm).
+
+const CYCLE93_HOW = 'Si scrive CYCLE93(SPD, SPL, WIDG, DIAG, STA1, ANG1, ANG2, RCO1, RCI1, RCO2, RCI2, FAL1, FAL2, IDEP, DTB, VARI): diametro e quota Z di partenza, larghezza e profondità della gola, angoli e raccordi (0 per una gola rettangolare), sovrametalli sul fondo e sui fianchi, profondità di ogni affondamento, sosta sul fondo, tipo (5: gola esterna con SPL sul fianco destro). Per esempio CYCLE93(40, -12, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.2, 2, 0.5, 5).';
+
+function cycle93(block, raw, state, words) {
+  const nums = raw.slice(1, -1).split(',').map((s) => s.trim()).map((s) => (s === '' ? null : Number(s)));
+  if (nums.some((a) => a !== null && !Number.isFinite(a))) return { alarm: createAlarm(1003, block.line, { letter: 'CYCLE93', raw }) };
+  const [spd = null, spl = null, widg = null, diag = null, sta1, ang1, ang2, rco1, rci1, rco2, rci2, fal1, fal2, idep = null, dtb, vari = null, vrt] = nums;
+  const missing = (what) => ({ alarm: createAlarm(2007, block.line, { cycle: 'CYCLE93', missing: what, how: CYCLE93_HOW }) });
+
+  if (spd === null || spl === null) return missing('il punto di partenza SPD (diametro) o SPL (quota Z)');
+  if (!widg || widg <= 0) return missing('la larghezza della gola WIDG (maggiore di zero)');
+  if (!diag || diag <= 0) return missing('la profondità della gola DIAG (maggiore di zero)');
+  if (vari === null) return missing('il tipo di lavorazione VARI');
+  if (![1, 5, 11, 15].includes(vari)) {
+    if ([2, 3, 4, 6, 7, 8, 12, 13, 14, 16, 17, 18].includes(vari)) {
+      return unsupported(block, `CYCLE93 con VARI=${vari} (gola frontale o interna): per ora solo la gola esterna longitudinale, VARI=1 o 5`);
+    }
+    return missing('un tipo di lavorazione VARI da 1 a 8 (o da 11 a 18)');
+  }
+  if ([sta1, ang1, ang2, rco1, rci1, rco2, rci2].some((v) => v)) {
+    return unsupported(block, 'CYCLE93 con angoli o raccordi (STA1, ANG1, ANG2, RCO1, RCI1, RCO2, RCI2): per ora solo gole rettangolari, con questi parametri a 0');
+  }
+  const tool = state.tools[state.tool];
+  if (!tool || tool.shape !== 'groove') {
+    return { alarm: createAlarm(2011, block.line, { cycle: 'CYCLE93', tool: String(state.tool ?? 0).padStart(2, '0') }) };
+  }
+
+  const r = (v) => Math.round(v * 10000) / 10000;
+  const k = state.diameter ? 1 : 2;
+  const top = spd * k;                        // diametro esterno della gola
+  const bottom = top - 2 * diag;              // diametro del fondo
+  const allowBottom = fal1 ?? 0;
+  const allowSide = fal2 ?? 0;
+  const lift = vrt || 1;
+  const safe = r(top + 2 * lift);             // diametro di avvicinamento e di uscita
+  const [zL, zR] = vari % 10 === 1 ? [spl, spl + widg] : [spl - widg, spl];
+  const w = tool.width;
+  const first = zR - allowSide;               // spigolo destro nella prima passata
+  const last = zL + allowSide + w;            // spigolo destro nell'ultima
+  if (first - last < -1e-9) return { alarm: createAlarm(3009, block.line, { width: r(widg - 2 * allowSide), tool: w }) };
+
+  if (allowBottom < 0 || allowSide < 0) return missing('sovrametalli FAL1 e FAL2 positivi o zero');
+  if (allowBottom >= diag) return missing('un sovrametallo sul fondo FAL1 minore della profondità DIAG');
+
+  const out = [];
+  const add = (...list) => out.push(out.length ? list : [...words, ...list]);
+  const n = Math.ceil((first - last) / w - 1e-9);
+  const roughBottom = bottom + 2 * allowBottom;
+  const step = idep && idep > 0 ? 2 * idep : Infinity;
+  // Limite di sicurezza: una IDEP minuscola produrrebbe milioni di beccate
+  if ((n + 1) * Math.max(1, Math.ceil((top - roughBottom) / step)) > 2000) return missing('una profondità di affondamento IDEP più grande (troppe beccate)');
+  for (let i = 0; i <= n; i++) {
+    const z = r(n === 0 ? first : first - ((first - last) * i) / n);
+    add(word('G', 0), word('Z', z));
+    add(word('G', 0), word('X', safe));
+    // Affondamento a beccate: dopo ogni tratto si risale di _VRT per rompere il truciolo
+    for (let x = top - step; ; x -= step) {
+      const level = r(Math.max(x, roughBottom));
+      add(word('G', 1), word('X', level));
+      if (level <= roughBottom + 1e-9) break;
+      add(word('G', 0), word('X', r(level + 2 * lift)));
+    }
+    if (dtb) add(word('G', 4), word('X', dtb));
+    add(word('G', 0), word('X', safe));
+  }
+  if (allowBottom > 0 || allowSide > 0) {
+    // Finitura: fianco destro, fianco sinistro, poi il fondo da sinistra a destra
+    add(word('G', 0), word('Z', r(zR)));
+    add(word('G', 1), word('X', r(bottom)));
+    add(word('G', 0), word('X', safe));
+    add(word('G', 0), word('Z', r(zL + w)));
+    add(word('G', 1), word('X', r(bottom)));
+    add(word('G', 1), word('Z', r(zR)));
+    if (dtb) add(word('G', 4), word('X', dtb));
+    add(word('G', 0), word('X', safe));
+  }
+  return { blocks: out };
 }
