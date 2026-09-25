@@ -819,6 +819,9 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   color: #c3cde0;
 }
 
+/* la seconda frase sta vicino alla prima: sono un blocco solo */
+.intro-text + .intro-text { margin-top: 10px; }
+
 .intro-credits-title {
   margin: 22px 0 6px;
   font-size: 11px;

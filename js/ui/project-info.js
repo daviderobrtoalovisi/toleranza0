@@ -32,9 +32,11 @@ export function createProjectInfo(dialog, { version = '' } = {}) {
         <h2 class="intro-title" aria-label="Toleranza0">TOL<span class="mark-exp">2</span>ERANZA<span class="mark-zero">0</span></h2>
         <p class="intro-claim">Simulatore CNC per tornio e fresa</p>
         <p class="intro-text">
-          Scrivi un programma ISO e guardalo lavorare il pezzo: la riga in esecuzione
-          resta evidenziata e gli allarmi spiegano in italiano che cosa non va.
-          Nessuna macchina occupata, nessun pezzo sprecato.
+          Dai un ordine alla macchina e guardala eseguire: il pezzo di metallo nasce
+          sotto i tuoi occhi, passata dopo passata.
+        </p>
+        <p class="intro-text">
+          Se qualcosa non torna, te lo dice in parole chiare. Sbagliare qui è gratis — prova.
         </p>
         <p class="intro-credits-title">Created by</p>
         <ul class="intro-credits">${creditsList(CREDITS)}</ul>
