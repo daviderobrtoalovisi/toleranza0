@@ -285,7 +285,8 @@ function cycleG71(block, w, k, state, ctx, checkCutting) {
   const points = moves.flatMap((mv) => (mv.type === 'arc' ? [0, 0.5, 1].map((t) => pointAt(mv, t)) : [mv.to]));
   const outside = outOfLimits(points, ctx.params);
   if (outside) return fail(3004, outside);
-  return { moves, jumpTo: range.to + 1 };
+  // Profilo scritto altrove (CYCLE95 Siemens, profilo dopo M30): si prosegue con il blocco successivo
+  return { moves, jumpTo: block.profileElsewhere ? undefined : range.to + 1 };
 }
 
 // Usura del correttore attivo e dati per la compensazione del raggio di punta

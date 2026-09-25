@@ -14,7 +14,14 @@ const SIEMENS = {
   2005: { message: 'G96 senza limite di giri LIMS', hint: 'Con la velocità di taglio costante i giri aumentano quando il diametro cala e vicino al centro diventerebbero pericolosi. Scrivi il limite, per esempio G96 S180 LIMS=2000.' },
   2006: { message: 'Correttore D non presente', hint: 'Usa il correttore D1 (D0 annulla il correttore): sul tornio per esempio T1 D1.' },
   2008: { message: 'Movimento in Z senza correttore D attivo', hint: 'Con D0 la lunghezza dell\'utensile non è attiva: scrivi D1 prima di muovere Z.' },
-  3001: { message: 'Arco impossibile: raggio CR={r} troppo piccolo' }
+  3001: { message: 'Arco impossibile: raggio CR={r} troppo piccolo' },
+  3006: {
+    message: 'Etichetta {n}: del profilo non trovata',
+    hint: 'CYCLE95("INIZIO:FINE", ...) cerca il profilo tra le righe che iniziano con INIZIO: e FINE:, scritte dopo M30. Controlla che i nomi siano uguali, con i due punti dopo il nome.'
+  },
+  3007: {
+    hint: 'CYCLE95 lavora profili esterni longitudinali (VARI=1, 5 o 9) che salgono sempre in X e scendono sempre in Z, senza gole. Il profilo si scrive dopo M30 tra due etichette e il suo primo punto ha X e Z, per esempio INIZIO: G1 X18 Z0. Le gole si fanno a parte, per esempio con il troncatore.'
+  }
 };
 
 // Restituisce l'allarme con i testi Siemens, se ce ne sono per quel codice

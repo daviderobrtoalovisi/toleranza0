@@ -8,6 +8,7 @@ import { createAlarm } from '../alarms/alarm.js';
 //   DIAMON  DIAMOF                         parole chiave senza valore (value: null)
 //   CYCLE81(...)                           chiamate di ciclo (value: null, call: true)
 //   T="FRESA"                              nome utensile (value: null, text: 'FRESA')
+//   INIZIO:                                etichetta a inizio blocco (block.label = 'INIZIO')
 //   ; commento                             fino a fine riga
 // Come per il Fanuc, per ogni riga si tiene solo il primo allarme.
 
@@ -51,6 +52,14 @@ export function parseSiemensLine(source, line) {
       break;
     }
     if (!/[a-z_]/i.test(ch)) return fail(1001, { char: ch, col: i + 1 });
+
+    // Etichetta all'inizio del blocco (dopo l'eventuale N): PROFILO_INIZIO: G1 X18 Z0
+    const label = /^([a-z_][a-z0-9_]+):/i.exec(source.slice(i));
+    if (label && !block.label && block.words.every((w) => w.letter === 'N')) {
+      block.label = label[1].toUpperCase();
+      i += label[0].length;
+      continue;
+    }
 
     const col = i + 1;
     let name = '';

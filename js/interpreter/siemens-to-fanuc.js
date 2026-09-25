@@ -16,21 +16,33 @@ import { isExecutable } from '../parser/check-program.js';
 
 export function translateSiemens(blocks, machine) {
   const state = { absolute: true, diameter: true, tool: null, nextTool: null, units: 21 };
+  state.contours = machine === 'lathe' ? findContours(blocks) : new Map();
+  const starts = new Map([...state.contours.values()].filter((c) => !c.alarm).map((c) => [c.from, c]));
   const out = [];
-  for (const block of blocks) {
+  let contour = null; // profilo di CYCLE95 in traduzione: i suoi blocchi Fanuc si raccolgono a parte
+  blocks.forEach((block, index) => {
+    if (!contour && starts.has(index)) {
+      contour = { ...starts.get(index), out: [] };
+    }
+    const target = contour ? contour.out : out;
     if (!isExecutable(block) || block.alarm) {
-      out.push(block);
-      continue;
+      target.push(block);
+    } else {
+      const result = machine === 'mill' ? millBlock(block, state) : latheBlock(block, state);
+      if (result.alarm) {
+        target.push({ ...block, alarm: result.alarm });
+      } else {
+        for (const item of result.blocks) {
+          const words = Array.isArray(item) ? item : item.words;
+          target.push({ line: block.line, source: block.source, words, comment: block.comment, blockDelete: block.blockDelete, alarm: null, original: block, ...(item.profileElsewhere ? { profileElsewhere: true } : {}) });
+        }
+      }
     }
-    const result = machine === 'mill' ? millBlock(block, state) : latheBlock(block, state);
-    if (result.alarm) {
-      out.push({ ...block, alarm: result.alarm });
-      continue;
+    if (contour && index === contour.to) {
+      out.push(...contourBlocks(contour, blocks));
+      contour = null;
     }
-    for (const words of result.blocks) {
-      out.push({ line: block.line, source: block.source, words, comment: block.comment, blockDelete: block.blockDelete, alarm: null, original: block });
-    }
-  }
+  });
   return out;
 }
 
@@ -70,6 +82,12 @@ function latheBlock(block, state) {
   const post = [];
   const words = [];
   if (w.N) words.push(word('N', w.N.value));
+
+  if (w.CYCLE95) {
+    const extra = block.words.find((item) => item.letter !== 'N' && item.letter !== 'CYCLE95');
+    if (extra) return unsupported(block, `${extra.letter} nello stesso blocco del ciclo: scrivere il ciclo in un blocco a parte`);
+    return cycle95(block, w.CYCLE95.raw, state, words);
+  }
 
   for (const g of gs) {
     if (g === 90) state.absolute = true;
@@ -257,4 +275,117 @@ function drillBlocks(cycle, xy) {
   if (cycle.q) drill.push(word('Q', cycle.q));
   if (cycle.p) drill.push(word('P', cycle.p));
   return [drill, [word('G', 80)], [word('G', 0), word('Z', cycle.rtp)]];
+}
+
+// ---------- Ciclo di sgrossatura del tornio CYCLE95 ----------
+//
+// CYCLE95("INIZIO:FINE", MID, FALZ, FALX, FAL, FF1, FF2, FF3, VARI, DT, DAM, _VRT)
+// Il profilo sta dopo la fine del programma, tra le etichette INIZIO: e FINE:.
+// Si traduce nei cicli Fanuc: VARI=1 -> G71 (sgrossatura), 5 -> G70 (finitura), 9 -> G71 + G70.
+// Il profilo tradotto riceve due numeri N propri (P e Q) e il suo primo punto si divide in
+// "G0 X" + "Z", come vuole il primo blocco del profilo di G71.
+// Ipotesi: FALX in raggio; MID in raggio; _VRT vuoto = 1 mm; FF2, DT e DAM non simulati.
+
+const CONTOUR_N = 900000;
+const CYCLE95_HOW = 'Si scrive CYCLE95("INIZIO:FINE", MID, FALZ, FALX, FAL, FF1, FF2, FF3, VARI): etichette del profilo, profondità di passata, sovrametalli in Z e in X, avanzamenti di sgrossatura, di affondamento e di finitura, tipo di lavorazione (1 sgrossatura, 5 finitura, 9 completa). Per esempio CYCLE95("INIZIO:FINE", 2, 0.2, 0.3, , 0.25, 0.1, 0.1, 9).';
+
+// Profili richiamati dai CYCLE95 del programma: chiave "INIZIO:FINE" -> { from, to, p, q } oppure { alarm }
+function findContours(blocks) {
+  const labels = new Map();
+  blocks.forEach((b, i) => {
+    if (b.label && !labels.has(b.label)) labels.set(b.label, i);
+  });
+  const end = blocks.findIndex((b) => b.words.some((w) => w.letter === 'M' && (w.value === 30 || w.value === 2)));
+  const contours = new Map();
+  for (const block of blocks) {
+    const call = block.words.find((w) => w.letter === 'CYCLE95');
+    const key = call && contourKey(call.raw);
+    if (!key || contours.has(key)) continue;
+    const [start, stop] = key.split(':');
+    const from = labels.get(start);
+    const to = labels.get(stop);
+    const fail = (code, params) => contours.set(key, { alarm: { code, params } });
+    if (from === undefined) fail(3006, { n: start });
+    else if (to === undefined) fail(3006, { n: stop });
+    else if (from > to) fail(3007, { reason: `l'etichetta ${start}: deve venire prima di ${stop}:` });
+    else if (end < 0 || from < end) fail(3007, { reason: 'il profilo va scritto dopo la fine del programma (M30)' });
+    else if ([...contours.values()].some((c) => !c.alarm && from <= c.to && to >= c.from)) {
+      fail(3007, { reason: 'due CYCLE95 usano profili che si sovrappongono' });
+    } else {
+      const k = contours.size;
+      contours.set(key, { from, to, p: CONTOUR_N + 2 * k, q: CONTOUR_N + 2 * k + 1 });
+    }
+  }
+  return contours;
+}
+
+function contourKey(raw) {
+  const name = raw.slice(1, -1).split(',')[0].trim();
+  const m = /^"\s*([a-z_][a-z0-9_]+)\s*:\s*([a-z_][a-z0-9_]+)\s*"$/i.exec(name);
+  return m ? `${m[1].toUpperCase()}:${m[2].toUpperCase()}` : null;
+}
+
+// Blocchi Fanuc del profilo: N(P) vuoto, profilo con il primo punto diviso, N(Q) vuoto
+function contourBlocks(contour, blocks) {
+  const first = blocks[contour.from];
+  const last = blocks[contour.to];
+  const marker = (block, n) => ({ line: block.line, source: block.source, words: [word('N', n)], comment: '', blockDelete: false, alarm: null, original: block });
+  const list = [...contour.out];
+  const i = list.findIndex((b) => !b.alarm && b.words.some((w) => 'XUZW'.includes(w.letter)));
+  if (i >= 0) {
+    const b = list[i];
+    const xs = b.words.filter((w) => w.letter === 'X' || w.letter === 'U');
+    const rest = b.words.filter((w) => w.letter !== 'X' && w.letter !== 'U' && w.letter !== 'N');
+    const motion = rest.find((w) => w.letter === 'G' && w.value <= 3);
+    const hasZ = rest.some((w) => w.letter === 'Z' || w.letter === 'W');
+    if (xs.length && hasZ && (!motion || motion.value <= 1)) {
+      const n = b.words.filter((w) => w.letter === 'N');
+      const a = { ...b, words: [...n, word('G', 0), ...xs] };
+      const z = { ...b, words: motion ? rest : [word('G', 1), ...rest] };
+      list.splice(i, 1, a, z);
+    }
+  }
+  return [marker(first, contour.p), ...list, marker(last, contour.q)];
+}
+
+function cycle95(block, raw, state, words) {
+  const parts = raw.slice(1, -1).split(',').map((s) => s.trim());
+  const key = contourKey(raw);
+  if (!key) {
+    if (/^".*"$/.test(parts[0])) {
+      return unsupported(block, 'CYCLE95 con il profilo in un sottoprogramma: scrivere il profilo dopo M30 tra due etichette, per esempio CYCLE95("INIZIO:FINE", ...)');
+    }
+    return { alarm: createAlarm(1003, block.line, { letter: 'CYCLE95', raw }) };
+  }
+  const nums = parts.slice(1).map((s) => (s === '' ? null : Number(s)));
+  if (nums.some((a) => a !== null && !Number.isFinite(a))) return { alarm: createAlarm(1003, block.line, { letter: 'CYCLE95', raw }) };
+  const [mid = null, falz = null, falx = null, fal = null, ff1 = null, , ff3 = null, vari = null, , , vrt = null] = nums;
+  const missing = (what) => ({ alarm: createAlarm(2007, block.line, { cycle: 'CYCLE95', missing: what, how: CYCLE95_HOW }) });
+
+  const contour = state.contours.get(key);
+  if (contour.alarm) return { alarm: createAlarm(contour.alarm.code, block.line, contour.alarm.params) };
+  if (vari === null) return missing('il tipo di lavorazione VARI');
+  if (!Number.isInteger(vari) || vari < 1 || vari > 12) return missing('un tipo di lavorazione VARI da 1 a 12');
+  if ((vari - 1) % 4 !== 0) {
+    return unsupported(block, `CYCLE95 con VARI=${vari} (lavorazione trasversale o interna): per ora solo quella longitudinale esterna, VARI=1, 5 o 9`);
+  }
+  if (fal) return unsupported(block, 'FAL (sovrametallo lungo il profilo) di CYCLE95: usare FALX e FALZ');
+  const rough = vari !== 5;
+  const finish = vari !== 1;
+
+  const blocks = [];
+  if (rough) {
+    if (mid === null || mid <= 0) return missing('la profondità di passata MID (maggiore di zero)');
+    if (ff1 === null) return missing("l'avanzamento di sgrossatura FF1");
+    blocks.push([...words, word('G', 71), word('U', mid), word('R', vrt || 1)]);
+    blocks.push({
+      words: [word('G', 71), word('P', contour.p), word('Q', contour.q), word('U', 2 * (falx ?? 0)), word('W', falz ?? 0), word('F', ff1)],
+      profileElsewhere: true
+    });
+  }
+  if (finish) {
+    if (ff3 === null) return missing("l'avanzamento di finitura FF3");
+    blocks.push([...(rough ? [] : words), word('G', 70), word('P', contour.p), word('Q', contour.q), word('F', ff3)]);
+  }
+  return { blocks };
 }

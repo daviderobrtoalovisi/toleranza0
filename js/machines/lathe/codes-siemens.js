@@ -27,11 +27,11 @@ export const LATHE_SIEMENS = {
     X1: 'Asse X per il ritorno al punto di riferimento G74 (X1=0)',
     Z1: 'Asse Z per il ritorno al punto di riferimento G74 (Z1=0)',
     DIAMON: 'Quote X in diametro (predefinito sul tornio)',
-    DIAMOF: 'Quote X in raggio'
+    DIAMOF: 'Quote X in raggio',
+    CYCLE95: 'Sgrossatura e finitura: CYCLE95("INIZIO:FINE", MID, FALZ, FALX, FAL, FF1, FF2, FF3, VARI) = etichette del profilo (scritto dopo M30), passata in raggio, sovrametalli Z e X (raggio), avanzamenti, tipo (1 sgrossatura, 5 finitura, 9 completa)'
   },
   keywords: ['DIAMON', 'DIAMOF'],
   planned: {
-    CYCLE95: 'ciclo di sgrossatura',
     CYCLE93: 'ciclo di gola',
     CYCLE97: 'ciclo di filettatura',
     CYCLE81: 'ciclo di foratura',
