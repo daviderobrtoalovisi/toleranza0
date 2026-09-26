@@ -104,7 +104,7 @@ Intervalli di codici (vedi anche `docs/allarmi.md`):
 
 ## Versioni
 
-- SemVer. Il numero di versione sta **solo** in `js/version.js`.
+- SemVer. Il numero di versione sta **solo** in `js/version.js`. Unica eccezione: `index.html` richiama il foglio di stile come `css/style.css?v=X.Y.Z`, così dopo un rilascio i browser non tengono in cache lo stile vecchio; `tests/version.test.js` controlla che i due numeri coincidano, quindi se si cambia la versione e ci si dimentica del link i test falliscono.
 - Cambia la versione solo quando te lo chiede esplicitamente un docente, insieme al tag `vX.Y.Z`.
 
 ## Lavoro su `main` e gestione dei conflitti

@@ -25,6 +25,7 @@
     import './catalog.test.js';
     import './siemens.test.js';
     import { registerExampleTests } from './examples.test.js';
+    import { registerVersionTests } from './version.test.js';
 
     const list = await (await fetch('../examples/index.json')).json();
     const examples = await Promise.all(list.map(async ({ file, machine, dialect }) => ({
@@ -34,6 +35,7 @@
       text: await (await fetch(`../examples/${file}`)).text()
     })));
     registerExampleTests(examples);
+    registerVersionTests(await (await fetch('../index.html')).text());
     run(document.getElementById('results'));
   </script>
 </body>
