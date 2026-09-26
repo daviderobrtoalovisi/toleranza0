@@ -396,6 +396,9 @@ body[data-state="alarm"] .status-message { color: var(--error); font-weight: 600
 .help-dialog {
   width: min(900px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
+  /* su iPhone le barre di Safari rubano altezza: con i vh il riquadro
+     sbordava sopra il bordo dello schermo e la testata spariva */
+  max-height: calc(100dvh - 32px);
   padding: 0;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -403,8 +406,12 @@ body[data-state="alarm"] .status-message { color: var(--error); font-weight: 600
   color: var(--text);
 }
 .help-dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
-.help { display: flex; flex-direction: column; max-height: calc(100vh - 34px); }
+.help { display: flex; flex-direction: column; max-height: calc(100vh - 34px); max-height: calc(100dvh - 34px); }
 .help-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
