@@ -31,6 +31,14 @@ Nella simulazione il tratteggio rosso è il rapido G00, il blu la lavorazione. L
 
 **Fresa.** Si sceglie in alto a destra, in **Macchina**. Il grezzo si imposta con lunghezza X, larghezza Y, altezza Z, sovrametallo sopra e posizione dello zero (angolo o centro), oppure con `(GREZZO X100 Y80 Z30)` nel programma. La vista è in 3D: si ruota trascinando con il tasto sinistro, si sposta con il destro, si ingrandisce con la rotella; doppio clic = adatta la vista. Dopo ogni cambio utensile (`T1 M06`) serve `G43 H1` prima di muovere Z. La vista 3D usa Three.js scaricato da Internet: senza connessione la fresa non si apre, il tornio funziona lo stesso.
 
+## Guida per studenti
+
+Per chi comincia — e per chi non ha mai visto un CNC — c'è [`docs/guida-studenti.md`](docs/guida-studenti.md): che cos'è il simulatore, i comandi, le idee di base (coordinate, rapido e lavoro, giri e avanzamento, grezzo e utensili, a che servono gli allarmi), sei **esercizi guidati** con il metodo *Prevedi · Osserva · Spiega* costruiti sugli esempi del menu **Esempi…**, e un glossario finale.
+
+È pensata per essere stampata o proiettata: si può assegnare per casa, usare in laboratorio come traccia, o dare a un supplente che non conosce il simulatore. Le soluzioni degli esercizi restano in [`docs/esercitazioni.md`](docs/esercitazioni.md), riservato ai docenti.
+
+Dentro il simulatore, il pulsante **Guida** (F1) ha una scheda **In parole semplici** con la versione breve degli stessi contenuti.
+
 ## Linguaggio supportato: ISO / Fanuc
 
 Si parte dal sottoinsieme usato a scuola; l'elenco completo e aggiornato è in [`docs/codici-supportati.md`](docs/codici-supportati.md).
@@ -76,7 +84,7 @@ js/
 examples/               programmi di esempio (.nc) per le esercitazioni
 tests/                  test nel browser (aprire tests/index.html)
 tools/serve.py          server locale in Python che imita GitHub Pages
-docs/                   codici supportati, allarmi, esercitazioni, configurazione delle macchine
+docs/                   guida per studenti, codici supportati, allarmi, esercitazioni, configurazione delle macchine
 ```
 
 ## Per i docenti
