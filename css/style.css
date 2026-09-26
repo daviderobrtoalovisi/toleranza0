@@ -627,13 +627,23 @@ body, button, select, select option, input, textarea { text-transform: uppercase
   .header-actions select { padding: 6px 10px; }
   #btn-help { position: absolute; top: 6px; right: 10px; padding: 4px 12px; }
 
-  /* Barra comandi: una sola riga che scorre di lato.
-     I comandi non si stringono, si raggiungono scorrendo. */
-  .toolbar { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; gap: 8px; padding: 6px 10px; }
-  .toolbar > .toolbar-group { flex: 0 0 auto; flex-wrap: nowrap; }
+  /* Barra comandi: i due gruppi uno sotto l'altro, ciascuno su una riga che
+     scorre di lato. Prima il contenuto usciva dal gruppo e finiva sopra
+     quello accanto (Esempi sopra Velocita'). */
+  .toolbar { flex-wrap: wrap; justify-content: flex-start; gap: 6px; padding: 6px 10px; }
+  .toolbar > .toolbar-group {
+    flex: 1 0 100%;
+    max-width: none;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 2px;
+  }
   .toolbar-group > * { flex: 0 0 auto; }
   .toolbar button, .toolbar select, .file-name { white-space: nowrap; }
-  .toolbar .file-name { width: 8em; }
+  .toolbar .file-name { width: 7em; }
+  .toolbar #examples { max-width: 100%; }
+  .field-inline input[type="range"] { width: 90px; }
 
   /* Le schede */
   .tab-bar { display: flex; gap: 6px; padding: 8px 10px 0; }
@@ -1086,12 +1096,31 @@ body, button, select, select option, input, textarea { text-transform: uppercase
 
 .help-lead-end { margin: 20px 0 0; font-size: 14px; color: var(--muted); border-left-color: var(--border); background: none; }
 
-/* Telefono: le schede della guida su una riga sola che scorre di lato,
-   invece di tre righe di testata che mangiano il testo */
+/* Il pulsante che chiude la guida deve saltare all'occhio ed essere
+   grande abbastanza da premerlo col pollice */
+.help-close {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+}
+.help-close:hover { border-color: #f5c451; color: #f5c451; }
+
+/* Telefono: titolo piccolo e le quattro schede tutte in vista su due righe,
+   cosi' si vede subito che ce ne sono altre oltre a quella aperta */
 @media (max-width: 700px) {
-  .help-head { gap: 6px 10px; padding: 8px 12px; }
-  .help-tabs { flex-wrap: nowrap; overflow-x: auto; }
-  .help-tabs button { flex: 0 0 auto; white-space: nowrap; }
+  .help-head { gap: 6px 8px; padding: 8px 10px; align-items: flex-start; }
+  /* il titolo "Guida" sparisce: lo spazio serve alle schede (il dialogo
+     resta annunciato come "Guida" a chi usa un lettore di schermo) */
+  .help-head h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .help-tabs { flex-wrap: wrap; gap: 4px; }
+  .help-tabs button { flex: 0 0 auto; padding: 6px 9px; font-size: 12px; }
   .help-cards li { padding: 8px 12px 8px 40px; }
   .help-cards li::before { left: 12px; font-size: 18px; }
 }
